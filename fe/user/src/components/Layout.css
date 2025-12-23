@@ -1,0 +1,389 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
+
+.material-symbols-outlined {
+  font-variation-settings:
+    'FILL' 0,
+    'wght' 400,
+    'GRAD' 0,
+    'opsz' 24;
+}
+
+.icon-fill {
+  font-variation-settings: 'FILL' 1 !important;
+}
+
+.layout-container {
+  background-color: #f6f8f6;
+  font-family: 'Manrope', sans-serif;
+  color: #0f172a;
+  overflow: hidden;
+  display: flex;
+  height: 100vh;
+  width: 100%;
+}
+
+@media (prefers-color-scheme: dark) {
+  .layout-container {
+    background-color: #102216;
+    color: #f1f5f9;
+  }
+}
+
+/* Sidebar */
+.sidebar {
+  display: flex;
+  width: 16rem;
+  flex-direction: column;
+  border-right: 1px solid #28392e;
+  background-color: #f6f8f6;
+}
+
+@media (prefers-color-scheme: dark) {
+  .sidebar {
+    background-color: #102216;
+  }
+}
+
+.sidebar-content {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1rem;
+}
+
+.sidebar-top {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Brand Section */
+.brand-section {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0 0.5rem;
+}
+
+.brand-icon {
+  display: flex;
+  height: 2.5rem;
+  width: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background-color: rgba(76, 190, 0, 0.2);
+  color: #4cbe00;
+}
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-title {
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #0f172a;
+}
+
+@media (prefers-color-scheme: dark) {
+  .brand-title {
+    color: white;
+  }
+}
+
+.brand-subtitle {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #9db9a6;
+}
+
+/* Navigation */
+.navigation {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  color: #64748b;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+  text-align: left;
+}
+
+@media (prefers-color-scheme: dark) {
+  .nav-item {
+    color: #9db9a6;
+  }
+}
+
+.nav-item:hover {
+  background-color: #e2e8f0;
+}
+
+@media (prefers-color-scheme: dark) {
+  .nav-item:hover {
+    background-color: #28392e;
+  }
+}
+
+.nav-item-active {
+  background-color: rgba(76, 190, 0, 0.2) !important;
+  color: #4cbe00 !important;
+}
+
+.nav-text {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.nav-item-active .nav-text {
+  font-weight: 700;
+}
+
+/* User Profile */
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border-radius: 0.5rem;
+  background-color: #e2e8f0;
+  padding: 0.75rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  .user-profile {
+    background-color: #1f2f25;
+  }
+}
+
+.user-avatar {
+  height: 2.5rem;
+  width: 2.5rem;
+  border-radius: 9999px;
+  background-size: cover;
+  background-position: center;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.user-name {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+}
+
+@media (prefers-color-scheme: dark) {
+  .user-name {
+    color: white;
+  }
+}
+
+.user-role {
+  font-size: 0.75rem;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+}
+
+@media (prefers-color-scheme: dark) {
+  .user-role {
+    color: #9db9a6;
+  }
+}
+
+/* Main Content */
+.main-content {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+/* Top Header */
+.top-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  height: 4rem;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #28392e;
+  background-color: rgba(246, 248, 246, 0.8);
+  padding: 0 1.5rem;
+  backdrop-filter: blur(12px);
+}
+
+@media (prefers-color-scheme: dark) {
+  .top-header {
+    background-color: rgba(16, 34, 22, 0.8);
+  }
+}
+
+/* Search */
+.search-container {
+  display: flex;
+  width: 100%;
+  max-width: 28rem;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 0.5rem;
+  background-color: white;
+  padding: 0.5rem 0.75rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+@media (prefers-color-scheme: dark) {
+  .search-container {
+    background-color: #28392e;
+  }
+}
+
+.search-icon {
+  color: #64748b;
+}
+
+@media (prefers-color-scheme: dark) {
+  .search-icon {
+    color: #9db9a6;
+  }
+}
+
+.search-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 0;
+  font-size: 0.875rem;
+  color: #0f172a;
+  outline: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  .search-input {
+    color: white;
+  }
+}
+
+.search-input::placeholder {
+  color: #64748b;
+}
+
+@media (prefers-color-scheme: dark) {
+  .search-input::placeholder {
+    color: #9db9a6;
+  }
+}
+
+/* Header Actions */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.header-button {
+  display: flex;
+  height: 2.5rem;
+  width: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  background-color: white;
+  color: #64748b;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+@media (prefers-color-scheme: dark) {
+  .header-button {
+    background-color: #28392e;
+    color: white;
+  }
+}
+
+.header-button:hover {
+  background-color: #f1f5f9;
+}
+
+@media (prefers-color-scheme: dark) {
+  .header-button:hover {
+    background-color: #344a3b;
+  }
+}
+
+.logout-button:hover {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+@media (prefers-color-scheme: dark) {
+  .logout-button:hover {
+    background-color: #7f1d1d;
+    color: #fca5a5;
+  }
+}
+
+.notification-dot {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  height: 0.5rem;
+  width: 0.5rem;
+  border-radius: 9999px;
+  background-color: #4cbe00;
+  border: 2px solid #28392e;
+}
+
+/* Page Content */
+.page-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.5rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .sidebar {
+    display: none;
+  }
+  
+  .search-container {
+    max-width: 20rem;
+  }
+  
+  .header-actions {
+    gap: 0.5rem;
+  }
+  
+  .page-content {
+    padding: 1rem;
+  }
+}

@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Lịch sử dữ liệu cảm biến - Smart Garden</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#13ec5b",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#102216",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#1c2e24", // Slightly lighter than background-dark
+                        "border-dark": "#2f4b3a",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-gray-900 dark:text-white transition-colors duration-200">
+<div class="flex min-h-screen w-full flex-col lg:flex-row overflow-hidden">
+<!-- Sidebar -->
+<aside class="w-full lg:w-72 bg-surface-light dark:bg-background-dark border-r border-gray-200 dark:border-border-dark flex flex-col shrink-0">
+<div class="flex flex-col h-full p-4 lg:p-6 justify-between">
+<div class="flex flex-col gap-8">
+<!-- Brand -->
+<div class="flex items-center gap-3">
+<div class="bg-center bg-no-repeat bg-cover rounded-full size-12 shadow-md border-2 border-primary" data-alt="Smart Garden Logo abstract leaf design" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuACnDOjckSSYBir86FpxvgAF_bDC4IbuTcvmcuqEprDxLiQU0QrYp2QA5VTbXbiEsjY7xueGkpYq1FTi2go9riQ0rU6xfyXcrzA7rT_KMfm-5dfTBLONn1u7MAQCenuyvx6fMHSqnkNmXzicG8OaeEseKgEYeMlCqig7RZzBdizMbRlgzyrBJ0d3hPu1l8a4AOXpazNPH4NK7aKgvyggdGx4DNMZK6haWGPUx9LsQ2MMh0jfJI-uFineUlassQNCHmymZl2oZARH_Im");'></div>
+<div class="flex flex-col">
+<h1 class="text-lg font-bold leading-tight tracking-tight">Smart Garden</h1>
+<p class="text-gray-500 dark:text-[#9db9a6] text-sm font-medium">Manager Dashboard</p>
+</div>
+</div>
+<!-- Navigation -->
+<nav class="flex flex-col gap-2">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-surface-dark transition-colors group" href="#">
+<span class="material-symbols-outlined text-2xl group-hover:text-primary transition-colors">dashboard</span>
+<span class="text-sm font-medium">Tổng quan</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-surface-dark transition-colors group" href="#">
+<span class="material-symbols-outlined text-2xl group-hover:text-primary transition-colors">ssid_chart</span>
+<span class="text-sm font-medium">Giám sát trực tiếp</span>
+</a>
+<!-- Active State -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg bg-primary/10 dark:bg-[#1c2e24] border-l-4 border-primary text-gray-900 dark:text-white shadow-sm" href="#">
+<span class="material-symbols-outlined text-2xl text-green-600 dark:text-primary fill-1">history</span>
+<span class="text-sm font-bold">Lịch sử dữ liệu</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-surface-dark transition-colors group" href="#">
+<span class="material-symbols-outlined text-2xl group-hover:text-primary transition-colors">settings</span>
+<span class="text-sm font-medium">Cài đặt</span>
+</a>
+</nav>
+</div>
+<!-- Footer / User -->
+<div class="mt-auto pt-6 border-t border-gray-200 dark:border-border-dark">
+<a class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-surface-dark transition-colors" href="#">
+<div class="size-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-300">
+<span class="material-symbols-outlined">person</span>
+</div>
+<div class="flex flex-col">
+<span class="text-sm font-bold">Admin User</span>
+<span class="text-xs text-gray-500 dark:text-[#9db9a6]">Quản trị viên</span>
+</div>
+</a>
+</div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 flex flex-col h-screen overflow-y-auto bg-background-light dark:bg-background-dark">
+<div class="w-full max-w-[1400px] mx-auto p-4 md:p-8 flex flex-col gap-8">
+<!-- Page Heading -->
+<header class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+<div class="flex flex-col gap-2">
+<nav class="flex items-center gap-2 text-sm text-gray-500 dark:text-[#9db9a6]">
+<span>Trang chủ</span>
+<span class="material-symbols-outlined text-base">chevron_right</span>
+<span class="text-gray-900 dark:text-primary font-medium">Lịch sử</span>
+</nav>
+<h2 class="text-3xl md:text-4xl font-black tracking-tight text-gray-900 dark:text-white">Lịch sử dữ liệu cảm biến</h2>
+<p class="text-gray-600 dark:text-[#9db9a6] text-base">Xem lại và phân tích dữ liệu môi trường đã thu thập từ hệ thống vườn thông minh.</p>
+</div>
+<div class="flex gap-3">
+<button class="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-gray-300 dark:border-border-dark text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-surface-dark transition-colors font-medium text-sm">
+<span class="material-symbols-outlined text-[20px]">download</span>
+                            Xuất báo cáo
+                        </button>
+<button class="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary hover:bg-green-400 text-black font-bold transition-colors text-sm shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined text-[20px]">refresh</span>
+                            Làm mới
+                        </button>
+</div>
+</header>
+<!-- Filters & Controls -->
+<section class="flex flex-col xl:flex-row gap-6 p-5 rounded-xl bg-surface-light dark:bg-surface-dark shadow-sm border border-gray-200 dark:border-border-dark">
+<!-- Time Range -->
+<div class="flex flex-col gap-2 min-w-[280px]">
+<span class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-[#9db9a6]">Khoảng thời gian</span>
+<div class="flex bg-gray-100 dark:bg-background-dark p-1 rounded-lg">
+<label class="flex-1 cursor-pointer relative">
+<input class="peer sr-only" name="timerange" type="radio" value="day"/>
+<div class="w-full text-center py-2 text-sm font-medium rounded-md text-gray-500 dark:text-[#9db9a6] peer-checked:bg-white dark:peer-checked:bg-surface-dark peer-checked:text-gray-900 dark:peer-checked:text-white peer-checked:shadow-sm transition-all hover:text-gray-900 dark:hover:text-white">Ngày</div>
+</label>
+<label class="flex-1 cursor-pointer relative">
+<input checked="" class="peer sr-only" name="timerange" type="radio" value="week"/>
+<div class="w-full text-center py-2 text-sm font-medium rounded-md text-gray-500 dark:text-[#9db9a6] peer-checked:bg-white dark:peer-checked:bg-surface-dark peer-checked:text-gray-900 dark:peer-checked:text-white peer-checked:shadow-sm transition-all hover:text-gray-900 dark:hover:text-white">Tuần</div>
+</label>
+<label class="flex-1 cursor-pointer relative">
+<input class="peer sr-only" name="timerange" type="radio" value="month"/>
+<div class="w-full text-center py-2 text-sm font-medium rounded-md text-gray-500 dark:text-[#9db9a6] peer-checked:bg-white dark:peer-checked:bg-surface-dark peer-checked:text-gray-900 dark:peer-checked:text-white peer-checked:shadow-sm transition-all hover:text-gray-900 dark:hover:text-white">Tháng</div>
+</label>
+</div>
+</div>
+<div class="w-px bg-gray-200 dark:bg-border-dark hidden xl:block"></div>
+<!-- Sensor Type Chips -->
+<div class="flex flex-col gap-2 flex-1">
+<span class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-[#9db9a6]">Loại cảm biến</span>
+<div class="flex flex-wrap gap-3">
+<!-- Active Chip -->
+<button class="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary/20 border border-primary text-green-800 dark:text-primary font-medium text-sm transition-all">
+<span class="material-symbols-outlined text-[18px]">thermometer</span>
+                                Nhiệt độ
+                            </button>
+<!-- Inactive Chips -->
+<button class="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 dark:bg-background-dark border border-transparent hover:border-gray-300 dark:hover:border-gray-600 text-gray-600 dark:text-gray-300 font-medium text-sm transition-all">
+<span class="material-symbols-outlined text-[18px]">humidity_percentage</span>
+                                Độ ẩm
+                            </button>
+<button class="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 dark:bg-background-dark border border-transparent hover:border-gray-300 dark:hover:border-gray-600 text-gray-600 dark:text-gray-300 font-medium text-sm transition-all">
+<span class="material-symbols-outlined text-[18px]">light_mode</span>
+                                Ánh sáng
+                            </button>
+<button class="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 dark:bg-background-dark border border-transparent hover:border-gray-300 dark:hover:border-gray-600 text-gray-600 dark:text-gray-300 font-medium text-sm transition-all">
+<span class="material-symbols-outlined text-[18px]">air</span>
+                                Gió
+                            </button>
+</div>
+</div>
+</section>
+<!-- Stats Summary -->
+<section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+<div class="flex flex-col gap-2 p-5 rounded-xl bg-surface-light dark:bg-surface-dark border border-gray-200 dark:border-border-dark shadow-sm group hover:border-primary/50 transition-colors">
+<div class="flex justify-between items-start">
+<p class="text-sm font-medium text-gray-500 dark:text-[#9db9a6]">Nhiệt độ trung bình</p>
+<span class="p-1.5 rounded-md bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-primary">
+<span class="material-symbols-outlined text-[20px]">thermometer</span>
+</span>
+</div>
+<p class="text-3xl font-bold text-gray-900 dark:text-white">28°C</p>
+<div class="flex items-center gap-1 text-xs text-green-600 dark:text-primary font-medium">
+<span class="material-symbols-outlined text-[16px]">trending_up</span>
+<span>+2% so với tuần trước</span>
+</div>
+</div>
+<div class="flex flex-col gap-2 p-5 rounded-xl bg-surface-light dark:bg-surface-dark border border-gray-200 dark:border-border-dark shadow-sm group hover:border-primary/50 transition-colors">
+<div class="flex justify-between items-start">
+<p class="text-sm font-medium text-gray-500 dark:text-[#9db9a6]">Độ ẩm trung bình</p>
+<span class="p-1.5 rounded-md bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400">
+<span class="material-symbols-outlined text-[20px]">humidity_percentage</span>
+</span>
+</div>
+<p class="text-3xl font-bold text-gray-900 dark:text-white">72%</p>
+<div class="flex items-center gap-1 text-xs text-red-500 dark:text-red-400 font-medium">
+<span class="material-symbols-outlined text-[16px]">trending_down</span>
+<span>-5% so với tuần trước</span>
+</div>
+</div>
+<div class="flex flex-col gap-2 p-5 rounded-xl bg-surface-light dark:bg-surface-dark border border-gray-200 dark:border-border-dark shadow-sm group hover:border-primary/50 transition-colors">
+<div class="flex justify-between items-start">
+<p class="text-sm font-medium text-gray-500 dark:text-[#9db9a6]">Ánh sáng cao nhất</p>
+<span class="p-1.5 rounded-md bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400">
+<span class="material-symbols-outlined text-[20px]">light_mode</span>
+</span>
+</div>
+<p class="text-3xl font-bold text-gray-900 dark:text-white">12k <span class="text-lg font-medium text-gray-500">lux</span></p>
+<div class="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 font-medium">
+<span>Ổn định</span>
+</div>
+</div>
+<div class="flex flex-col gap-2 p-5 rounded-xl bg-surface-light dark:bg-surface-dark border border-gray-200 dark:border-border-dark shadow-sm group hover:border-primary/50 transition-colors">
+<div class="flex justify-between items-start">
+<p class="text-sm font-medium text-gray-500 dark:text-[#9db9a6]">Tốc độ gió tối đa</p>
+<span class="p-1.5 rounded-md bg-gray-100 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300">
+<span class="material-symbols-outlined text-[20px]">air</span>
+</span>
+</div>
+<p class="text-3xl font-bold text-gray-900 dark:text-white">15 <span class="text-lg font-medium text-gray-500">km/h</span></p>
+<div class="flex items-center gap-1 text-xs text-green-600 dark:text-primary font-medium">
+<span class="material-symbols-outlined text-[16px]">check_circle</span>
+<span>Trong ngưỡng an toàn</span>
+</div>
+</div>
+</section>
+<!-- Visualization Area (Chart Placeholder) -->
+<section class="flex flex-col gap-4">
+<div class="rounded-xl bg-surface-light dark:bg-surface-dark border border-gray-200 dark:border-border-dark shadow-sm p-6">
+<div class="flex justify-between items-center mb-6">
+<h3 class="text-lg font-bold text-gray-900 dark:text-white">Biểu đồ biến động (7 ngày qua)</h3>
+<div class="flex items-center gap-2">
+<span class="flex items-center gap-1 text-xs font-medium text-gray-500 dark:text-gray-400">
+<span class="size-2 rounded-full bg-primary"></span> Nhiệt độ
+                                </span>
+<span class="flex items-center gap-1 text-xs font-medium text-gray-500 dark:text-gray-400">
+<span class="size-2 rounded-full bg-gray-300 dark:bg-gray-600"></span> Trung bình
+                                </span>
+</div>
+</div>
+<!-- Pure CSS Bar Chart Simulation -->
+<div class="relative h-64 w-full flex items-end justify-between gap-2 md:gap-4 px-2">
+<!-- Grid Lines -->
+<div class="absolute inset-0 flex flex-col justify-between pointer-events-none">
+<div class="w-full h-px bg-gray-100 dark:bg-gray-800"></div>
+<div class="w-full h-px bg-gray-100 dark:bg-gray-800"></div>
+<div class="w-full h-px bg-gray-100 dark:bg-gray-800"></div>
+<div class="w-full h-px bg-gray-100 dark:bg-gray-800"></div>
+<div class="w-full h-px bg-gray-100 dark:bg-gray-800"></div>
+</div>
+<!-- Bars -->
+<div class="relative z-10 flex-1 flex flex-col justify-end items-center group">
+<div class="w-full max-w-[40px] bg-primary/20 dark:bg-primary/20 rounded-t-sm h-[40%] group-hover:bg-primary/40 transition-all relative">
+<div class="absolute bottom-0 left-0 w-full bg-primary h-[80%] rounded-t-sm"></div>
+<!-- Tooltip -->
+<div class="absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-20">26°C</div>
+</div>
+<span class="mt-2 text-xs text-gray-500">T2</span>
+</div>
+<div class="relative z-10 flex-1 flex flex-col justify-end items-center group">
+<div class="w-full max-w-[40px] bg-primary/20 dark:bg-primary/20 rounded-t-sm h-[60%] group-hover:bg-primary/40 transition-all relative">
+<div class="absolute bottom-0 left-0 w-full bg-primary h-[85%] rounded-t-sm"></div>
+<div class="absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-20">28°C</div>
+</div>
+<span class="mt-2 text-xs text-gray-500">T3</span>
+</div>
+<div class="relative z-10 flex-1 flex flex-col justify-end items-center group">
+<div class="w-full max-w-[40px] bg-primary/20 dark:bg-primary/20 rounded-t-sm h-[55%] group-hover:bg-primary/40 transition-all relative">
+<div class="absolute bottom-0 left-0 w-full bg-primary h-[70%] rounded-t-sm"></div>
+<div class="absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-20">27.5°C</div>
+</div>
+<span class="mt-2 text-xs text-gray-500">T4</span>
+</div>
+<div class="relative z-10 flex-1 flex flex-col justify-end items-center group">
+<div class="w-full max-w-[40px] bg-primary/20 dark:bg-primary/20 rounded-t-sm h-[75%] group-hover:bg-primary/40 transition-all relative">
+<div class="absolute bottom-0 left-0 w-full bg-primary h-[90%] rounded-t-sm"></div>
+<div class="absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-20">30°C</div>
+</div>
+<span class="mt-2 text-xs text-gray-500 font-bold text-primary">T5</span>
+</div>
+<div class="relative z-10 flex-1 flex flex-col justify-end items-center group">
+<div class="w-full max-w-[40px] bg-primary/20 dark:bg-primary/20 rounded-t-sm h-[50%] group-hover:bg-primary/40 transition-all relative">
+<div class="absolute bottom-0 left-0 w-full bg-primary h-[60%] rounded-t-sm"></div>
+<div class="absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-20">27°C</div>
+</div>
+<span class="mt-2 text-xs text-gray-500">T6</span>
+</div>
+<div class="relative z-10 flex-1 flex flex-col justify-end items-center group">
+<div class="w-full max-w-[40px] bg-primary/20 dark:bg-primary/20 rounded-t-sm h-[65%] group-hover:bg-primary/40 transition-all relative">
+<div class="absolute bottom-0 left-0 w-full bg-primary h-[75%] rounded-t-sm"></div>
+<div class="absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-20">29°C</div>
+</div>
+<span class="mt-2 text-xs text-gray-500">T7</span>
+</div>
+<div class="relative z-10 flex-1 flex flex-col justify-end items-center group">
+<div class="w-full max-w-[40px] bg-primary/20 dark:bg-primary/20 rounded-t-sm h-[45%] group-hover:bg-primary/40 transition-all relative">
+<div class="absolute bottom-0 left-0 w-full bg-primary h-[65%] rounded-t-sm"></div>
+<div class="absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-20">26.5°C</div>
+</div>
+<span class="mt-2 text-xs text-gray-500">CN</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Detailed Data Table -->
+<section class="flex flex-col gap-4 mb-8">
+<div class="flex justify-between items-center">
+<h3 class="text-lg font-bold text-gray-900 dark:text-white">Chi tiết dữ liệu</h3>
+<div class="flex items-center gap-2">
+<div class="relative">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-gray-500 text-[20px]">search</span>
+<input class="pl-10 pr-4 py-2 bg-white dark:bg-surface-dark border border-gray-200 dark:border-border-dark rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-primary" placeholder="Tìm kiếm..." type="text"/>
+</div>
+</div>
+</div>
+<div class="overflow-hidden rounded-xl bg-surface-light dark:bg-surface-dark border border-gray-200 dark:border-border-dark shadow-sm">
+<div class="overflow-x-auto">
+<table class="w-full text-left text-sm text-gray-600 dark:text-gray-300">
+<thead class="bg-gray-50 dark:bg-[#25362b] text-xs uppercase font-semibold text-gray-900 dark:text-white">
+<tr>
+<th class="px-6 py-4" scope="col">Thời gian</th>
+<th class="px-6 py-4" scope="col">Cảm biến</th>
+<th class="px-6 py-4" scope="col">Giá trị</th>
+<th class="px-6 py-4" scope="col">Khu vực</th>
+<th class="px-6 py-4" scope="col">Trạng thái</th>
+<th class="px-6 py-4 text-right" scope="col">Hành động</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-gray-200 dark:divide-gray-700/50">
+<tr class="hover:bg-gray-50 dark:hover:bg-[#25362b]/50 transition-colors">
+<td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900 dark:text-white">
+                                            2023-10-27 14:00
+                                        </td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-primary">thermometer</span>
+                                                Nhiệt độ
+                                            </div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap font-bold">25°C</td>
+<td class="px-6 py-4 whitespace-nowrap">Vườn A - Khu 1</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">
+<span class="size-1.5 rounded-full bg-green-500"></span> Ổn định
+                                            </span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-right">
+<button class="text-gray-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-gray-50 dark:hover:bg-[#25362b]/50 transition-colors">
+<td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900 dark:text-white">
+                                            2023-10-27 13:45
+                                        </td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-blue-400">humidity_percentage</span>
+                                                Độ ẩm
+                                            </div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap font-bold">82%</td>
+<td class="px-6 py-4 whitespace-nowrap">Vườn A - Khu 2</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300">
+<span class="size-1.5 rounded-full bg-yellow-500"></span> Cảnh báo cao
+                                            </span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-right">
+<button class="text-gray-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-gray-50 dark:hover:bg-[#25362b]/50 transition-colors">
+<td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900 dark:text-white">
+                                            2023-10-27 13:30
+                                        </td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-yellow-400">light_mode</span>
+                                                Ánh sáng
+                                            </div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap font-bold">11,500 lux</td>
+<td class="px-6 py-4 whitespace-nowrap">Vườn B - Nhà Kính</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">
+<span class="size-1.5 rounded-full bg-green-500"></span> Ổn định
+                                            </span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-right">
+<button class="text-gray-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-gray-50 dark:hover:bg-[#25362b]/50 transition-colors">
+<td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900 dark:text-white">
+                                            2023-10-27 13:15
+                                        </td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-primary">thermometer</span>
+                                                Nhiệt độ
+                                            </div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap font-bold">29.5°C</td>
+<td class="px-6 py-4 whitespace-nowrap">Vườn A - Khu 1</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300">
+<span class="size-1.5 rounded-full bg-red-500"></span> Quá nhiệt
+                                            </span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-right">
+<button class="text-gray-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-gray-50 dark:hover:bg-[#25362b]/50 transition-colors">
+<td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900 dark:text-white">
+                                            2023-10-27 13:00
+                                        </td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-gray-400">air</span>
+                                                Gió
+                                            </div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap font-bold">5 km/h</td>
+<td class="px-6 py-4 whitespace-nowrap">Ngoài trời</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">
+<span class="size-1.5 rounded-full bg-green-500"></span> Ổn định
+                                            </span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-right">
+<button class="text-gray-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination -->
+<div class="flex items-center justify-between border-t border-gray-200 dark:border-border-dark px-4 py-3 sm:px-6">
+<div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+<div>
+<p class="text-sm text-gray-700 dark:text-gray-300">
+                                        Hiển thị <span class="font-medium">1</span> đến <span class="font-medium">5</span> trong số <span class="font-medium">97</span> kết quả
+                                    </p>
+</div>
+<div>
+<nav aria-label="Pagination" class="isolate inline-flex -space-x-px rounded-md shadow-sm">
+<a class="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 dark:ring-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 focus:z-20 focus:outline-offset-0" href="#">
+<span class="sr-only">Previous</span>
+<span class="material-symbols-outlined text-[20px]">chevron_left</span>
+</a>
+<a aria-current="page" class="relative z-10 inline-flex items-center bg-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary px-4 py-2 text-sm font-semibold text-black" href="#">1</a>
+<a class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 dark:text-gray-300 ring-1 ring-inset ring-gray-300 dark:ring-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 focus:z-20 focus:outline-offset-0" href="#">2</a>
+<a class="relative hidden items-center px-4 py-2 text-sm font-semibold text-gray-900 dark:text-gray-300 ring-1 ring-inset ring-gray-300 dark:ring-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 focus:z-20 focus:outline-offset-0 md:inline-flex" href="#">3</a>
+<span class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-700 dark:text-gray-400 ring-1 ring-inset ring-gray-300 dark:ring-gray-700 focus:outline-offset-0">...</span>
+<a class="relative hidden items-center px-4 py-2 text-sm font-semibold text-gray-900 dark:text-gray-300 ring-1 ring-inset ring-gray-300 dark:ring-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 focus:z-20 focus:outline-offset-0 md:inline-flex" href="#">10</a>
+<a class="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 dark:ring-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 focus:z-20 focus:outline-offset-0" href="#">
+<span class="sr-only">Next</span>
+<span class="material-symbols-outlined text-[20px]">chevron_right</span>
+</a>
+</nav>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+</main>
+</div>
+</body></html>

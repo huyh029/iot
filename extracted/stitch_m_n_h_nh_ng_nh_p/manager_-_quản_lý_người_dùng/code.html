@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Manager - Quản lý người dùng</title>
+<!-- Google Fonts: Manrope -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Theme Configuration -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#13ec5b",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#102216",
+                        "surface-dark": "#1c2e22",
+                        "surface-border": "#2e4535",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-white antialiased">
+<div class="flex h-screen w-full overflow-hidden">
+<!-- Side Navigation -->
+<aside class="hidden lg:flex flex-col w-72 h-full bg-background-dark border-r border-surface-border p-4">
+<!-- Brand -->
+<div class="flex items-center gap-3 px-2 py-4 mb-6">
+<div class="size-10 rounded-xl bg-gradient-to-br from-primary to-emerald-800 flex items-center justify-center text-background-dark">
+<span class="material-symbols-outlined text-2xl">eco</span>
+</div>
+<div class="flex flex-col">
+<h1 class="text-white text-lg font-bold leading-tight tracking-tight">Smart Garden</h1>
+<p class="text-emerald-400/80 text-xs font-medium">Manager Portal</p>
+</div>
+</div>
+<!-- Navigation Links -->
+<nav class="flex flex-col gap-2 flex-1">
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-emerald-100 hover:bg-surface-dark hover:text-white transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors">dashboard</span>
+<span class="text-sm font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-emerald-100 hover:bg-surface-dark hover:text-white transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors">router</span>
+<span class="text-sm font-medium">Device Monitor</span>
+</a>
+<!-- Active Link -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/10 text-primary border border-primary/20" href="#">
+<span class="material-symbols-outlined fill-1">group</span>
+<span class="text-sm font-bold">Quản lý người dùng</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-emerald-100 hover:bg-surface-dark hover:text-white transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors">settings</span>
+<span class="text-sm font-medium">Cài đặt</span>
+</a>
+</nav>
+<!-- User Profile (Bottom Sidebar) -->
+<div class="mt-auto pt-4 border-t border-surface-border">
+<div class="flex items-center gap-3 px-2">
+<div class="bg-center bg-no-repeat bg-cover rounded-full size-10 ring-2 ring-primary/30" data-alt="Profile picture of the manager" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAhYd37mi7wDDxnFpkLKPLfSm9kTaAmbH06XiUWhiEsK6x3xhJr8qLafOfdLpkVwgcVgxXWDPQNTMn2kMhuyd4TLQDuRphCJxIAhm7soOA8sFzAhdTPnsRbRnmoDONvqtwXNIid2Xtw9toqsFszd93nRg8kKSrqqjepttsIFUJCWcRhhq_W0fa58CBW30lrOLCGD6IHmor30V9AgNHqNeE_5cjynVfJroFKDzV64mrckdcSnuUpvmjzS5vtZsu8y5DqJ68jNKkC76y9");'>
+</div>
+<div class="flex flex-col overflow-hidden">
+<p class="text-white text-sm font-bold truncate">Nguyễn Văn A</p>
+<p class="text-emerald-400/60 text-xs truncate">Manager</p>
+</div>
+<button class="ml-auto text-emerald-400 hover:text-white">
+<span class="material-symbols-outlined">logout</span>
+</button>
+</div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 flex flex-col h-full overflow-hidden relative">
+<!-- Header & Actions -->
+<div class="w-full bg-background-dark/95 backdrop-blur-md sticky top-0 z-20 border-b border-surface-border">
+<div class="w-full max-w-[1400px] mx-auto p-6 md:p-8">
+<!-- Breadcrumbs & Title -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
+<div class="flex flex-col gap-2">
+<div class="flex items-center gap-2 text-emerald-400/60 text-sm">
+<span>Trang chủ</span>
+<span class="material-symbols-outlined text-base">chevron_right</span>
+<span class="text-emerald-100">Người dùng</span>
+</div>
+<h2 class="text-white text-3xl md:text-4xl font-extrabold tracking-tight">Quản lý người dùng</h2>
+<p class="text-emerald-400/80 text-base">Quản lý quyền truy cập và phân quyền thiết bị ESP32.</p>
+</div>
+<button class="flex items-center gap-2 bg-primary hover:bg-primary/90 text-background-dark px-6 py-3 rounded-xl font-bold text-sm transition-all transform active:scale-95 shadow-[0_0_20px_rgba(19,236,91,0.2)]">
+<span class="material-symbols-outlined">add</span>
+                            Thêm người dùng
+                        </button>
+</div>
+<!-- Filter & Search Bar -->
+<div class="flex flex-col md:flex-row gap-4 items-center justify-between bg-surface-dark/50 p-2 rounded-2xl border border-surface-border">
+<div class="relative w-full md:max-w-md group">
+<div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-emerald-400/60 group-focus-within:text-primary transition-colors">
+<span class="material-symbols-outlined">search</span>
+</div>
+<input class="w-full bg-surface-dark border-transparent focus:border-primary/50 focus:ring-0 rounded-xl py-3 pl-11 pr-4 text-emerald-100 placeholder-emerald-400/40 text-sm transition-all" placeholder="Tìm kiếm theo tên, email hoặc ID..." type="text"/>
+</div>
+<div class="flex gap-2 w-full md:w-auto">
+<button class="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-surface-dark border border-surface-border text-emerald-200 hover:text-white hover:border-emerald-500/50 transition-colors text-sm font-medium">
+<span class="material-symbols-outlined text-[20px]">filter_list</span>
+<span>Bộ lọc</span>
+</button>
+<button class="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-surface-dark border border-surface-border text-emerald-200 hover:text-white hover:border-emerald-500/50 transition-colors text-sm font-medium">
+<span class="material-symbols-outlined text-[20px]">download</span>
+<span>Xuất CSV</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Scrollable Content -->
+<div class="flex-1 overflow-y-auto p-6 md:p-8 pt-0">
+<div class="w-full max-w-[1400px] mx-auto">
+<!-- Data Table -->
+<div class="bg-surface-dark border border-surface-border rounded-2xl overflow-hidden shadow-xl">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-[#15231b] border-b border-surface-border">
+<th class="p-5 text-xs font-bold text-emerald-400 uppercase tracking-wider w-24">ID</th>
+<th class="p-5 text-xs font-bold text-emerald-400 uppercase tracking-wider w-64">Tên đăng nhập</th>
+<th class="p-5 text-xs font-bold text-emerald-400 uppercase tracking-wider w-64">Email</th>
+<th class="p-5 text-xs font-bold text-emerald-400 uppercase tracking-wider min-w-[300px]">Thiết bị được cấp quyền</th>
+<th class="p-5 text-xs font-bold text-emerald-400 uppercase tracking-wider w-40 text-center">Hành động</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-border">
+<!-- Row 1 -->
+<tr class="group hover:bg-[#1f3526] transition-colors">
+<td class="p-5 text-sm font-mono text-emerald-100/70">#001</td>
+<td class="p-5">
+<div class="flex items-center gap-3">
+<div class="size-10 rounded-full bg-cover bg-center border border-surface-border" data-alt="User avatar 1" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAoEnG6HFji8fKkzOBev3WNzkPAg-_qNAnwFU06umJBkJ96_65dqSX8CDWEhEWX8Tr4pg8apz8iLbV84vjEA1vuuO6nlvIg2g_IjQl4YAJjRDmbmI55hK0-wKvrtZrTw62qfa7lAHZYgSzgziTx7VgmUamMeaSK8Xr32XpVdBYmr2tUV1pXgTkOEAw6PlRFAZXgVXEQbo3zepXnOXd_fCqK5W5rZp93MvcejzC5doWXEBa1DDI9hzd2wl12iyh5kiUrCXXLy0knHsnr");'></div>
+<div class="flex flex-col">
+<span class="text-sm font-bold text-white group-hover:text-primary transition-colors">nguyenvana</span>
+<span class="text-xs text-emerald-400/60">Admin</span>
+</div>
+</div>
+</td>
+<td class="p-5 text-sm text-emerald-100">vana@gmail.com</td>
+<td class="p-5">
+<div class="flex flex-wrap gap-2">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-primary/10 border border-primary/20 text-primary text-xs font-bold">
+<span class="material-symbols-outlined text-[14px]">memory</span>
+                                                    ESP32-01
+                                                </span>
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-primary/10 border border-primary/20 text-primary text-xs font-bold">
+<span class="material-symbols-outlined text-[14px]">water_drop</span>
+                                                    ESP32-05
+                                                </span>
+</div>
+</td>
+<td class="p-5">
+<div class="flex items-center justify-center gap-2 opacity-80 group-hover:opacity-100 transition-opacity">
+<button class="size-9 rounded-lg flex items-center justify-center text-emerald-400 hover:bg-emerald-400/10 hover:text-primary transition-colors" title="Chỉnh sửa">
+<span class="material-symbols-outlined text-[20px]">edit_square</span>
+</button>
+<button class="size-9 rounded-lg flex items-center justify-center text-red-400 hover:bg-red-400/10 hover:text-red-300 transition-colors" title="Xóa">
+<span class="material-symbols-outlined text-[20px]">delete</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="group hover:bg-[#1f3526] transition-colors">
+<td class="p-5 text-sm font-mono text-emerald-100/70">#002</td>
+<td class="p-5">
+<div class="flex items-center gap-3">
+<div class="size-10 rounded-full bg-cover bg-center border border-surface-border" data-alt="User avatar 2" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBsFvJjRptdeXYR6vukdTz0qomzNx4LtBSzWPf4ha9HlABkZJNsk1nCby-DoaBDDR27NM6zFDwjA9mzS6BFn1zK9KFDsI5mujykz3t_WZ6Pby6aNgyp6ae-oxaeWGiHpcMuJLrNS30rPaBTO_cEvjStAYFuwRMaPOiGdL0rEjAItSZG-PO-wLylnj9ooR4T4ca9xERctmp3b2ORVx0blhBZM324V0OI80kF6n1vOrCrjuz15u-B6NcU7ZiMcMg403E1FXZp8xGzINlO");'></div>
+<div class="flex flex-col">
+<span class="text-sm font-bold text-white group-hover:text-primary transition-colors">lethib</span>
+<span class="text-xs text-emerald-400/60">Member</span>
+</div>
+</div>
+</td>
+<td class="p-5 text-sm text-emerald-100">thib@garden.com</td>
+<td class="p-5">
+<div class="flex flex-wrap gap-2">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface-border/50 border border-surface-border text-emerald-300 text-xs font-medium">
+<span class="material-symbols-outlined text-[14px]">sensors</span>
+                                                    ESP32-02
+                                                </span>
+</div>
+</td>
+<td class="p-5">
+<div class="flex items-center justify-center gap-2 opacity-80 group-hover:opacity-100 transition-opacity">
+<button class="size-9 rounded-lg flex items-center justify-center text-emerald-400 hover:bg-emerald-400/10 hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">edit_square</span>
+</button>
+<button class="size-9 rounded-lg flex items-center justify-center text-red-400 hover:bg-red-400/10 hover:text-red-300 transition-colors">
+<span class="material-symbols-outlined text-[20px]">delete</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="group hover:bg-[#1f3526] transition-colors">
+<td class="p-5 text-sm font-mono text-emerald-100/70">#003</td>
+<td class="p-5">
+<div class="flex items-center gap-3">
+<div class="size-10 rounded-full bg-cover bg-center border border-surface-border" data-alt="User avatar 3" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAqXTw_bhN9MRvQQ2gX4k6QAMlgW_IO8HiOvItHce6OS7Dcf6vyfGT367R0KCvloIMOs140HklFyGYw2m0v3vgzAe07M8iAdBYdV1GL0w4XJNyNmYljAJsSpNTzAUbZ1vFqNITwgg5IUDi1AZoKuz68uX0zjyL8W8cfnDaLIFilVpKqINtA9h7dBQlUqoT36DI1GLh1k8LI6HaiCRKcDFtMIBtGVX0dYLKF6kyJmOuVLtwCBlWDah8Ere2idgU5jDPeFaKOsrUMDq2L");'></div>
+<div class="flex flex-col">
+<span class="text-sm font-bold text-white group-hover:text-primary transition-colors">phamc_dn</span>
+<span class="text-xs text-emerald-400/60">Manager</span>
+</div>
+</div>
+</td>
+<td class="p-5 text-sm text-emerald-100">phamc@yahoo.com</td>
+<td class="p-5">
+<div class="flex flex-wrap gap-2">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface-border/50 border border-surface-border text-emerald-300 text-xs font-medium">
+<span class="material-symbols-outlined text-[14px]">wb_sunny</span>
+                                                    ESP32-01
+                                                </span>
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface-border/50 border border-surface-border text-emerald-300 text-xs font-medium">
+<span class="material-symbols-outlined text-[14px]">water_drop</span>
+                                                    ESP32-03
+                                                </span>
+<span class="inline-flex items-center px-2 py-1 rounded-lg bg-surface-border/30 text-emerald-400/60 text-xs font-medium">
+                                                    +2
+                                                </span>
+</div>
+</td>
+<td class="p-5">
+<div class="flex items-center justify-center gap-2 opacity-80 group-hover:opacity-100 transition-opacity">
+<button class="size-9 rounded-lg flex items-center justify-center text-emerald-400 hover:bg-emerald-400/10 hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">edit_square</span>
+</button>
+<button class="size-9 rounded-lg flex items-center justify-center text-red-400 hover:bg-red-400/10 hover:text-red-300 transition-colors">
+<span class="material-symbols-outlined text-[20px]">delete</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="group hover:bg-[#1f3526] transition-colors">
+<td class="p-5 text-sm font-mono text-emerald-100/70">#004</td>
+<td class="p-5">
+<div class="flex items-center gap-3">
+<div class="size-10 rounded-full bg-cover bg-center border border-surface-border" data-alt="User avatar 4" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCU5DKyAr9dVOWBOxT2tE9dXxYjEbfGpIIixMP_fP4jTMrcmXv3jdeuHt1uvDc_eDP-4b2rJIJ0LWRZ0zYuhVgu2sSEdC6y3G1IT1oXSS2qVTZTRfQsoN1FrZSRXVJXmu-NZf69mZZNuNxgmc5osFTk4iZ1kZzIxuIY3U3swbgSVEd7WRPEmIGRgRAXy4BTA1O9FOlOZ2LDQDjZIBFkym8u5AkvF0YHbCGxBjJBkzpawFKDl0OFW6R-GDhI5FIywVb1QaXpqkoOyN4x");'></div>
+<div class="flex flex-col">
+<span class="text-sm font-bold text-white group-hover:text-primary transition-colors">trand_sg</span>
+<span class="text-xs text-emerald-400/60">Member</span>
+</div>
+</div>
+</td>
+<td class="p-5 text-sm text-emerald-100">trand@gmail.com</td>
+<td class="p-5">
+<span class="text-emerald-400/40 text-sm italic">Chưa có thiết bị</span>
+</td>
+<td class="p-5">
+<div class="flex items-center justify-center gap-2 opacity-80 group-hover:opacity-100 transition-opacity">
+<button class="size-9 rounded-lg flex items-center justify-center text-emerald-400 hover:bg-emerald-400/10 hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">edit_square</span>
+</button>
+<button class="size-9 rounded-lg flex items-center justify-center text-red-400 hover:bg-red-400/10 hover:text-red-300 transition-colors">
+<span class="material-symbols-outlined text-[20px]">delete</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 5 -->
+<tr class="group hover:bg-[#1f3526] transition-colors">
+<td class="p-5 text-sm font-mono text-emerald-100/70">#005</td>
+<td class="p-5">
+<div class="flex items-center gap-3">
+<div class="size-10 rounded-full bg-cover bg-center border border-surface-border" data-alt="User avatar 5" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuC-bDVchiY6SfqM9bsCNCT9GkhhgYgt61ydLayXqu44fGr3zA_jKqzubWhN_TUcVBzr3sVDfPC4_NozYnW_CPHM7NYoJFMx_75iO5xb36mWk6Mz-R7A9feE3B0ILJG5LNcNwbQQG0WGIJ2qoLTBJeTJYR3hDS5C72Cy5GcuLmYl2MoYshDQZp3w_OFQZ77HJT_Iyn1eFqHvn2tiyZ4ArSlXE5vCeebAfeILkzepmj38J6qKRAKGhF_5s-LmlzMVM_RC-mCzKTbR5qCK");'></div>
+<div class="flex flex-col">
+<span class="text-sm font-bold text-white group-hover:text-primary transition-colors">hoange_iot</span>
+<span class="text-xs text-emerald-400/60">Viewer</span>
+</div>
+</div>
+</td>
+<td class="p-5 text-sm text-emerald-100">hoange@outlook.com</td>
+<td class="p-5">
+<div class="flex flex-wrap gap-2">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface-border/50 border border-surface-border text-emerald-300 text-xs font-medium">
+<span class="material-symbols-outlined text-[14px]">memory</span>
+                                                    ESP32-05
+                                                </span>
+</div>
+</td>
+<td class="p-5">
+<div class="flex items-center justify-center gap-2 opacity-80 group-hover:opacity-100 transition-opacity">
+<button class="size-9 rounded-lg flex items-center justify-center text-emerald-400 hover:bg-emerald-400/10 hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">edit_square</span>
+</button>
+<button class="size-9 rounded-lg flex items-center justify-center text-red-400 hover:bg-red-400/10 hover:text-red-300 transition-colors">
+<span class="material-symbols-outlined text-[20px]">delete</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination -->
+<div class="bg-[#15231b] border-t border-surface-border p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+<span class="text-emerald-400/60 text-sm">Hiển thị 1-5 trong 48 người dùng</span>
+<div class="flex items-center gap-2">
+<button class="size-9 flex items-center justify-center rounded-lg border border-surface-border text-emerald-400 hover:bg-surface-border hover:text-white disabled:opacity-50 transition-colors">
+<span class="material-symbols-outlined text-lg">chevron_left</span>
+</button>
+<button class="size-9 flex items-center justify-center rounded-lg bg-primary text-background-dark font-bold text-sm shadow-[0_0_10px_rgba(19,236,91,0.2)]">1</button>
+<button class="size-9 flex items-center justify-center rounded-lg border border-surface-border text-emerald-400 hover:bg-surface-border hover:text-white transition-colors text-sm">2</button>
+<button class="size-9 flex items-center justify-center rounded-lg border border-surface-border text-emerald-400 hover:bg-surface-border hover:text-white transition-colors text-sm">3</button>
+<span class="flex items-center justify-center w-8 text-emerald-400/40">...</span>
+<button class="size-9 flex items-center justify-center rounded-lg border border-surface-border text-emerald-400 hover:bg-surface-border hover:text-white transition-colors text-sm">10</button>
+<button class="size-9 flex items-center justify-center rounded-lg border border-surface-border text-emerald-400 hover:bg-surface-border hover:text-white transition-colors">
+<span class="material-symbols-outlined text-lg">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<div class="mt-6 flex justify-center pb-8">
+<p class="text-emerald-400/40 text-xs">© 2024 Smart Garden Manager Portal. All rights reserved.</p>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

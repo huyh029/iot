@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Smart Garden - Device Management</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&amp;family=Noto+Sans:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#13ec5b",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#102216",
+                        "surface-dark": "#1a2c20",
+                        "border-dark": "#28392e",
+                        "text-secondary": "#9db9a6",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"],
+                        "body": ["Noto Sans", "sans-serif"],
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-white antialiased overflow-hidden">
+<div class="flex h-screen w-full flex-row overflow-hidden">
+<!-- Side Navigation -->
+<aside class="flex w-72 flex-col border-r border-border-dark bg-background-dark hidden md:flex">
+<div class="flex h-full flex-col justify-between p-4">
+<div class="flex flex-col gap-6">
+<!-- Brand -->
+<div class="flex items-center gap-3 px-2">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border border-border-dark" data-alt="Smart garden logo with abstract leaf" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDCGT1KTO0pnZ0nagOW9VoiDSa6UGKu7OTdqqvhMUXn1IG7ZEcdLRwtEb9WuChMOzK6FSwm1sTtV5RD1ijU1FxyxzNUD8EJuPrCuEahW-BR8EOUVxLx3iOm5kc7VqXPPGZcDImTxqD3vmDtiUkau97Z_VuPJ4UAKOA1MobWT4XtKuysWjQ-bUuMgWf1kejTeiLwA61oraD4N_YgxifU5KPwwwg1H5K5NOsbLEAFIFgvdBvKZZ_sqVpE_vVSbjSjwqp7f8GSXdBP-ugs");'></div>
+<div class="flex flex-col">
+<h1 class="text-white text-base font-bold leading-normal">Smart Garden</h1>
+<p class="text-text-secondary text-xs font-normal">Superadmin Portal</p>
+</div>
+</div>
+<!-- Navigation Menu -->
+<nav class="flex flex-col gap-2">
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-secondary hover:bg-surface-dark hover:text-white transition-colors" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<p class="text-sm font-medium leading-normal">Tổng quan</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-surface-dark border border-border-dark/50" href="#">
+<span class="material-symbols-outlined text-primary">developer_board</span>
+<p class="text-white text-sm font-medium leading-normal">Thiết bị ESP32</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-secondary hover:bg-surface-dark hover:text-white transition-colors" href="#">
+<span class="material-symbols-outlined">group</span>
+<p class="text-sm font-medium leading-normal">Người dùng</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-secondary hover:bg-surface-dark hover:text-white transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+<p class="text-sm font-medium leading-normal">Cài đặt hệ thống</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-secondary hover:bg-surface-dark hover:text-white transition-colors" href="#">
+<span class="material-symbols-outlined">history</span>
+<p class="text-sm font-medium leading-normal">Lịch sử hoạt động</p>
+</a>
+</nav>
+</div>
+<!-- Bottom User Profile -->
+<div class="flex items-center gap-3 px-3 py-3 border-t border-border-dark mt-auto">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-8" data-alt="User avatar placeholder" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBKTJ3rhAoV9467vMnHcI5y2oBgGl_V71mnzGUyashM_-NmfK1KJKiTR7ZW6Gy5QXjheekDqoSLOZYzmZf6HqmUQVehJS56qVQ03Ga75AM81RoUBlf0CJ0SZjLpmOjGu5ZTEe9rTkBjcBLjEVVZZ1hX3NIK2pBzGS4zRJmeOormGfw7VqVu-ymcM5oW0tRNrtIoosrMjnh5FdrKHmAgS27X8bh2ih9VPIcjV-maee686lN8-td7AT8MLmAEEU0Vuis38DFHVziCkpEm");'></div>
+<div class="flex flex-col">
+<p class="text-white text-sm font-medium">Admin User</p>
+<p class="text-text-secondary text-xs">admin@smartgarden.io</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col h-full overflow-hidden bg-background-dark relative">
+<!-- Top Navigation Bar -->
+<header class="flex items-center justify-between border-b border-border-dark px-6 py-4 bg-background-dark shrink-0">
+<div class="flex items-center gap-4 text-white">
+<button class="md:hidden text-text-secondary hover:text-white">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<h2 class="text-white text-xl font-bold leading-tight tracking-tight">Quản lý thiết bị</h2>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex gap-2">
+<button class="flex items-center justify-center rounded-lg size-10 bg-surface-dark hover:bg-border-dark text-white transition-colors relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 size-2 bg-red-500 rounded-full border border-surface-dark"></span>
+</button>
+<button class="flex items-center justify-center rounded-lg size-10 bg-surface-dark hover:bg-border-dark text-white transition-colors">
+<span class="material-symbols-outlined">help</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Scrollable Content -->
+<div class="flex-1 overflow-y-auto p-6 md:p-8 scroll-smooth">
+<div class="mx-auto max-w-7xl flex flex-col gap-6">
+<!-- Page Header & Actions -->
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+<div class="flex flex-col gap-1">
+<h1 class="text-white text-3xl font-black tracking-tight">Thiết bị ESP32</h1>
+<p class="text-text-secondary text-base">Quản lý trạng thái kết nối và cấu hình các node trong vườn.</p>
+</div>
+<button class="flex items-center justify-center gap-2 rounded-lg bg-primary hover:bg-[#10d952] text-[#102216] px-5 py-2.5 text-sm font-bold transition-all shadow-[0_0_15px_rgba(19,236,91,0.3)]">
+<span class="material-symbols-outlined text-lg">add</span>
+<span>Thêm thiết bị</span>
+</button>
+</div>
+<!-- Statistics Cards -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+<div class="flex flex-col gap-1 rounded-xl p-5 border border-border-dark bg-surface-dark/50">
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-text-secondary">router</span>
+<p class="text-text-secondary text-sm font-medium uppercase tracking-wider">Tổng thiết bị</p>
+</div>
+<p class="text-white text-3xl font-bold font-display">124</p>
+</div>
+<div class="flex flex-col gap-1 rounded-xl p-5 border border-border-dark bg-surface-dark/50">
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-primary">check_circle</span>
+<p class="text-text-secondary text-sm font-medium uppercase tracking-wider">Đang hoạt động</p>
+</div>
+<p class="text-white text-3xl font-bold font-display">110</p>
+</div>
+<div class="flex flex-col gap-1 rounded-xl p-5 border border-border-dark bg-surface-dark/50">
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-red-500">wifi_off</span>
+<p class="text-text-secondary text-sm font-medium uppercase tracking-wider">Mất kết nối</p>
+</div>
+<p class="text-white text-3xl font-bold font-display">14</p>
+</div>
+<div class="flex flex-col gap-1 rounded-xl p-5 border border-border-dark bg-surface-dark/50">
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-yellow-500">build</span>
+<p class="text-text-secondary text-sm font-medium uppercase tracking-wider">Cần bảo trì</p>
+</div>
+<p class="text-white text-3xl font-bold font-display">0</p>
+</div>
+</div>
+<!-- Filter & Search Bar -->
+<div class="flex flex-col sm:flex-row gap-4">
+<div class="relative flex-1 group">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-text-secondary">search</span>
+</div>
+<input class="block w-full rounded-lg border-border-dark bg-surface-dark text-white pl-10 pr-3 py-2.5 placeholder:text-text-secondary focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm" placeholder="Tìm kiếm theo ID, Tên hoặc MAC Address..." type="text"/>
+</div>
+<div class="flex gap-2">
+<select class="block w-full sm:w-48 rounded-lg border-border-dark bg-surface-dark text-white py-2.5 pl-3 pr-10 focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm">
+<option>Tất cả trạng thái</option>
+<option>Online</option>
+<option>Offline</option>
+<option>Bảo trì</option>
+</select>
+<button class="flex items-center justify-center rounded-lg border border-border-dark bg-surface-dark text-white px-3 hover:bg-border-dark transition-colors">
+<span class="material-symbols-outlined">filter_list</span>
+</button>
+</div>
+</div>
+<!-- Main Data Table -->
+<div class="rounded-xl border border-border-dark bg-surface-dark/30 overflow-hidden shadow-sm">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-border-dark bg-surface-dark text-xs uppercase tracking-wider text-text-secondary">
+<th class="px-6 py-4 font-semibold w-[160px]">ID Thiết bị</th>
+<th class="px-6 py-4 font-semibold">Tên thiết bị</th>
+<th class="px-6 py-4 font-semibold">Vị trí</th>
+<th class="px-6 py-4 font-semibold w-[180px]">Trạng thái</th>
+<th class="px-6 py-4 font-semibold w-[100px] text-right">Hành động</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-border-dark text-sm text-white">
+<!-- Row 1 -->
+<tr class="group hover:bg-border-dark/30 transition-colors">
+<td class="px-6 py-4 font-mono text-text-secondary">ESP-8266-01</td>
+<td class="px-6 py-4 font-medium">Cảm biến nhiệt độ A1</td>
+<td class="px-6 py-4 text-text-secondary">Khu vực nhà lưới 1</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20">
+<span class="relative flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+</span>
+                                                Online
+                                            </span>
+</td>
+<td class="px-6 py-4 text-right">
+<div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-1 rounded hover:bg-border-dark text-text-secondary hover:text-white" title="Chỉnh sửa">
+<span class="material-symbols-outlined text-[20px]">edit</span>
+</button>
+<button class="p-1 rounded hover:bg-red-500/20 text-text-secondary hover:text-red-500" title="Xóa">
+<span class="material-symbols-outlined text-[20px]">delete</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="group hover:bg-border-dark/30 transition-colors">
+<td class="px-6 py-4 font-mono text-text-secondary">ESP-32-CAM-04</td>
+<td class="px-6 py-4 font-medium">Camera giám sát luống 3</td>
+<td class="px-6 py-4 text-text-secondary">Khu vực ngoài trời B</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-red-500/10 text-red-500 border border-red-500/20">
+<span class="h-2 w-2 rounded-full bg-red-500"></span>
+                                                Offline
+                                            </span>
+</td>
+<td class="px-6 py-4 text-right">
+<div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-1 rounded hover:bg-border-dark text-text-secondary hover:text-white" title="Chỉnh sửa">
+<span class="material-symbols-outlined text-[20px]">edit</span>
+</button>
+<button class="p-1 rounded hover:bg-red-500/20 text-text-secondary hover:text-red-500" title="Xóa">
+<span class="material-symbols-outlined text-[20px]">delete</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="group hover:bg-border-dark/30 transition-colors">
+<td class="px-6 py-4 font-mono text-text-secondary">ESP-WROOM-12</td>
+<td class="px-6 py-4 font-medium">Bộ điều khiển tưới nhỏ giọt</td>
+<td class="px-6 py-4 text-text-secondary">Vườn ươm Lan</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20">
+<span class="relative flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+</span>
+                                                Online
+                                            </span>
+</td>
+<td class="px-6 py-4 text-right">
+<div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-1 rounded hover:bg-border-dark text-text-secondary hover:text-white" title="Chỉnh sửa">
+<span class="material-symbols-outlined text-[20px]">edit</span>
+</button>
+<button class="p-1 rounded hover:bg-red-500/20 text-text-secondary hover:text-red-500" title="Xóa">
+<span class="material-symbols-outlined text-[20px]">delete</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="group hover:bg-border-dark/30 transition-colors">
+<td class="px-6 py-4 font-mono text-text-secondary">ESP-01S-Relay</td>
+<td class="px-6 py-4 font-medium">Công tắc đèn LED UV</td>
+<td class="px-6 py-4 text-text-secondary">Phòng thí nghiệm</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-yellow-500/10 text-yellow-500 border border-yellow-500/20">
+<span class="h-2 w-2 rounded-full bg-yellow-500"></span>
+                                                Bảo trì
+                                            </span>
+</td>
+<td class="px-6 py-4 text-right">
+<div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-1 rounded hover:bg-border-dark text-text-secondary hover:text-white" title="Chỉnh sửa">
+<span class="material-symbols-outlined text-[20px]">edit</span>
+</button>
+<button class="p-1 rounded hover:bg-red-500/20 text-text-secondary hover:text-red-500" title="Xóa">
+<span class="material-symbols-outlined text-[20px]">delete</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 5 -->
+<tr class="group hover:bg-border-dark/30 transition-colors">
+<td class="px-6 py-4 font-mono text-text-secondary">ESP-32-Main-01</td>
+<td class="px-6 py-4 font-medium">Gateway Trung tâm</td>
+<td class="px-6 py-4 text-text-secondary">Phòng điều khiển</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20">
+<span class="relative flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+</span>
+                                                Online
+                                            </span>
+</td>
+<td class="px-6 py-4 text-right">
+<div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-1 rounded hover:bg-border-dark text-text-secondary hover:text-white" title="Chỉnh sửa">
+<span class="material-symbols-outlined text-[20px]">edit</span>
+</button>
+<button class="p-1 rounded hover:bg-red-500/20 text-text-secondary hover:text-red-500" title="Xóa">
+<span class="material-symbols-outlined text-[20px]">delete</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination -->
+<div class="flex items-center justify-between border-t border-border-dark px-6 py-4">
+<p class="text-sm text-text-secondary">Hiển thị <span class="font-medium text-white">1-5</span> trong <span class="font-medium text-white">124</span> kết quả</p>
+<div class="flex gap-2">
+<button class="flex items-center justify-center rounded-lg border border-border-dark p-1 text-text-secondary hover:bg-border-dark hover:text-white disabled:opacity-50">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<button class="flex items-center justify-center rounded-lg border border-border-dark p-1 text-text-secondary hover:bg-border-dark hover:text-white">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

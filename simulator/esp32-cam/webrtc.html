@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ESP32-CAM WebRTC Simulator</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      min-height: 100vh;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .container { width: 100%; max-width: 500px; padding: 1.5rem; }
+    
+    /* Setup Screen */
+    .setup-screen, .camera-screen { display: none; }
+    .setup-screen.active, .camera-screen.active { display: block; }
+    
+    .card {
+      background: #0f172a;
+      border-radius: 1rem;
+      padding: 1.5rem;
+      border: 1px solid #334155;
+    }
+    
+    .header { text-align: center; margin-bottom: 1.5rem; }
+    .header h1 { font-size: 1.5rem; margin-bottom: 0.25rem; color: #4cbe00; }
+    .header p { color: #94a3b8; font-size: 0.875rem; }
+    
+    .input-group { margin-bottom: 1rem; }
+    .input-group label { 
+      display: block; 
+      font-size: 0.8rem; 
+      color: #94a3b8; 
+      margin-bottom: 0.375rem;
+      font-weight: 500;
+    }
+    .input-group input {
+      width: 100%;
+      padding: 0.75rem;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 0.5rem;
+      color: white;
+      font-size: 0.9rem;
+    }
+    .input-group input:focus {
+      outline: none;
+      border-color: #4cbe00;
+    }
+    
+    .btn {
+      width: 100%;
+      padding: 0.875rem;
+      border: none;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+    .btn:hover { transform: translateY(-2px); opacity: 0.9; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .btn-primary { background: #4cbe00; color: white; }
+    .btn-danger { background: #dc2626; color: white; }
+    .btn-secondary { background: #334155; color: white; }
+    
+    /* Camera Screen */
+    .video-container {
+      position: relative;
+      background: #000;
+      border-radius: 0.75rem;
+      overflow: hidden;
+      aspect-ratio: 4/3;
+      margin-bottom: 1rem;
+    }
+    .video-container video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .video-overlay {
+      position: absolute;
+      top: 0.75rem;
+      left: 0.75rem;
+      right: 0.75rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.375rem 0.625rem;
+      border-radius: 0.375rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .status-badge.live { background: rgba(34, 197, 94, 0.9); }
+    .status-badge.offline { background: rgba(239, 68, 68, 0.9); }
+    .status-badge.connecting { background: rgba(245, 158, 11, 0.9); }
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: white;
+    }
+    .status-badge.live .status-dot { animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    
+    .device-badge {
+      padding: 0.375rem 0.625rem;
+      background: rgba(0,0,0,0.6);
+      border-radius: 0.375rem;
+      font-size: 0.75rem;
+    }
+    
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+    .controls .btn { padding: 0.75rem; }
+    
+    .btn-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+    
+    .info-bar {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.75rem;
+      background: #1e293b;
+      border-radius: 0.5rem;
+      font-size: 0.8rem;
+      color: #94a3b8;
+    }
+    
+    .back-link {
+      display: block;
+      text-align: center;
+      margin-top: 1rem;
+      color: #94a3b8;
+      text-decoration: none;
+      font-size: 0.875rem;
+    }
+    .back-link:hover { color: white; }
+  </style>
+</head>
+<body>
+  <!-- Setup Screen -->
+  <div class="container setup-screen active" id="setupScreen">
+    <div class="card">
+      <div class="header">
+        <h1>🎥 ESP32-CAM Simulator</h1>
+        <p>WebRTC Video Streaming</p>
+      </div>
+      
+      <div class="input-group">
+        <label>Backend URL</label>
+        <input type="text" id="baseUrl" value="https://beiot.onrender.com" placeholder="https://beiot.onrender.com">
+      </div>
+      
+      <div class="input-group">
+        <label>Device ID</label>
+        <input type="text" id="deviceId" value="100100C40A24" placeholder="VD: 100100C40A24">
+      </div>
+      
+      <button class="btn btn-primary" onclick="connect()">
+        🔗 Kết nối
+      </button>
+    </div>
+  </div>
+
+  <!-- Camera Screen -->
+  <div class="container camera-screen" id="cameraScreen">
+    <div class="card">
+      <div class="video-container">
+        <video id="localVideo" autoplay playsinline muted></video>
+        <div class="video-overlay">
+          <div class="status-badge offline" id="statusBadge">
+            <span class="status-dot"></span>
+            <span id="statusText">OFFLINE</span>
+          </div>
+          <div class="device-badge" id="deviceBadge">--</div>
+        </div>
+      </div>
+      
+      <div class="controls">
+        <button class="btn btn-primary btn-icon" id="btnStart" onclick="startStream()">
+          ▶️ Start
+        </button>
+        <button class="btn btn-danger btn-icon" id="btnStop" onclick="stopStream()" disabled>
+          ⏹ Stop
+        </button>
+        <button class="btn btn-secondary btn-icon" id="btnFlip" onclick="flipCamera()">
+          🔄 Flip
+        </button>
+        <button class="btn btn-secondary btn-icon" onclick="disconnect()">
+          🔌 Ngắt
+        </button>
+      </div>
+      
+      <div class="info-bar">
+        <span id="viewerCount">👁 0 viewers</span>
+        <span id="connectionInfo">Chưa kết nối</span>
+      </div>
+      
+      <a href="#" class="back-link" onclick="disconnect(); return false;">← Quay lại cấu hình</a>
+    </div>
+  </div>
+
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script>
+    let socket = null;
+    let localStream = null;
+    let peerConnections = new Map(); // viewerId -> RTCPeerConnection
+    let currentDeviceId = '';
+    let facingMode = 'user'; // 'user' or 'environment'
+    let isStreaming = false;
+    
+    const rtcConfig = {
+      iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' },
+        { urls: 'stun:stun2.l.google.com:19302' },
+        { urls: 'stun:stun3.l.google.com:19302' },
+        { urls: 'stun:stun4.l.google.com:19302' }
+      ],
+      iceCandidatePoolSize: 10
+    };
+    
+    function setStatus(status, text) {
+      const badge = document.getElementById('statusBadge');
+      const statusText = document.getElementById('statusText');
+      badge.className = `status-badge ${status}`;
+      statusText.textContent = text;
+    }
+    
+    function updateConnectionInfo(text) {
+      document.getElementById('connectionInfo').textContent = text;
+    }
+    
+    function updateViewerCount(count) {
+      document.getElementById('viewerCount').textContent = `👁 ${count} viewer${count !== 1 ? 's' : ''}`;
+    }
+    
+    async function connect() {
+      const baseUrl = document.getElementById('baseUrl').value.trim();
+      currentDeviceId = document.getElementById('deviceId').value.trim();
+      
+      if (!baseUrl || !currentDeviceId) {
+        alert('Vui lòng nhập đầy đủ thông tin!');
+        return;
+      }
+      
+      // Connect to signaling server
+      socket = io(baseUrl, { transports: ['websocket', 'polling'] });
+      
+      socket.on('connect', async () => {
+        console.log('✅ Connected to server');
+        socket.emit('webrtc-register', { deviceId: currentDeviceId, role: 'broadcaster' });
+        
+        // Switch to camera screen
+        document.getElementById('setupScreen').classList.remove('active');
+        document.getElementById('cameraScreen').classList.add('active');
+        document.getElementById('deviceBadge').textContent = currentDeviceId;
+        updateConnectionInfo('Đã kết nối server');
+        
+        // Start camera
+        await startCamera();
+      });
+      
+      socket.on('connect_error', (err) => {
+        alert('Không thể kết nối: ' + err.message);
+      });
+      
+      socket.on('webrtc-viewer-joined', async (data) => {
+        console.log('👁 Viewer joined:', data.viewerId);
+        // Check if we already have a peer connection for this viewer
+        if (peerConnections.has(data.viewerId)) {
+          console.log('⚠️ Already have peer connection for viewer:', data.viewerId, '- closing old one');
+          peerConnections.get(data.viewerId).close();
+          peerConnections.delete(data.viewerId);
+        }
+        if (isStreaming) {
+          await createOfferForViewer(data.viewerId);
+        }
+        updateViewerCount(peerConnections.size);
+      });
+      
+      socket.on('webrtc-answer', async (data) => {
+        console.log('📥 Received answer for viewer:', data.viewerId);
+        const pc = peerConnections.get(data.viewerId);
+        if (pc) {
+          console.log('📥 Setting remote description for viewer:', data.viewerId);
+          try {
+            await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
+            console.log('✅ Answer set successfully for viewer:', data.viewerId);
+          } catch (err) {
+            console.error('❌ Error setting remote description:', err);
+          }
+        } else {
+          console.log('❌ No peer connection found for viewer:', data.viewerId, 'Available:', Array.from(peerConnections.keys()));
+        }
+      });
+      
+      socket.on('webrtc-ice-candidate', async (data) => {
+        const pc = peerConnections.get(data.viewerId);
+        if (pc && data.candidate) {
+          try {
+            await pc.addIceCandidate(new RTCIceCandidate(data.candidate));
+          } catch (err) {
+            console.error('❌ Error adding ICE candidate:', err);
+          }
+        }
+      });
+      
+      socket.on('disconnect', () => {
+        updateConnectionInfo('Mất kết nối');
+        setStatus('offline', 'OFFLINE');
+      });
+    }
+    
+    async function startCamera() {
+      try {
+        localStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode, width: 640, height: 480 },
+          audio: false
+        });
+        document.getElementById('localVideo').srcObject = localStream;
+        setStatus('offline', 'SẴN SÀNG');
+        updateConnectionInfo('Camera sẵn sàng');
+      } catch (err) {
+        alert('Không thể truy cập camera: ' + err.message);
+      }
+    }
+    
+    async function startStream() {
+      if (!localStream) {
+        await startCamera();
+      }
+      
+      isStreaming = true;
+      socket.emit('webrtc-start-broadcast', { deviceId: currentDeviceId });
+      
+      document.getElementById('btnStart').disabled = true;
+      document.getElementById('btnStop').disabled = false;
+      setStatus('connecting', 'CHỜ VIEWER');
+      updateConnectionInfo('Đang chờ viewer...');
+    }
+    
+    async function createOfferForViewer(viewerId) {
+      console.log('📹 Creating offer for viewer:', viewerId);
+      console.log('📹 localStream:', localStream);
+      console.log('📹 localStream tracks:', localStream ? localStream.getTracks().map(t => `${t.kind}:${t.readyState}:${t.enabled}`) : 'no stream');
+      
+      if (!localStream || localStream.getTracks().length === 0) {
+        console.error('❌ No local stream available!');
+        return;
+      }
+      
+      const pc = new RTCPeerConnection(rtcConfig);
+      peerConnections.set(viewerId, pc);
+      
+      // Add tracks to peer connection
+      localStream.getTracks().forEach(track => {
+        const sender = pc.addTrack(track, localStream);
+        console.log('✅ Added track:', track.kind, 'enabled:', track.enabled, 'readyState:', track.readyState, 'sender:', sender);
+      });
+      
+      // Log senders to verify tracks were added
+      console.log('📹 PC senders:', pc.getSenders().map(s => s.track ? `${s.track.kind}:${s.track.readyState}` : 'no track'));
+      
+      pc.onicecandidate = (event) => {
+        if (event.candidate) {
+          console.log('🧊 Sending ICE candidate to viewer');
+          socket.emit('webrtc-ice-candidate', {
+            deviceId: currentDeviceId,
+            viewerId,
+            candidate: event.candidate
+          });
+        }
+      };
+
+      pc.oniceconnectionstatechange = () => {
+        console.log(`🧊 ICE connection state (${viewerId}):`, pc.iceConnectionState);
+      };
+
+      pc.onicegatheringstatechange = () => {
+        console.log(`🧊 ICE gathering state (${viewerId}):`, pc.iceGatheringState);
+      };
+      
+      pc.onconnectionstatechange = () => {
+        console.log(`Connection state (${viewerId}):`, pc.connectionState);
+        if (pc.connectionState === 'connected') {
+          setStatus('live', 'LIVE');
+          updateConnectionInfo('Đang stream');
+        } else if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
+          peerConnections.delete(viewerId);
+          updateViewerCount(peerConnections.size);
+          if (peerConnections.size === 0 && isStreaming) {
+            setStatus('connecting', 'CHỜ VIEWER');
+          }
+        }
+      };
+      
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+      
+      console.log('📹 Sending offer to viewer:', viewerId);
+      socket.emit('webrtc-offer', {
+        deviceId: currentDeviceId,
+        viewerId,
+        offer
+      });
+    }
+    
+    function stopStream() {
+      isStreaming = false;
+      
+      // Close all peer connections
+      peerConnections.forEach(pc => pc.close());
+      peerConnections.clear();
+      
+      socket.emit('webrtc-stop-broadcast', { deviceId: currentDeviceId });
+      
+      document.getElementById('btnStart').disabled = false;
+      document.getElementById('btnStop').disabled = true;
+      setStatus('offline', 'SẴN SÀNG');
+      updateConnectionInfo('Đã dừng stream');
+      updateViewerCount(0);
+    }
+    
+    async function flipCamera() {
+      facingMode = facingMode === 'user' ? 'environment' : 'user';
+      
+      // Stop current stream
+      if (localStream) {
+        localStream.getTracks().forEach(track => track.stop());
+      }
+      
+      // Restart with new facing mode
+      await startCamera();
+      
+      // Update all peer connections with new stream
+      if (isStreaming) {
+        const videoTrack = localStream.getVideoTracks()[0];
+        peerConnections.forEach(pc => {
+          const sender = pc.getSenders().find(s => s.track?.kind === 'video');
+          if (sender) {
+            sender.replaceTrack(videoTrack);
+          }
+        });
+      }
+    }
+    
+    function disconnect() {
+      stopStream();
+      
+      if (localStream) {
+        localStream.getTracks().forEach(track => track.stop());
+        localStream = null;
+      }
+      
+      if (socket) {
+        socket.disconnect();
+        socket = null;
+      }
+      
+      document.getElementById('cameraScreen').classList.remove('active');
+      document.getElementById('setupScreen').classList.add('active');
+    }
+  </script>
+</body>
+</html>

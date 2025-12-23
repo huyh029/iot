@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Manager - Bảng điều khiển</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#13ec5b",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#102216",
+                        "surface-dark": "#1a2c20", 
+                        "surface-light": "#ffffff",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.5rem", "lg": "0.75rem", "xl": "1rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings:
+            'FILL' 0,
+            'wght' 400,
+            'GRAD' 0,
+            'opsz' 24
+        }
+        .icon-fill {
+            font-variation-settings: 'FILL' 1 !important;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 overflow-hidden">
+<div class="flex h-screen w-full">
+<!-- Sidebar -->
+<aside class="flex w-64 flex-col border-r border-[#28392e] bg-background-light dark:bg-background-dark">
+<div class="flex h-full flex-col justify-between p-4">
+<div class="flex flex-col gap-6">
+<!-- Brand -->
+<div class="flex items-center gap-3 px-2">
+<div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary/20 text-primary">
+<span class="material-symbols-outlined icon-fill">eco</span>
+</div>
+<div class="flex flex-col">
+<h1 class="text-base font-bold leading-tight">Smart Garden</h1>
+<p class="text-xs font-medium text-[#9db9a6]">Manager View</p>
+</div>
+</div>
+<!-- Navigation -->
+<nav class="flex flex-col gap-2">
+<a class="flex items-center gap-3 rounded-lg bg-primary/20 px-3 py-2 text-primary" href="#">
+<span class="material-symbols-outlined icon-fill">dashboard</span>
+<span class="text-sm font-bold">Bảng điều khiển</span>
+</a>
+<a class="flex items-center gap-3 rounded-lg px-3 py-2 text-slate-600 dark:text-[#9db9a6] hover:bg-slate-200 dark:hover:bg-[#28392e] transition-colors" href="#">
+<span class="material-symbols-outlined">router</span>
+<span class="text-sm font-medium">Thiết bị</span>
+</a>
+<a class="flex items-center gap-3 rounded-lg px-3 py-2 text-slate-600 dark:text-[#9db9a6] hover:bg-slate-200 dark:hover:bg-[#28392e] transition-colors" href="#">
+<span class="material-symbols-outlined">potted_plant</span>
+<span class="text-sm font-medium">Cây trồng</span>
+</a>
+<a class="flex items-center gap-3 rounded-lg px-3 py-2 text-slate-600 dark:text-[#9db9a6] hover:bg-slate-200 dark:hover:bg-[#28392e] transition-colors" href="#">
+<span class="material-symbols-outlined">bar_chart</span>
+<span class="text-sm font-medium">Báo cáo</span>
+</a>
+<a class="flex items-center gap-3 rounded-lg px-3 py-2 text-slate-600 dark:text-[#9db9a6] hover:bg-slate-200 dark:hover:bg-[#28392e] transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-sm font-medium">Cài đặt</span>
+</a>
+</nav>
+</div>
+<!-- User Profile Summary at bottom -->
+<div class="flex items-center gap-3 rounded-lg bg-slate-200 dark:bg-[#1f2f25] p-3">
+<div class="h-10 w-10 rounded-full bg-cover bg-center" data-alt="User avatar placeholder" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCvTrfQ223kjjQTnf_5UyF8mraF5GjVGZ2eKBHeyirAlzyrNcqo7_AwSbvEsq94jDSanZJp9jZYymciMIFOYPtUI92ThsGQyCoNZ4hRI9aZHsSPTc5AF8C4eTTSjl2DdDGpQe2BGacD9uNjqVQVn-jNe2sVyLP4FSiK18XNlTDe3cwxteBAw-N68L2zHGUU7Ds4FD088KnsnkmoUGkP8sAlSDg0Ak06DrIhq762UBq7rup2OKcyFqCkImwUD1Ob4KwP60eb0vKwppuf");'></div>
+<div class="flex flex-col overflow-hidden">
+<p class="truncate text-sm font-bold text-slate-900 dark:text-white">Nguyễn Văn A</p>
+<p class="truncate text-xs text-slate-500 dark:text-[#9db9a6]">Admin</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex flex-1 flex-col overflow-y-auto">
+<!-- Top Header -->
+<header class="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-[#28392e] bg-background-light/80 dark:bg-background-dark/80 px-6 backdrop-blur-md">
+<!-- Search -->
+<div class="flex w-full max-w-md items-center gap-2 rounded-lg bg-white dark:bg-[#28392e] px-3 py-2 shadow-sm">
+<span class="material-symbols-outlined text-slate-400 dark:text-[#9db9a6]">search</span>
+<input class="flex-1 border-none bg-transparent p-0 text-sm placeholder-slate-400 dark:placeholder-[#9db9a6] focus:ring-0 text-slate-900 dark:text-white" placeholder="Tìm kiếm thiết bị, khu vực..." type="text"/>
+</div>
+<!-- Right Actions -->
+<div class="flex items-center gap-4">
+<button class="flex h-10 w-10 items-center justify-center rounded-lg bg-white dark:bg-[#28392e] text-slate-600 dark:text-white hover:bg-slate-100 dark:hover:bg-[#344a3b] transition-colors relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 h-2 w-2 rounded-full bg-primary ring-2 ring-[#28392e]"></span>
+</button>
+<button class="flex h-10 w-10 items-center justify-center rounded-lg bg-white dark:bg-[#28392e] text-slate-600 dark:text-white hover:bg-slate-100 dark:hover:bg-[#344a3b] transition-colors">
+<span class="material-symbols-outlined">help</span>
+</button>
+</div>
+</header>
+<!-- Dashboard Content -->
+<div class="flex flex-col gap-6 p-6">
+<!-- Heading Section -->
+<div class="flex flex-wrap items-end justify-between gap-4">
+<div>
+<h2 class="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">Xin chào, Manager</h2>
+<p class="text-slate-500 dark:text-[#9db9a6] mt-1">Thứ Hai, 23 tháng 10 - Tổng quan vườn</p>
+</div>
+<button class="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-bold text-background-dark hover:bg-green-400 transition-colors shadow-[0_0_15px_rgba(19,236,91,0.3)]">
+<span class="material-symbols-outlined">add</span>
+                        Thêm thiết bị mới
+                    </button>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+<!-- LEFT COLUMN: Weather & Quick Stats (Span 4) -->
+<div class="col-span-1 md:col-span-4 flex flex-col gap-6">
+<!-- Main Weather Card -->
+<div class="rounded-xl bg-white dark:bg-surface-dark p-5 shadow-sm border border-slate-200 dark:border-[#28392e] relative overflow-hidden group">
+<!-- Background Decoration -->
+<div class="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-primary/10 blur-3xl group-hover:bg-primary/20 transition-all"></div>
+<div class="flex justify-between items-start mb-6 relative z-10">
+<div>
+<h3 class="text-lg font-bold text-slate-900 dark:text-white">Thời tiết hiện tại</h3>
+<p class="text-sm text-slate-500 dark:text-[#9db9a6]">Hà Nội, Việt Nam</p>
+</div>
+<span class="material-symbols-outlined text-yellow-400 text-4xl icon-fill">sunny</span>
+</div>
+<div class="flex items-baseline gap-2 mb-6 relative z-10">
+<span class="text-5xl font-extrabold text-slate-900 dark:text-white">27°</span>
+<span class="text-xl font-medium text-slate-500 dark:text-[#9db9a6]">C</span>
+</div>
+<div class="grid grid-cols-2 gap-4 relative z-10">
+<div class="flex flex-col gap-1 p-3 rounded-lg bg-slate-50 dark:bg-[#1f2f25]">
+<div class="flex items-center gap-2 text-slate-500 dark:text-[#9db9a6]">
+<span class="material-symbols-outlined text-sm">water_drop</span>
+<span class="text-xs font-semibold uppercase">Độ ẩm</span>
+</div>
+<span class="text-lg font-bold text-slate-900 dark:text-white">65%</span>
+</div>
+<div class="flex flex-col gap-1 p-3 rounded-lg bg-slate-50 dark:bg-[#1f2f25]">
+<div class="flex items-center gap-2 text-slate-500 dark:text-[#9db9a6]">
+<span class="material-symbols-outlined text-sm">air</span>
+<span class="text-xs font-semibold uppercase">Gió</span>
+</div>
+<span class="text-lg font-bold text-slate-900 dark:text-white">12 km/h</span>
+</div>
+<div class="flex flex-col gap-1 p-3 rounded-lg bg-slate-50 dark:bg-[#1f2f25]">
+<div class="flex items-center gap-2 text-slate-500 dark:text-[#9db9a6]">
+<span class="material-symbols-outlined text-sm">light_mode</span>
+<span class="text-xs font-semibold uppercase">Ánh sáng</span>
+</div>
+<span class="text-lg font-bold text-slate-900 dark:text-white">1200 lx</span>
+</div>
+<div class="flex flex-col gap-1 p-3 rounded-lg bg-slate-50 dark:bg-[#1f2f25]">
+<div class="flex items-center gap-2 text-slate-500 dark:text-[#9db9a6]">
+<span class="material-symbols-outlined text-sm">umbrella</span>
+<span class="text-xs font-semibold uppercase">Mưa</span>
+</div>
+<span class="text-lg font-bold text-slate-900 dark:text-white">0%</span>
+</div>
+</div>
+<!-- Forecast Mini List -->
+<div class="mt-6 pt-4 border-t border-slate-100 dark:border-[#28392e] relative z-10">
+<h4 class="text-xs font-bold uppercase text-slate-400 dark:text-[#5e7a68] mb-3">Dự báo 3 ngày tới</h4>
+<div class="flex justify-between text-sm">
+<div class="flex flex-col items-center gap-1">
+<span class="text-slate-500 dark:text-[#9db9a6]">T3</span>
+<span class="material-symbols-outlined text-yellow-400 icon-fill">sunny</span>
+<span class="font-bold dark:text-white">28°</span>
+</div>
+<div class="flex flex-col items-center gap-1">
+<span class="text-slate-500 dark:text-[#9db9a6]">T4</span>
+<span class="material-symbols-outlined text-slate-400">cloud</span>
+<span class="font-bold dark:text-white">25°</span>
+</div>
+<div class="flex flex-col items-center gap-1">
+<span class="text-slate-500 dark:text-[#9db9a6]">T5</span>
+<span class="material-symbols-outlined text-blue-400">rainy</span>
+<span class="font-bold dark:text-white">22°</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Harvest Readiness List -->
+<div class="flex-1 rounded-xl bg-white dark:bg-surface-dark p-5 shadow-sm border border-slate-200 dark:border-[#28392e]">
+<div class="flex justify-between items-center mb-4">
+<h3 class="text-lg font-bold text-slate-900 dark:text-white">Sắp thu hoạch</h3>
+<a class="text-xs font-bold text-primary hover:underline" href="#">Xem tất cả</a>
+</div>
+<div class="flex flex-col gap-4">
+<!-- Item 1 -->
+<div class="flex flex-col gap-2">
+<div class="flex justify-between items-end">
+<div class="flex items-center gap-3">
+<div class="bg-red-100 dark:bg-red-900/30 p-2 rounded-lg">
+<span class="material-symbols-outlined text-red-500 dark:text-red-400 icon-fill">nutrition</span>
+</div>
+<div>
+<p class="font-bold text-slate-900 dark:text-white">Dâu tây</p>
+<p class="text-xs text-slate-500 dark:text-[#9db9a6]">Khu vực A2</p>
+</div>
+</div>
+<span class="text-sm font-bold text-primary">2 ngày nữa</span>
+</div>
+<div class="relative h-2 w-full rounded-full bg-slate-100 dark:bg-[#1f2f25]">
+<div class="absolute top-0 left-0 h-full rounded-full bg-primary" style="width: 90%;"></div>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="flex flex-col gap-2">
+<div class="flex justify-between items-end">
+<div class="flex items-center gap-3">
+<div class="bg-green-100 dark:bg-green-900/30 p-2 rounded-lg">
+<span class="material-symbols-outlined text-green-600 dark:text-green-400 icon-fill">grass</span>
+</div>
+<div>
+<p class="font-bold text-slate-900 dark:text-white">Xà lách</p>
+<p class="text-xs text-slate-500 dark:text-[#9db9a6]">Khu vực B1</p>
+</div>
+</div>
+<span class="text-sm font-bold text-slate-400 dark:text-[#9db9a6]">4 ngày nữa</span>
+</div>
+<div class="relative h-2 w-full rounded-full bg-slate-100 dark:bg-[#1f2f25]">
+<div class="absolute top-0 left-0 h-full rounded-full bg-primary opacity-80" style="width: 85%;"></div>
+</div>
+</div>
+<!-- Item 3 -->
+<div class="flex flex-col gap-2">
+<div class="flex justify-between items-end">
+<div class="flex items-center gap-3">
+<div class="bg-orange-100 dark:bg-orange-900/30 p-2 rounded-lg">
+<span class="material-symbols-outlined text-orange-500 dark:text-orange-400 icon-fill">psychiatry</span>
+</div>
+<div>
+<p class="font-bold text-slate-900 dark:text-white">Cà rốt</p>
+<p class="text-xs text-slate-500 dark:text-[#9db9a6]">Khu vực C4</p>
+</div>
+</div>
+<span class="text-sm font-bold text-slate-400 dark:text-[#9db9a6]">1 tuần nữa</span>
+</div>
+<div class="relative h-2 w-full rounded-full bg-slate-100 dark:bg-[#1f2f25]">
+<div class="absolute top-0 left-0 h-full rounded-full bg-primary opacity-60" style="width: 60%;"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- RIGHT COLUMN: Map & Devices (Span 8) -->
+<div class="col-span-1 md:col-span-8 flex flex-col gap-6">
+<!-- Map Widget -->
+<div class="flex h-[400px] flex-col rounded-xl bg-white dark:bg-surface-dark overflow-hidden shadow-sm border border-slate-200 dark:border-[#28392e] relative">
+<div class="absolute top-4 left-4 z-10 rounded-lg bg-background-dark/80 backdrop-blur px-3 py-2 border border-white/10 shadow-lg">
+<h3 class="text-sm font-bold text-white flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-lg">location_on</span>
+                                    Vị trí thiết bị ESP32
+                                </h3>
+</div>
+<!-- Map Image Placeholder -->
+<div class="h-full w-full bg-cover bg-center relative" data-alt="Dark map interface showing garden plot layout" data-location="Garden Zones Map" style='background-image: url("https://placeholder.pics/svg/300");'>
+<!-- Fake Map Markers -->
+<div class="absolute top-1/3 left-1/4 transform -translate-x-1/2 -translate-y-1/2 cursor-pointer group">
+<div class="h-4 w-4 rounded-full bg-primary animate-ping absolute opacity-75"></div>
+<div class="h-4 w-4 rounded-full bg-primary relative border-2 border-white dark:border-background-dark shadow-lg"></div>
+<!-- Tooltip -->
+<div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-max bg-background-dark text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                                         ESP32-01 (Active)
+                                     </div>
+</div>
+<div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 cursor-pointer group">
+<div class="h-4 w-4 rounded-full bg-primary animate-ping absolute opacity-75 animation-delay-500"></div>
+<div class="h-4 w-4 rounded-full bg-primary relative border-2 border-white dark:border-background-dark shadow-lg"></div>
+<div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-max bg-background-dark text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                                        ESP32-02 (Active)
+                                    </div>
+</div>
+<div class="absolute bottom-1/4 right-1/3 transform -translate-x-1/2 -translate-y-1/2 cursor-pointer group">
+<div class="h-4 w-4 rounded-full bg-slate-500 relative border-2 border-white dark:border-background-dark shadow-lg"></div>
+<div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-max bg-background-dark text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                                        ESP32-05 (Offline)
+                                    </div>
+</div>
+</div>
+</div>
+<!-- Device Status Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+<!-- Status Card 1 -->
+<div class="rounded-xl bg-white dark:bg-surface-dark p-4 shadow-sm border border-slate-200 dark:border-[#28392e] flex flex-col justify-between h-32">
+<div class="flex justify-between items-start">
+<div class="bg-primary/20 p-2 rounded-lg text-primary">
+<span class="material-symbols-outlined icon-fill">memory</span>
+</div>
+<span class="px-2 py-1 rounded-full bg-green-500/10 text-green-500 text-xs font-bold border border-green-500/20">Online</span>
+</div>
+<div>
+<p class="text-2xl font-bold text-slate-900 dark:text-white">12/15</p>
+<p class="text-sm text-slate-500 dark:text-[#9db9a6]">Thiết bị đang hoạt động</p>
+</div>
+</div>
+<!-- Status Card 2 -->
+<div class="rounded-xl bg-white dark:bg-surface-dark p-4 shadow-sm border border-slate-200 dark:border-[#28392e] flex flex-col justify-between h-32">
+<div class="flex justify-between items-start">
+<div class="bg-blue-500/20 p-2 rounded-lg text-blue-500">
+<span class="material-symbols-outlined icon-fill">water_pump</span>
+</div>
+<span class="px-2 py-1 rounded-full bg-blue-500/10 text-blue-500 text-xs font-bold border border-blue-500/20">Active</span>
+</div>
+<div>
+<p class="text-2xl font-bold text-slate-900 dark:text-white">4</p>
+<p class="text-sm text-slate-500 dark:text-[#9db9a6]">Máy bơm đang chạy</p>
+</div>
+</div>
+<!-- Status Card 3 -->
+<div class="rounded-xl bg-white dark:bg-surface-dark p-4 shadow-sm border border-slate-200 dark:border-[#28392e] flex flex-col justify-between h-32">
+<div class="flex justify-between items-start">
+<div class="bg-yellow-500/20 p-2 rounded-lg text-yellow-500">
+<span class="material-symbols-outlined icon-fill">warning</span>
+</div>
+<span class="px-2 py-1 rounded-full bg-yellow-500/10 text-yellow-500 text-xs font-bold border border-yellow-500/20">Alert</span>
+</div>
+<div>
+<p class="text-2xl font-bold text-slate-900 dark:text-white">1</p>
+<p class="text-sm text-slate-500 dark:text-[#9db9a6]">Cảnh báo cần xử lý</p>
+</div>
+</div>
+</div>
+<!-- System Logs / Mini Table -->
+<div class="rounded-xl bg-white dark:bg-surface-dark shadow-sm border border-slate-200 dark:border-[#28392e] overflow-hidden">
+<div class="px-5 py-4 border-b border-slate-100 dark:border-[#28392e]">
+<h3 class="text-sm font-bold text-slate-900 dark:text-white">Nhật ký hoạt động gần đây</h3>
+</div>
+<table class="w-full text-sm text-left">
+<thead class="bg-slate-50 dark:bg-[#1f2f25] text-slate-500 dark:text-[#9db9a6] font-medium">
+<tr>
+<th class="px-5 py-3">Thời gian</th>
+<th class="px-5 py-3">Thiết bị</th>
+<th class="px-5 py-3">Hành động</th>
+<th class="px-5 py-3 text-right">Trạng thái</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-100 dark:divide-[#28392e]">
+<tr class="hover:bg-slate-50 dark:hover:bg-[#1f2f25/50]">
+<td class="px-5 py-3 text-slate-600 dark:text-slate-300">10:32 AM</td>
+<td class="px-5 py-3 font-medium text-slate-900 dark:text-white">Pump-01</td>
+<td class="px-5 py-3 text-slate-600 dark:text-slate-300">Tự động tưới (Zone A)</td>
+<td class="px-5 py-3 text-right text-primary font-bold">Hoàn thành</td>
+</tr>
+<tr class="hover:bg-slate-50 dark:hover:bg-[#1f2f25/50]">
+<td class="px-5 py-3 text-slate-600 dark:text-slate-300">09:15 AM</td>
+<td class="px-5 py-3 font-medium text-slate-900 dark:text-white">Sensor-Temp-03</td>
+<td class="px-5 py-3 text-slate-600 dark:text-slate-300">Cập nhật firmware</td>
+<td class="px-5 py-3 text-right text-primary font-bold">Hoàn thành</td>
+</tr>
+<tr class="hover:bg-slate-50 dark:hover:bg-[#1f2f25/50]">
+<td class="px-5 py-3 text-slate-600 dark:text-slate-300">08:00 AM</td>
+<td class="px-5 py-3 font-medium text-slate-900 dark:text-white">System</td>
+<td class="px-5 py-3 text-slate-600 dark:text-slate-300">Sao lưu dữ liệu định kỳ</td>
+<td class="px-5 py-3 text-right text-primary font-bold">Hoàn thành</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

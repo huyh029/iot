@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Garden View - Smart Garden</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Theme Configuration -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#13ec5b",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#102216",
+                        "surface-dark": "#1c2e24", // Slightly lighter than background-dark for cards
+                        "surface-light": "#ffffff",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom scrollbar for sidebar */
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="font-display bg-background-light dark:bg-background-dark text-slate-900 dark:text-white antialiased overflow-hidden">
+<div class="flex h-screen w-full">
+<!-- Left Sidebar: Structure & Navigation -->
+<aside class="w-72 flex flex-col border-r border-[#28392e] bg-[#111813] hidden md:flex">
+<!-- Brand -->
+<div class="h-16 flex items-center gap-3 px-6 border-b border-[#28392e]">
+<div class="size-8 text-primary">
+<svg fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M24 45.8096C19.6865 45.8096 15.4698 44.5305 11.8832 42.134C8.29667 39.7376 5.50128 36.3314 3.85056 32.3462C2.19985 28.361 1.76794 23.9758 2.60947 19.7452C3.451 15.5145 5.52816 11.6284 8.57829 8.5783C11.6284 5.52817 15.5145 3.45101 19.7452 2.60948C23.9758 1.76795 28.361 2.19986 32.3462 3.85057C36.3314 5.50129 39.7376 8.29668 42.134 11.8833C44.5305 15.4698 45.8096 19.6865 45.8096 24L24 24L24 45.8096Z" fill="currentColor"></path>
+</svg>
+</div>
+<h1 class="text-white text-lg font-bold tracking-tight">Smart Garden</h1>
+</div>
+<!-- Scrollable Area -->
+<div class="flex-1 overflow-y-auto py-4 px-3 flex flex-col gap-6">
+<!-- Main Nav -->
+<div class="flex flex-col gap-1">
+<p class="px-3 text-xs font-bold text-[#9db9a6] uppercase tracking-wider mb-2">Menu chính</p>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary" href="#">
+<span class="material-symbols-outlined text-[20px]">dashboard</span>
+<span class="text-sm font-medium">Tổng quan vườn</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-[#28392e] text-white transition-colors group" href="#">
+<span class="material-symbols-outlined text-[20px] text-[#9db9a6] group-hover:text-white">calendar_month</span>
+<span class="text-sm font-medium">Lịch trình tưới</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-[#28392e] text-white transition-colors group" href="#">
+<span class="material-symbols-outlined text-[20px] text-[#9db9a6] group-hover:text-white">settings_remote</span>
+<span class="text-sm font-medium">Thiết bị</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-[#28392e] text-white transition-colors group" href="#">
+<span class="material-symbols-outlined text-[20px] text-[#9db9a6] group-hover:text-white">analytics</span>
+<span class="text-sm font-medium">Báo cáo</span>
+</a>
+</div>
+<!-- Garden Structure Tree -->
+<div class="flex flex-col gap-1">
+<div class="flex items-center justify-between px-3 mb-2">
+<p class="text-xs font-bold text-[#9db9a6] uppercase tracking-wider">Cấu trúc vườn</p>
+<button class="text-[#9db9a6] hover:text-white"><span class="material-symbols-outlined text-[16px]">add</span></button>
+</div>
+<!-- Root -->
+<div class="flex flex-col gap-1">
+<button class="flex items-center gap-2 px-3 py-2 text-white hover:bg-[#28392e] rounded-lg text-left w-full">
+<span class="material-symbols-outlined text-[18px] text-primary">park</span>
+<span class="text-sm font-medium flex-1">Vườn Chính</span>
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+</button>
+<!-- Child 1 -->
+<div class="pl-4 flex flex-col gap-1 border-l border-[#28392e] ml-4">
+<button class="flex items-center gap-2 px-3 py-1.5 text-[#9db9a6] hover:text-white hover:bg-[#28392e] rounded-lg text-left w-full transition-colors">
+<span class="material-symbols-outlined text-[16px]">potted_plant</span>
+<span class="text-sm">Khu vực A - Rau</span>
+</button>
+<button class="flex items-center gap-2 px-3 py-1.5 text-[#9db9a6] hover:text-white hover:bg-[#28392e] rounded-lg text-left w-full transition-colors">
+<span class="material-symbols-outlined text-[16px]">forest</span>
+<span class="text-sm">Khu vực B - Quả</span>
+</button>
+<button class="flex items-center gap-2 px-3 py-1.5 text-[#9db9a6] hover:text-white hover:bg-[#28392e] rounded-lg text-left w-full transition-colors">
+<span class="material-symbols-outlined text-[16px]">water_drop</span>
+<span class="text-sm">Hồ thủy sinh</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- User Profile Bottom -->
+<div class="p-4 border-t border-[#28392e]">
+<div class="flex items-center gap-3">
+<div class="bg-center bg-no-repeat bg-cover rounded-full size-10" data-alt="Avatar of user" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBM9amQGMTa1Z4wBFIZi2jgCh9IuU9hbOLM0qKdjOvf9kNP3wBRo8FhVLVuz2XneAt-E3lrqp93eqY3pxgArwUFo5pemq90awkTZOd0dYCa-wpseF1pkZ-x0O_nKoEsFcaI9ITgDc14OFYuL7YRKjmrnNZLq0pT6jH0PMV1XLyVtIXwpjbGmf-ahiqdnUWrjcuXDQlQhA3hZqVrC1AvXcGgLnTi_nXLcpH6ggj4yI26HtiTZljd2ii8GT6HrOjFoKf93N-ZCmaVwfBV");'></div>
+<div class="flex flex-col overflow-hidden">
+<h3 class="text-white text-sm font-bold truncate">Admin Garden</h3>
+<p class="text-[#9db9a6] text-xs truncate">Online</p>
+</div>
+<button class="ml-auto text-[#9db9a6] hover:text-white">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+</button>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col h-full overflow-hidden bg-background-light dark:bg-background-dark relative">
+<!-- Top Header -->
+<header class="h-16 border-b border-[#28392e] bg-[#111813]/90 backdrop-blur-md flex items-center justify-between px-6 shrink-0 z-20">
+<div class="flex items-center gap-4">
+<button class="md:hidden text-white"><span class="material-symbols-outlined">menu</span></button>
+<h2 class="text-white text-xl font-bold">Tổng quan vườn</h2>
+<span class="hidden sm:flex items-center gap-1.5 bg-[#28392e] px-2.5 py-1 rounded-full text-xs font-medium text-[#13ec5b] border border-[#13ec5b]/20">
+<span class="w-1.5 h-1.5 rounded-full bg-[#13ec5b] animate-pulse"></span>
+                        Hệ thống ổn định
+                    </span>
+</div>
+<div class="flex items-center gap-3">
+<div class="relative hidden sm:block">
+<span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-[#9db9a6] text-[20px]">search</span>
+<input class="bg-[#28392e] border-none rounded-lg h-9 pl-10 pr-4 text-sm text-white focus:ring-1 focus:ring-primary w-64 placeholder-[#5c6f62]" placeholder="Tìm kiếm thiết bị..." type="text"/>
+</div>
+<button class="size-9 rounded-lg bg-[#28392e] flex items-center justify-center text-white hover:bg-[#344a3b] transition-colors relative">
+<span class="material-symbols-outlined text-[20px]">notifications</span>
+<span class="absolute top-2 right-2.5 w-2 h-2 rounded-full bg-red-500 border border-[#28392e]"></span>
+</button>
+<button class="h-9 px-4 rounded-lg bg-primary hover:bg-green-400 text-[#111813] text-sm font-bold transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-[20px]">add</span>
+<span class="hidden sm:inline">Thêm thiết bị</span>
+</button>
+</div>
+</header>
+<!-- Scrollable Dashboard Content -->
+<div class="flex-1 overflow-y-auto p-4 md:p-6 pb-24">
+<div class="max-w-[1400px] mx-auto flex flex-col gap-6">
+<!-- Stats Row -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+<!-- Stat Card 1 -->
+<div class="bg-[#1c2e24] p-5 rounded-xl border border-[#28392e] hover:border-[#13ec5b]/30 transition-colors group">
+<div class="flex justify-between items-start mb-2">
+<div class="flex items-center gap-2 text-[#9db9a6] group-hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[22px]">thermostat</span>
+<span class="text-sm font-medium">Nhiệt độ TB</span>
+</div>
+<span class="text-[#fa5538] text-xs font-bold bg-[#fa5538]/10 px-1.5 py-0.5 rounded">-2%</span>
+</div>
+<div class="flex items-end gap-2">
+<p class="text-3xl font-bold text-white tracking-tight">24°C</p>
+<p class="text-sm text-[#9db9a6] mb-1">/ 26°C mục tiêu</p>
+</div>
+</div>
+<!-- Stat Card 2 -->
+<div class="bg-[#1c2e24] p-5 rounded-xl border border-[#28392e] hover:border-[#13ec5b]/30 transition-colors group">
+<div class="flex justify-between items-start mb-2">
+<div class="flex items-center gap-2 text-[#9db9a6] group-hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[22px]">water_drop</span>
+<span class="text-sm font-medium">Độ ẩm đất</span>
+</div>
+<span class="text-primary text-xs font-bold bg-primary/10 px-1.5 py-0.5 rounded">+5%</span>
+</div>
+<div class="flex items-end gap-2">
+<p class="text-3xl font-bold text-white tracking-tight">65%</p>
+<p class="text-sm text-[#9db9a6] mb-1">Tốt</p>
+</div>
+</div>
+<!-- Stat Card 3 -->
+<div class="bg-[#1c2e24] p-5 rounded-xl border border-[#28392e] hover:border-[#13ec5b]/30 transition-colors group">
+<div class="flex justify-between items-start mb-2">
+<div class="flex items-center gap-2 text-[#9db9a6] group-hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[22px]">cloud</span>
+<span class="text-sm font-medium">Độ ẩm KK</span>
+</div>
+<span class="text-[#9db9a6] text-xs font-bold bg-[#9db9a6]/10 px-1.5 py-0.5 rounded">0%</span>
+</div>
+<div class="flex items-end gap-2">
+<p class="text-3xl font-bold text-white tracking-tight">70%</p>
+<p class="text-sm text-[#9db9a6] mb-1">Bình thường</p>
+</div>
+</div>
+<!-- Stat Card 4 -->
+<div class="bg-[#1c2e24] p-5 rounded-xl border border-[#28392e] hover:border-[#13ec5b]/30 transition-colors group">
+<div class="flex justify-between items-start mb-2">
+<div class="flex items-center gap-2 text-[#9db9a6] group-hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[22px]">light_mode</span>
+<span class="text-sm font-medium">Ánh sáng</span>
+</div>
+<span class="text-primary text-xs font-bold bg-primary/10 px-1.5 py-0.5 rounded">+10%</span>
+</div>
+<div class="flex items-end gap-2">
+<p class="text-3xl font-bold text-white tracking-tight">Tốt</p>
+<p class="text-sm text-[#9db9a6] mb-1">12,000 Lux</p>
+</div>
+</div>
+</div>
+<!-- Main Grid Area -->
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-6 h-full min-h-[500px]">
+<!-- MAP SECTION (Dominant) -->
+<div class="xl:col-span-2 flex flex-col bg-[#1c2e24] rounded-xl border border-[#28392e] overflow-hidden relative group/map">
+<!-- Map Toolbar -->
+<div class="absolute top-4 left-4 z-10 flex gap-2">
+<button class="bg-[#111813]/80 backdrop-blur text-white text-xs font-bold px-3 py-1.5 rounded-lg border border-[#28392e] hover:bg-[#28392e] transition-colors">Khu vực A</button>
+<button class="bg-[#111813]/80 backdrop-blur text-[#9db9a6] text-xs font-bold px-3 py-1.5 rounded-lg border border-[#28392e] hover:bg-[#28392e] transition-colors">Khu vực B</button>
+</div>
+<!-- Map Controls -->
+<div class="absolute bottom-4 right-4 z-10 flex flex-col gap-2">
+<button class="size-9 rounded-lg bg-[#111813]/90 text-white flex items-center justify-center hover:bg-primary hover:text-black transition-colors shadow-lg">
+<span class="material-symbols-outlined text-[20px]">add</span>
+</button>
+<button class="size-9 rounded-lg bg-[#111813]/90 text-white flex items-center justify-center hover:bg-primary hover:text-black transition-colors shadow-lg">
+<span class="material-symbols-outlined text-[20px]">remove</span>
+</button>
+<button class="size-9 rounded-lg bg-[#111813]/90 text-white flex items-center justify-center hover:bg-primary hover:text-black transition-colors shadow-lg mt-2">
+<span class="material-symbols-outlined text-[20px]">my_location</span>
+</button>
+</div>
+<!-- The Map Image -->
+<div class="flex-1 w-full bg-[#102216] relative overflow-hidden cursor-grab active:cursor-grabbing">
+<img alt="Top down aerial view of a green garden with pathways and vegetable patches" class="w-full h-full object-cover opacity-60 grayscale-[30%] group-hover/map:grayscale-0 transition-all duration-700" data-alt="Top down map view of the garden" data-location="Smart Garden A" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAxiWHP04byve4tF4sNF-20towQ-hZV-Thj0CZsfyIYd-xMKPeLF4HBAYy1XUce3Z7ZvNdyxpavxMa26K-bKmKSfobCyCaf0OgUj1Bblic_kMcSdCNi0lnJFT8JQXfZ8i23oXjMVYnSEefaSee7nt7sxCNDz5iJfmnq7Xn2X_U8DF9WhNe-jsZUnFn72ITLkRMNsQwziQVlwbCwFp1ohPjEyrEDG-atO7S5pKYRIrZcwQYDyYNkf_EJhH3s5P9TzV2UE2LDztchCtXQ"/>
+<!-- Interactive Map Markers -->
+<!-- Marker 1: Sensor Active -->
+<div class="absolute top-[30%] left-[25%] flex flex-col items-center gap-1 group/marker cursor-pointer">
+<div class="relative">
+<div class="w-8 h-8 rounded-full bg-primary/20 animate-ping absolute inset-0"></div>
+<div class="w-8 h-8 rounded-full bg-[#111813] border-2 border-primary flex items-center justify-center z-10 relative shadow-lg shadow-primary/20 group-hover/marker:scale-110 transition-transform">
+<span class="material-symbols-outlined text-primary text-[16px]">water_drop</span>
+</div>
+</div>
+<div class="bg-[#111813]/90 text-white text-[10px] font-bold px-2 py-1 rounded backdrop-blur border border-[#28392e] opacity-0 group-hover/marker:opacity-100 transition-opacity whitespace-nowrap -translate-y-1">
+                                        Độ ẩm: 68%
+                                    </div>
+</div>
+<!-- Marker 2: Sprinkler -->
+<div class="absolute top-[60%] left-[65%] flex flex-col items-center gap-1 group/marker cursor-pointer">
+<div class="w-8 h-8 rounded-full bg-[#111813] border-2 border-white/20 flex items-center justify-center shadow-lg group-hover/marker:border-white transition-colors">
+<span class="material-symbols-outlined text-white text-[16px]">sprinkler</span>
+</div>
+<div class="bg-[#111813]/90 text-white text-[10px] font-bold px-2 py-1 rounded backdrop-blur border border-[#28392e] opacity-0 group-hover/marker:opacity-100 transition-opacity whitespace-nowrap -translate-y-1">
+                                        Vòi phun 02
+                                    </div>
+</div>
+<!-- Marker 3: Warning -->
+<div class="absolute top-[45%] left-[50%] flex flex-col items-center gap-1 group/marker cursor-pointer">
+<div class="relative">
+<div class="w-8 h-8 rounded-full bg-[#fa5538]/20 animate-ping absolute inset-0"></div>
+<div class="w-8 h-8 rounded-full bg-[#111813] border-2 border-[#fa5538] flex items-center justify-center z-10 relative shadow-lg">
+<span class="material-symbols-outlined text-[#fa5538] text-[16px]">warning</span>
+</div>
+</div>
+<div class="bg-[#fa5538] text-white text-[10px] font-bold px-2 py-1 rounded shadow-lg opacity-100 whitespace-nowrap -translate-y-1">
+                                        Cảnh báo nhiệt
+                                    </div>
+</div>
+</div>
+</div>
+<!-- RIGHT COLUMN: Live View & Quick Actions -->
+<div class="flex flex-col gap-6">
+<!-- Live View Card -->
+<div class="bg-[#1c2e24] rounded-xl border border-[#28392e] overflow-hidden flex flex-col">
+<div class="px-4 py-3 border-b border-[#28392e] flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-white text-[18px]">videocam</span>
+<h3 class="text-white text-sm font-bold">Live View</h3>
+</div>
+<span class="flex h-2 w-2 relative">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+</span>
+</div>
+<div class="aspect-video w-full bg-black relative group">
+<div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1615562768560-6b7df02c4df5?q=80&amp;w=1000&amp;auto=format&amp;fit=crop')] bg-cover bg-center opacity-80" data-alt="Live camera feed showing plants"></div>
+<div class="absolute top-2 right-2 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded font-mono backdrop-blur-sm">
+                                        CAM-01 • REC
+                                    </div>
+<div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30">
+<button class="bg-white/20 backdrop-blur p-2 rounded-full text-white hover:bg-primary hover:text-black transition-colors">
+<span class="material-symbols-outlined text-[32px]">fullscreen</span>
+</button>
+</div>
+</div>
+<div class="px-4 py-3 flex justify-between items-center bg-[#18261e]">
+<span class="text-[#9db9a6] text-xs">Khu vực A - Cổng chính</span>
+<button class="text-[#13ec5b] text-xs font-bold hover:underline">Xem lại</button>
+</div>
+</div>
+<!-- Quick Controls -->
+<div class="bg-[#1c2e24] rounded-xl border border-[#28392e] flex flex-col flex-1">
+<div class="px-4 py-3 border-b border-[#28392e]">
+<h3 class="text-white text-sm font-bold">Điều khiển nhanh</h3>
+</div>
+<div class="p-4 flex flex-col gap-3">
+<!-- Control Item 1 -->
+<div class="flex items-center justify-between p-3 rounded-lg bg-[#28392e]/50 border border-[#28392e]">
+<div class="flex items-center gap-3">
+<div class="size-8 rounded bg-[#28392e] flex items-center justify-center text-[#9db9a6]">
+<span class="material-symbols-outlined text-[20px]">sprinkler</span>
+</div>
+<div class="flex flex-col">
+<span class="text-white text-sm font-medium">Hệ thống tưới</span>
+<span class="text-[#9db9a6] text-xs">Zone A • Tự động</span>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-9 h-5 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+</label>
+</div>
+<!-- Control Item 2 -->
+<div class="flex items-center justify-between p-3 rounded-lg bg-[#28392e]/50 border border-[#28392e]">
+<div class="flex items-center gap-3">
+<div class="size-8 rounded bg-[#28392e] flex items-center justify-center text-[#9db9a6]">
+<span class="material-symbols-outlined text-[20px]">lightbulb</span>
+</div>
+<div class="flex flex-col">
+<span class="text-white text-sm font-medium">Đèn sinh trưởng</span>
+<span class="text-[#9db9a6] text-xs">Zone B • Tắt</span>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox" value=""/>
+<div class="w-9 h-5 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+</label>
+</div>
+<!-- Control Item 3 -->
+<div class="flex items-center justify-between p-3 rounded-lg bg-[#28392e]/50 border border-[#28392e]">
+<div class="flex items-center gap-3">
+<div class="size-8 rounded bg-[#28392e] flex items-center justify-center text-[#9db9a6]">
+<span class="material-symbols-outlined text-[20px]">mode_fan</span>
+</div>
+<div class="flex flex-col">
+<span class="text-white text-sm font-medium">Quạt thông gió</span>
+<span class="text-[#9db9a6] text-xs">Nhà kính 1</span>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-9 h-5 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+</label>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

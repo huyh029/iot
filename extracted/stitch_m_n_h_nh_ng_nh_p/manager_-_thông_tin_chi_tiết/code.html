@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Manager - Device Details</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#13ec5b",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#102216",
+                        "surface-dark": "#1c2e24", // Slightly lighter for cards
+                        "surface-border": "#2f4538",
+                        "text-muted": "#9db9a6",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Custom scrollbar for better aesthetics in dark mode */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #102216; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2f4538; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3d5a49; 
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white font-display overflow-hidden">
+<div class="flex h-screen w-full">
+<!-- Side Navigation -->
+<aside class="flex w-72 flex-col border-r border-surface-border bg-background-dark overflow-y-auto hidden md:flex">
+<div class="flex flex-col gap-4 p-6">
+<!-- User Profile / App Header -->
+<div class="flex items-center gap-3 mb-6">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-12 ring-2 ring-primary/20" data-alt="Abstract green geometric pattern representing a smart garden ecosystem" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuD8D4HYcvGmpQLrxvo1F8CbQ-8aEl44FPVn1RoZtM1t8xlGLZcCOpMC6NlMkQJZOl5GTYZcmx7NuRRftrhx9h1fu3yfHX2KDt9Lc3n7LLH9k1OjWwCxPs7ojixojBuobgN9N6em7u2Pz7A81jNKGs0--H4-OcpMVdvC6-q2wC5qe-qhd4lsm_hUWVtUedlO_k_WvFIx3ZQWCh1SbcxNCM_52H77rkzCqcAhM0Uo5iLpoM3ob11YbnExJ3eCffwCgQXvTvJk9jvA4huP");'>
+</div>
+<div class="flex flex-col">
+<h1 class="text-white text-lg font-bold leading-tight tracking-tight">Smart Garden</h1>
+<p class="text-primary text-xs font-bold uppercase tracking-wider">Manager Portal</p>
+</div>
+</div>
+<!-- Navigation Links -->
+<div class="flex flex-col gap-2">
+<a class="group flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-surface-dark transition-colors" href="#">
+<span class="material-symbols-outlined text-text-muted group-hover:text-white">dashboard</span>
+<p class="text-text-muted group-hover:text-white text-sm font-medium">Tổng quan</p>
+</a>
+<a class="group flex items-center gap-3 px-4 py-3 rounded-lg bg-surface-dark border-l-4 border-primary" href="#">
+<span class="material-symbols-outlined text-primary">router</span>
+<p class="text-white text-sm font-bold">Thiết bị</p>
+</a>
+<a class="group flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-surface-dark transition-colors" href="#">
+<span class="material-symbols-outlined text-text-muted group-hover:text-white">group</span>
+<p class="text-text-muted group-hover:text-white text-sm font-medium">Người dùng</p>
+</a>
+<a class="group flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-surface-dark transition-colors" href="#">
+<span class="material-symbols-outlined text-text-muted group-hover:text-white">settings</span>
+<p class="text-text-muted group-hover:text-white text-sm font-medium">Cài đặt</p>
+</a>
+</div>
+</div>
+<div class="mt-auto p-6">
+<div class="flex items-center gap-3 px-4 py-3 rounded-lg bg-surface-dark/50 border border-surface-border cursor-pointer hover:bg-surface-dark transition-colors">
+<span class="material-symbols-outlined text-text-muted">logout</span>
+<p class="text-text-muted text-sm font-medium">Đăng xuất</p>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col h-full overflow-hidden bg-background-light dark:bg-background-dark relative">
+<!-- Mobile Header (Visible only on small screens) -->
+<div class="md:hidden flex items-center justify-between p-4 border-b border-surface-border bg-background-dark z-20">
+<div class="flex items-center gap-3">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-8" data-alt="Abstract green geometric pattern" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCiMueAm5ThicKDkznFJ2OQhiJlRUN1gw-G6a8Pc1Wlx8pbujbx5GQ1UM6CcIOs2YSLdf_2m-R1uA5BVsN265A2wJZ1UK0FncHbLCyTDbhvY4lnqT9izvxWzV5Qt5A2q6cjltL6A5qI93F1KYLQt75F6D39NpcU6h-IhfAYsf4jJMzKLsBVbMB8ar_SuK0YCMqZKvcALQUFWbSr4U57Z0Z24oTL0pI1RUEYAEChx7AlG0N1xj3R1Tzlh-7EwSPjDD1fOuG0uATwNe2E");'>
+</div>
+<span class="text-white font-bold">Smart Garden</span>
+</div>
+<button class="text-white">
+<span class="material-symbols-outlined">menu</span>
+</button>
+</div>
+<!-- Scrollable Content -->
+<div class="flex-1 overflow-y-auto p-4 md:p-8 lg:px-12">
+<div class="max-w-7xl mx-auto flex flex-col gap-8 pb-10">
+<!-- Breadcrumbs -->
+<nav class="flex flex-wrap gap-2 items-center text-sm">
+<a class="text-text-muted hover:text-primary transition-colors" href="#">Trang chủ</a>
+<span class="text-surface-border">/</span>
+<a class="text-text-muted hover:text-primary transition-colors" href="#">Quản lý thiết bị</a>
+<span class="text-surface-border">/</span>
+<span class="text-primary font-medium">#GD-2023-X</span>
+</nav>
+<!-- Page Heading & Actions -->
+<div class="flex flex-col lg:flex-row justify-between gap-6 items-start lg:items-end border-b border-surface-border pb-6">
+<div class="flex flex-col gap-3">
+<div class="flex items-center gap-3">
+<h1 class="text-3xl md:text-4xl font-black text-white tracking-tight">Smart Garden Pro #GD-2023-X</h1>
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-wider">
+<span class="size-2 rounded-full bg-primary animate-pulse"></span>
+                                    Đang hoạt động
+                                </span>
+</div>
+<div class="flex items-center gap-2 text-text-muted text-sm md:text-base">
+<span class="material-symbols-outlined text-lg">sync</span>
+<span>Cập nhật lần cuối: 5 phút trước</span>
+</div>
+</div>
+<div class="flex flex-wrap gap-3">
+<button class="flex items-center justify-center gap-2 h-10 px-4 rounded-lg bg-surface-dark border border-surface-border hover:bg-surface-border text-white text-sm font-bold transition-all">
+<span class="material-symbols-outlined text-lg">edit</span>
+<span>Chỉnh sửa</span>
+</button>
+<button class="flex items-center justify-center gap-2 h-10 px-4 rounded-lg bg-surface-dark border border-surface-border hover:bg-surface-border text-white text-sm font-bold transition-all">
+<span class="material-symbols-outlined text-lg">manage_accounts</span>
+<span>Gán người dùng</span>
+</button>
+<button class="flex items-center justify-center gap-2 h-10 px-4 rounded-lg bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 text-red-500 text-sm font-bold transition-all">
+<span class="material-symbols-outlined text-lg">link_off</span>
+<span>Hủy liên kết</span>
+</button>
+</div>
+</div>
+<!-- Main Grid Layout -->
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+<!-- Col 1: Asset Info -->
+<div class="flex flex-col bg-surface-dark rounded-xl border border-surface-border overflow-hidden">
+<div class="p-5 border-b border-surface-border bg-white/5 flex items-center justify-between">
+<h3 class="text-white font-bold text-lg flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">inventory_2</span>
+                                    Thông tin tài sản
+                                </h3>
+</div>
+<div class="p-6 flex flex-col gap-6">
+<div class="grid grid-cols-2 gap-4">
+<div class="flex flex-col gap-1">
+<span class="text-xs uppercase font-bold text-text-muted tracking-wider">ID Thiết bị</span>
+<span class="text-white font-mono text-base">GD-2023-X</span>
+</div>
+<div class="flex flex-col gap-1">
+<span class="text-xs uppercase font-bold text-text-muted tracking-wider">Mã Model</span>
+<span class="text-white text-base">SG-Pro-V2</span>
+</div>
+</div>
+<div class="h-px bg-surface-border w-full"></div>
+<div class="grid grid-cols-2 gap-4">
+<div class="flex flex-col gap-1">
+<span class="text-xs uppercase font-bold text-text-muted tracking-wider">Ngày mua</span>
+<span class="text-white text-base">12/10/2023</span>
+</div>
+<div class="flex flex-col gap-1">
+<span class="text-xs uppercase font-bold text-text-muted tracking-wider">Bảo hành đến</span>
+<span class="text-white text-base">12/10/2025</span>
+</div>
+</div>
+<div class="flex flex-col gap-1 bg-background-dark/50 p-3 rounded border border-surface-border">
+<span class="text-xs uppercase font-bold text-text-muted tracking-wider mb-1">Ghi chú</span>
+<p class="text-text-muted text-sm italic">Thiết bị được lắp đặt tại khu vực nhà kính số 2, lô B.</p>
+</div>
+</div>
+</div>
+<!-- Col 2: User Assignment -->
+<div class="flex flex-col bg-surface-dark rounded-xl border border-surface-border overflow-hidden">
+<div class="p-5 border-b border-surface-border bg-white/5 flex items-center justify-between">
+<h3 class="text-white font-bold text-lg flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">person</span>
+                                    Người quản lý
+                                </h3>
+<button class="text-primary text-xs font-bold hover:underline">CHI TIẾT</button>
+</div>
+<div class="p-6 flex flex-col gap-6 h-full">
+<div class="flex items-center gap-4">
+<div class="size-16 rounded-full bg-cover bg-center border-2 border-primary" data-alt="Portrait of a smiling asian male farm manager in a field" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCtzWFNCZOQA9W5UVfyJmcUhyqm_dDrQe2TL0R7IMQBnTuWpHpqaU4wZziPa_f7JlLltGwVNx67aWG4LaDt7LaaAiAnmQMOD9oUw11hxaAJRU0leeiIY-8PG6iI6m3BxaCJUHivrmi-HekqF0KDLNXC24sQRccM-7Htlpx17G5agtD2EzlHcnChFmfQjyivUJ3r-s2BE41lSj3sRdjzqYl37PzPfuL18z7KnIl5jTEOPjv8MHv2AOYDvrwhHdBmBbNKtgfwFpamD8X6");'>
+</div>
+<div class="flex flex-col">
+<h4 class="text-white font-bold text-lg">Nguyen Van A</h4>
+<p class="text-text-muted text-sm">ID: <span class="font-mono text-primary">U-4568</span></p>
+</div>
+</div>
+<div class="h-px bg-surface-border w-full"></div>
+<div class="flex flex-col gap-4">
+<div class="flex items-center justify-between">
+<span class="text-text-muted text-sm">Ngày gán:</span>
+<span class="text-white font-medium">15/10/2023</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-text-muted text-sm">Email:</span>
+<span class="text-white font-medium">nguyenvana@example.com</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-text-muted text-sm">Số điện thoại:</span>
+<span class="text-white font-medium">0912 *** 789</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Col 3: Live Stats (Telemetry) -->
+<div class="flex flex-col bg-surface-dark rounded-xl border border-surface-border overflow-hidden">
+<div class="p-5 border-b border-surface-border bg-white/5 flex items-center justify-between">
+<h3 class="text-white font-bold text-lg flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">show_chart</span>
+                                    Trạng thái hiện tại
+                                </h3>
+</div>
+<div class="flex flex-col divide-y divide-surface-border">
+<!-- Stat 1 -->
+<div class="p-5 flex items-center justify-between hover:bg-white/5 transition-colors">
+<div class="flex items-center gap-3">
+<div class="p-2 rounded-lg bg-blue-500/20 text-blue-400">
+<span class="material-symbols-outlined">water_drop</span>
+</div>
+<div>
+<p class="text-text-muted text-xs font-bold uppercase tracking-wider">Độ ẩm đất</p>
+<p class="text-white text-2xl font-bold">68%</p>
+</div>
+</div>
+<span class="text-primary text-sm font-medium flex items-center">
+<span class="material-symbols-outlined text-base">arrow_upward</span>
+                                        2%
+                                    </span>
+</div>
+<!-- Stat 2 -->
+<div class="p-5 flex items-center justify-between hover:bg-white/5 transition-colors">
+<div class="flex items-center gap-3">
+<div class="p-2 rounded-lg bg-yellow-500/20 text-yellow-400">
+<span class="material-symbols-outlined">light_mode</span>
+</div>
+<div>
+<p class="text-text-muted text-xs font-bold uppercase tracking-wider">Ánh sáng</p>
+<p class="text-white text-2xl font-bold">Tốt (High)</p>
+</div>
+</div>
+<span class="text-text-muted text-sm font-medium">-</span>
+</div>
+<!-- Stat 3 -->
+<div class="p-5 flex items-center justify-between hover:bg-white/5 transition-colors">
+<div class="flex items-center gap-3">
+<div class="p-2 rounded-lg bg-green-500/20 text-green-400">
+<span class="material-symbols-outlined">battery_5_bar</span>
+</div>
+<div>
+<p class="text-text-muted text-xs font-bold uppercase tracking-wider">Pin</p>
+<p class="text-white text-2xl font-bold">92%</p>
+</div>
+</div>
+<span class="text-red-500 text-sm font-medium flex items-center">
+<span class="material-symbols-outlined text-base">arrow_downward</span>
+                                        5%
+                                    </span>
+</div>
+</div>
+</div>
+</div>
+<!-- History / Logs Section -->
+<div class="flex flex-col gap-4 mt-4">
+<div class="flex items-center justify-between">
+<h2 class="text-2xl font-bold text-white tracking-tight">Lịch sử hoạt động</h2>
+<button class="text-primary text-sm font-bold hover:underline flex items-center gap-1">
+                                XEM TẤT CẢ
+                                <span class="material-symbols-outlined text-lg">arrow_forward</span>
+</button>
+</div>
+<div class="w-full overflow-x-auto rounded-xl border border-surface-border bg-surface-dark">
+<table class="w-full text-left text-sm text-text-muted">
+<thead class="bg-white/5 text-xs uppercase font-bold text-white">
+<tr>
+<th class="px-6 py-4" scope="col">Thời gian</th>
+<th class="px-6 py-4" scope="col">Hoạt động</th>
+<th class="px-6 py-4" scope="col">Người thực hiện</th>
+<th class="px-6 py-4" scope="col">Trạng thái</th>
+<th class="px-6 py-4 text-right" scope="col">Chi tiết</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-border">
+<tr class="hover:bg-white/5 transition-colors">
+<td class="px-6 py-4 font-mono text-white">10:42 AM - Hôm nay</td>
+<td class="px-6 py-4 text-white font-medium">Cập nhật Firmware v2.1</td>
+<td class="px-6 py-4">Hệ thống (Auto)</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-green-500/10 text-green-500 text-xs font-bold">
+                                                Thành công
+                                            </span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-primary hover:text-white transition-colors">
+<span class="material-symbols-outlined">visibility</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-white/5 transition-colors">
+<td class="px-6 py-4 font-mono text-white">08:15 AM - Hôm nay</td>
+<td class="px-6 py-4 text-white font-medium">Thay đổi cài đặt tưới</td>
+<td class="px-6 py-4">Nguyen Van A</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-green-500/10 text-green-500 text-xs font-bold">
+                                                Thành công
+                                            </span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-primary hover:text-white transition-colors">
+<span class="material-symbols-outlined">visibility</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-white/5 transition-colors">
+<td class="px-6 py-4 font-mono text-white">14:20 PM - 19/10/2023</td>
+<td class="px-6 py-4 text-white font-medium">Cảnh báo: Pin yếu &lt; 20%</td>
+<td class="px-6 py-4">Thiết bị #GD-2023-X</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-yellow-500/10 text-yellow-500 text-xs font-bold">
+                                                Cảnh báo
+                                            </span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-primary hover:text-white transition-colors">
+<span class="material-symbols-outlined">visibility</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-white/5 transition-colors">
+<td class="px-6 py-4 font-mono text-white">09:00 AM - 15/10/2023</td>
+<td class="px-6 py-4 text-white font-medium">Gán người dùng mới</td>
+<td class="px-6 py-4">Admin Manager</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-green-500/10 text-green-500 text-xs font-bold">
+                                                Thành công
+                                            </span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-primary hover:text-white transition-colors">
+<span class="material-symbols-outlined">visibility</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

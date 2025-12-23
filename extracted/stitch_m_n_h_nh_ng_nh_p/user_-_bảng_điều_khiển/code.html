@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Smart Garden Dashboard</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#13ec5b",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#102216",
+                        "surface-dark": "#1c2e21", // Slightly lighter than background-dark for cards
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom scrollbar for webkit */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #102216; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #28392e; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #13ec5b; 
+        }
+    </style>
+</head>
+<body class="font-display bg-background-light dark:bg-background-dark text-[#111813] dark:text-white overflow-hidden">
+<div class="flex h-screen w-full overflow-hidden">
+<!-- Sidebar -->
+<aside class="flex w-64 flex-col border-r border-[#28392e] bg-background-dark flex-shrink-0 transition-all duration-300">
+<div class="flex h-full flex-col justify-between p-4">
+<div class="flex flex-col gap-4">
+<!-- Brand -->
+<div class="flex items-center gap-3 px-2 py-2">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border border-primary/20" data-alt="Smart garden logo with abstract leaf icon" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAVa9epwN3kNArq-iMNWtIDNe9kHuO2HGJmMcDw44ucoZ7fviQGA817VoRPAOdeoGQ5DCLViolBXn0u9v021LxnWbKcLJHp92V6DTT30pVb9AG_Ps92Xol2WjL2kYJ7BlB7KYbuTCqP6CNdUNuOc7-Av5IluBHU37kuXKK-63hdoOeMDT4CowXUN_1WQJNGsdQKIfAdlxW1Nl6fnCpXrz0ImWfMHb89rJDEqV4B9ajuV-Ht5Ie57pvszgnxMGfboFacNnXuwZDlkNVH");'></div>
+<div class="flex flex-col">
+<h1 class="text-white text-base font-bold leading-normal">Smart Garden</h1>
+<p class="text-[#9db9a6] text-xs font-normal leading-normal">Quản lý vườn thông minh</p>
+</div>
+</div>
+<!-- Navigation -->
+<div class="flex flex-col gap-2 mt-4">
+<a class="flex items-center gap-3 px-3 py-3 rounded-lg bg-primary/20 border border-primary/10 group transition-colors" href="#">
+<span class="material-symbols-outlined text-primary group-hover:text-primary">dashboard</span>
+<p class="text-white text-sm font-bold leading-normal">Bảng điều khiển</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-surface-dark transition-colors group" href="#">
+<span class="material-symbols-outlined text-[#9db9a6] group-hover:text-white">router</span>
+<p class="text-[#9db9a6] group-hover:text-white text-sm font-medium leading-normal">Thiết bị</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-surface-dark transition-colors group" href="#">
+<span class="material-symbols-outlined text-[#9db9a6] group-hover:text-white">potted_plant</span>
+<p class="text-[#9db9a6] group-hover:text-white text-sm font-medium leading-normal">Cây trồng</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-surface-dark transition-colors group" href="#">
+<span class="material-symbols-outlined text-[#9db9a6] group-hover:text-white">settings</span>
+<p class="text-[#9db9a6] group-hover:text-white text-sm font-medium leading-normal">Cài đặt</p>
+</a>
+</div>
+</div>
+<!-- User Profile (Bottom Sidebar) -->
+<div class="flex items-center gap-3 px-3 py-3 rounded-lg bg-surface-dark border border-[#28392e]">
+<div class="bg-center bg-no-repeat bg-cover rounded-full size-8" data-alt="User avatar profile picture" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuALsHVfYCZXYYJ5WkegKeBtctP5Z9UxqQ8_1xJDP14j4w-rh7iwlm-iBnB2rpUkeCgIT-KgYqCEF8hK8XSUj5x04hc25heYQcQNwapkJF6hhdhT4tIxY_WBqv7yGWX8iU_F0oymfpIOqMRtHp3c8PAuz6jV0EU14Fdx6uqHeV6nxeOLqZs-08zh_Sr4o6kQRlHVbhDRTJP2vNf3dJdHZIHTGqrkwT4R2wxNgRdqCNosCNcbvj6BCVnvDdN3ohR1eRvQXQ2wiYke2dhn");'></div>
+<div class="flex flex-col">
+<p class="text-white text-sm font-bold">User Name</p>
+<p class="text-[#9db9a6] text-xs">Admin</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex flex-1 flex-col h-full overflow-y-auto bg-background-light dark:bg-background-dark relative">
+<div class="container mx-auto max-w-[1400px] p-4 md:p-6 lg:p-8 flex flex-col gap-6">
+<!-- Header -->
+<header class="flex flex-wrap items-center justify-between gap-4">
+<div class="flex flex-col gap-1">
+<h1 class="text-white text-3xl md:text-4xl font-black leading-tight tracking-tight">Xin chào, User</h1>
+<p class="text-[#9db9a6] text-sm md:text-base font-normal">Thứ Ba, 24 Tháng 10 • Hà Nội, VN</p>
+</div>
+<div class="flex items-center gap-3">
+<button class="flex items-center justify-center size-10 rounded-full bg-surface-dark text-white hover:bg-[#28392e] transition-colors relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 size-2 bg-red-500 rounded-full border border-surface-dark"></span>
+</button>
+<button class="flex h-10 items-center justify-center rounded-lg bg-primary px-4 text-background-dark text-sm font-bold hover:bg-opacity-90 transition-opacity">
+<span class="flex items-center gap-2">
+<span class="material-symbols-outlined text-lg">add</span>
+                                Thêm thiết bị
+                            </span>
+</button>
+</div>
+</header>
+<!-- Top Section: Map & Harvest List -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 min-h-[400px]">
+<!-- Map Widget (Takes 2/3 space) -->
+<div class="lg:col-span-2 flex flex-col rounded-xl overflow-hidden shadow-lg border border-[#28392e] relative group">
+<!-- Map Background -->
+<div class="absolute inset-0 bg-cover bg-center" data-alt="Dark stylized map of a garden layout showing device locations" data-location="Garden Map" style='background-image: url("https://placeholder.pics/svg/300"); filter: brightness(0.4);'>
+</div>
+<!-- Map Controls & Overlay -->
+<div class="relative z-10 flex flex-col justify-between h-full p-6">
+<!-- Top Bar: Search -->
+<div class="flex w-full max-w-md">
+<div class="flex w-full items-stretch rounded-lg bg-surface-dark/90 backdrop-blur-sm border border-[#28392e] shadow-lg">
+<div class="text-[#9db9a6] flex items-center justify-center pl-4">
+<span class="material-symbols-outlined">search</span>
+</div>
+<input class="w-full bg-transparent border-none text-white placeholder-[#9db9a6] focus:ring-0 px-3 py-3 text-sm" placeholder="Tìm kiếm thiết bị ESP32..."/>
+</div>
+</div>
+<!-- Map Pins (Simulated) -->
+<div class="absolute top-1/2 left-1/3 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-1 cursor-pointer group/pin">
+<div class="size-8 rounded-full bg-primary/20 flex items-center justify-center animate-pulse">
+<div class="size-3 rounded-full bg-primary shadow-[0_0_10px_#13ec5b]"></div>
+</div>
+<div class="bg-surface-dark/90 px-2 py-1 rounded text-xs text-white opacity-0 group-hover/pin:opacity-100 transition-opacity whitespace-nowrap border border-primary/30">ESP32-Node-01 (Active)</div>
+</div>
+<div class="absolute top-1/3 right-1/4 transform flex flex-col items-center gap-1 cursor-pointer group/pin">
+<div class="size-8 rounded-full bg-red-500/20 flex items-center justify-center">
+<div class="size-3 rounded-full bg-red-500 shadow-[0_0_10px_red]"></div>
+</div>
+<div class="bg-surface-dark/90 px-2 py-1 rounded text-xs text-white opacity-0 group-hover/pin:opacity-100 transition-opacity whitespace-nowrap border border-red-500/30">ESP32-Node-04 (Offline)</div>
+</div>
+<!-- Bottom Right: Controls -->
+<div class="flex flex-col items-end gap-2 self-end">
+<div class="flex flex-col bg-surface-dark/90 rounded-lg overflow-hidden border border-[#28392e] shadow-lg">
+<button class="p-2 text-white hover:bg-[#28392e] border-b border-[#28392e]">
+<span class="material-symbols-outlined">add</span>
+</button>
+<button class="p-2 text-white hover:bg-[#28392e]">
+<span class="material-symbols-outlined">remove</span>
+</button>
+</div>
+<button class="p-2 bg-surface-dark/90 rounded-lg text-white hover:bg-[#28392e] border border-[#28392e] shadow-lg">
+<span class="material-symbols-outlined">my_location</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Harvest Tracker List (Takes 1/3 space) -->
+<div class="flex flex-col rounded-xl bg-surface-dark border border-[#28392e] p-6 shadow-lg">
+<div class="flex items-center justify-between mb-6">
+<h2 class="text-white text-lg font-bold">Sắp thu hoạch</h2>
+<a class="text-primary text-xs font-bold uppercase tracking-wider hover:underline" href="#">Xem tất cả</a>
+</div>
+<div class="flex flex-col gap-6 overflow-y-auto pr-2 custom-scrollbar flex-1">
+<!-- Item 1 -->
+<div class="flex flex-col gap-2">
+<div class="flex justify-between items-center">
+<div class="flex items-center gap-3">
+<div class="size-10 rounded-lg bg-cover bg-center" data-alt="Cherry tomatoes growing on vine" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCSHCqBn-X6Yd_1TursICaPPPBJ51Neq2SFzaxsJ9sFQMG-ZhWz0-DzPm2pOMLLnDjQCYHygWWZ57hP56uD_kMmvwsGcJqvD9noMcZbPAPqLpSbZxUrEvT7ViMBT560yJRwbuhtyZQkJ6wnh-2BzOIYy9AH1UpM_ZunCJqgJ_wj5DqVujGQcNMmsmZoYi5dtrEl8jNuWVg4TFws1_z1xhNm6F-EA-raxnHM4y8YYooSTQbCNgj1DOPAgoPOrIXS8ZW8XMkEJzVWdGEp");'></div>
+<div>
+<p class="text-white text-sm font-bold">Cà chua bi</p>
+<p class="text-[#9db9a6] text-xs">Vườn khu A</p>
+</div>
+</div>
+<span class="text-primary font-bold text-sm">90%</span>
+</div>
+<div class="w-full bg-[#111813] rounded-full h-1.5">
+<div class="bg-primary h-1.5 rounded-full" style="width: 90%"></div>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="flex flex-col gap-2">
+<div class="flex justify-between items-center">
+<div class="flex items-center gap-3">
+<div class="size-10 rounded-lg bg-cover bg-center" data-alt="Fresh green lettuce" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBaCFdnvtvjuD7-s7YlQ4yEKz7AVJb8pUkqQIVX2xegmM_BdajCFt8XSdE2yz0LNYH25YdBzMp-v0vmEm2OkGDVh7gVNhIKOeCSgNngIMNEzPq8qaUIsgAXFqSC94QNhZgJ0fLs6LzP8HXxbaWFLp2-YPruip6UU3DPCDOKGDC8zOvUVFbtdvP-S3P1X7vxrGmkeAHdfRsCzu73bc3UGBhl2sQU8YDcREaLfA9UJoXe1isgu_qwmE2Re6td3or8kF0aNUxIYdg5t_X-");'></div>
+<div>
+<p class="text-white text-sm font-bold">Xà lách</p>
+<p class="text-[#9db9a6] text-xs">Thủy canh</p>
+</div>
+</div>
+<span class="text-primary font-bold text-sm">85%</span>
+</div>
+<div class="w-full bg-[#111813] rounded-full h-1.5">
+<div class="bg-primary h-1.5 rounded-full" style="width: 85%"></div>
+</div>
+</div>
+<!-- Item 3 -->
+<div class="flex flex-col gap-2">
+<div class="flex justify-between items-center">
+<div class="flex items-center gap-3">
+<div class="size-10 rounded-lg bg-cover bg-center" data-alt="Ripe strawberries" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAX2TGIyZD4lXwBf6qIpw4e-Z0UjikRxzrrGh7B00zzLDzTjjqd7FeiCLSb8tg_M0t30HPwfLwbios_yY20zhmLs9rPMDQtW_JrZ8J17JdEWWHsHkcNGOZv_wgaLW5hPQxP1frI8haqLFtulH5xRZJ7EkeBxe2ZMMVhdBCiu-jIBw3aSL_1vUUAFzh1DjcBYs6CPTFQc4Hirfx1r0HMfdZzNorBkLLzhdx7sYBPchfhZ2B2nLkH4X99HWKNBE8kIRZc4gXfCpTouaAm");'></div>
+<div>
+<p class="text-white text-sm font-bold">Dâu tây</p>
+<p class="text-[#9db9a6] text-xs">Nhà kính 2</p>
+</div>
+</div>
+<span class="text-primary font-bold text-sm">70%</span>
+</div>
+<div class="w-full bg-[#111813] rounded-full h-1.5">
+<div class="bg-primary h-1.5 rounded-full" style="width: 70%"></div>
+</div>
+</div>
+<!-- Item 4 -->
+<div class="flex flex-col gap-2">
+<div class="flex justify-between items-center">
+<div class="flex items-center gap-3">
+<div class="size-10 rounded-lg bg-cover bg-center" data-alt="Fresh mint leaves" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCPfqyuOYIv_lR0L0Ien2x4Jz2ofZI_fGRpO05LJ-81NJ6lGsYTE08pgEs7mdxkaiBvwirm1dl6AZZhr2x5VCOoKg4tlegJVmoQxjIDiNlIWn4-K1FHI32wW_AnX9zLxW17-nVZK6fUDD-sxkG8Uu33g1Pg9VEY8Aq2gVJC1sXIeBkk_XMvjf7O0kwNYR-ukaMxGo2hYWD3y_3-KWdIxYunPcFmQLMDhAlUtMPYQ9n5JdsaRxYv3EQjvVYwxP7-RI6_bI7BVo8L9rUn");'></div>
+<div>
+<p class="text-white text-sm font-bold">Bạc hà</p>
+<p class="text-[#9db9a6] text-xs">Vườn gia vị</p>
+</div>
+</div>
+<span class="text-white font-bold text-sm">45%</span>
+</div>
+<div class="w-full bg-[#111813] rounded-full h-1.5">
+<div class="bg-gray-600 h-1.5 rounded-full" style="width: 45%"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Weather Section -->
+<div class="flex flex-col gap-4">
+<div class="flex justify-between items-end">
+<h2 class="text-white text-2xl font-bold leading-tight">Thời tiết hiện tại</h2>
+<span class="text-[#9db9a6] text-sm hidden md:block">Cập nhật 5 phút trước</span>
+</div>
+<!-- Current Stats Grid -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+<div class="flex flex-col gap-2 rounded-xl p-6 bg-surface-dark border border-[#28392e] relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+<span class="material-symbols-outlined text-6xl text-white">thermostat</span>
+</div>
+<p class="text-[#9db9a6] text-sm font-medium uppercase tracking-wider">Nhiệt độ</p>
+<div class="flex items-end gap-2">
+<p class="text-white text-3xl font-bold leading-none">28°C</p>
+<p class="text-primary text-sm font-medium mb-1">+2%</p>
+</div>
+<p class="text-[#9db9a6] text-xs mt-2">Cảm giác như 30°C</p>
+</div>
+<div class="flex flex-col gap-2 rounded-xl p-6 bg-surface-dark border border-[#28392e] relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+<span class="material-symbols-outlined text-6xl text-white">humidity_percentage</span>
+</div>
+<p class="text-[#9db9a6] text-sm font-medium uppercase tracking-wider">Độ ẩm</p>
+<div class="flex items-end gap-2">
+<p class="text-white text-3xl font-bold leading-none">65%</p>
+<p class="text-[#9db9a6] text-sm font-medium mb-1">--</p>
+</div>
+<p class="text-[#9db9a6] text-xs mt-2">Độ ẩm lý tưởng</p>
+</div>
+<div class="flex flex-col gap-2 rounded-xl p-6 bg-surface-dark border border-[#28392e] relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+<span class="material-symbols-outlined text-6xl text-white">air</span>
+</div>
+<p class="text-[#9db9a6] text-sm font-medium uppercase tracking-wider">Gió</p>
+<div class="flex items-end gap-2">
+<p class="text-white text-3xl font-bold leading-none">12<span class="text-lg">km/h</span></p>
+<p class="text-red-400 text-sm font-medium mb-1">-3</p>
+</div>
+<p class="text-[#9db9a6] text-xs mt-2">Hướng Đông Nam</p>
+</div>
+<div class="flex flex-col gap-2 rounded-xl p-6 bg-surface-dark border border-[#28392e] relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+<span class="material-symbols-outlined text-6xl text-white">wb_sunny</span>
+</div>
+<p class="text-[#9db9a6] text-sm font-medium uppercase tracking-wider">Ánh sáng</p>
+<div class="flex items-end gap-2">
+<p class="text-white text-3xl font-bold leading-none">800<span class="text-lg">Lux</span></p>
+<p class="text-primary text-sm font-medium mb-1">+150</p>
+</div>
+<p class="text-[#9db9a6] text-xs mt-2">Nắng nhẹ</p>
+</div>
+</div>
+</div>
+<!-- Forecast Section -->
+<div class="flex flex-col gap-4 pb-8">
+<h2 class="text-white text-xl font-bold leading-tight">Dự báo 3 ngày tới</h2>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+<!-- Day 1 -->
+<div class="flex items-center justify-between p-4 bg-surface-dark rounded-lg border border-[#28392e]">
+<div class="flex items-center gap-4">
+<div class="bg-[#111813] p-3 rounded-full text-yellow-400">
+<span class="material-symbols-outlined">wb_sunny</span>
+</div>
+<div class="flex flex-col">
+<span class="text-white font-bold">Hôm nay</span>
+<span class="text-[#9db9a6] text-xs">Nắng đẹp</span>
+</div>
+</div>
+<div class="flex flex-col items-end">
+<span class="text-white font-bold text-lg">29°C</span>
+<span class="text-[#9db9a6] text-xs">22°C</span>
+</div>
+</div>
+<!-- Day 2 -->
+<div class="flex items-center justify-between p-4 bg-surface-dark rounded-lg border border-[#28392e]">
+<div class="flex items-center gap-4">
+<div class="bg-[#111813] p-3 rounded-full text-blue-400">
+<span class="material-symbols-outlined">rainy</span>
+</div>
+<div class="flex flex-col">
+<span class="text-white font-bold">Ngày mai</span>
+<span class="text-[#9db9a6] text-xs">Mưa rào</span>
+</div>
+</div>
+<div class="flex flex-col items-end">
+<span class="text-white font-bold text-lg">25°C</span>
+<span class="text-[#9db9a6] text-xs">20°C</span>
+</div>
+</div>
+<!-- Day 3 -->
+<div class="flex items-center justify-between p-4 bg-surface-dark rounded-lg border border-[#28392e]">
+<div class="flex items-center gap-4">
+<div class="bg-[#111813] p-3 rounded-full text-gray-400">
+<span class="material-symbols-outlined">cloud</span>
+</div>
+<div class="flex flex-col">
+<span class="text-white font-bold">Thứ Năm</span>
+<span class="text-[#9db9a6] text-xs">Nhiều mây</span>
+</div>
+</div>
+<div class="flex flex-col items-end">
+<span class="text-white font-bold text-lg">26°C</span>
+<span class="text-[#9db9a6] text-xs">21°C</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

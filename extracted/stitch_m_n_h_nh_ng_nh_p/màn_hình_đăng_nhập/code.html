@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Smart Garden Login</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#13ec5b",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#102216",
+                        "surface-dark": "#1c271f",
+                        "border-dark": "#3b5443",
+                        "text-secondary": "#9db9a6",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+</head>
+<body class="font-display antialiased text-gray-900 dark:text-white bg-background-light dark:bg-background-dark h-screen overflow-hidden selection:bg-primary selection:text-background-dark">
+<div class="flex min-h-full flex-1 h-full">
+<!-- Left Side: Login Form -->
+<div class="flex flex-1 flex-col justify-center px-4 py-12 sm:px-6 lg:flex-none lg:px-20 xl:px-24 w-full lg:w-1/2 bg-background-light dark:bg-background-dark relative z-10">
+<div class="mx-auto w-full max-w-sm lg:w-96">
+<!-- Logo Section -->
+<div class="flex items-center gap-3 text-primary mb-10">
+<div class="size-8">
+<svg class="w-full h-full" fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M42.4379 44C42.4379 44 36.0744 33.9038 41.1692 24C46.8624 12.9336 42.2078 4 42.2078 4L7.01134 4C7.01134 4 11.6577 12.932 5.96912 23.9969C0.876273 33.9029 7.27094 44 7.27094 44L42.4379 44Z" fill="currentColor"></path>
+</svg>
+</div>
+<h2 class="text-gray-900 dark:text-white text-xl font-bold leading-tight tracking-[-0.015em]">Smart Garden</h2>
+</div>
+<!-- Header Text -->
+<div>
+<h2 class="text-3xl font-bold leading-9 tracking-tight text-gray-900 dark:text-white">
+                        Welcome back
+                    </h2>
+<p class="mt-2 text-base leading-6 text-gray-600 dark:text-text-secondary">
+                        Please enter your credentials to access the management dashboard.
+                    </p>
+</div>
+<!-- Form Section -->
+<div class="mt-10">
+<form action="#" class="space-y-6" method="POST">
+<!-- Username Field -->
+<div>
+<label class="block text-sm font-medium leading-6 text-gray-900 dark:text-white" for="username">
+                                Username
+                            </label>
+<div class="mt-2 relative rounded-lg shadow-sm">
+<div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+<span class="material-symbols-outlined text-gray-400 dark:text-text-secondary text-[20px]">person</span>
+</div>
+<input autocomplete="username" class="block w-full rounded-lg border-0 py-3 pl-10 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary dark:bg-surface-dark dark:text-white dark:ring-border-dark dark:placeholder:text-text-secondary sm:text-sm sm:leading-6" id="username" name="username" placeholder="Enter your username" required="" type="text"/>
+</div>
+</div>
+<!-- Password Field -->
+<div>
+<label class="block text-sm font-medium leading-6 text-gray-900 dark:text-white" for="password">
+                                Password
+                            </label>
+<div class="mt-2 relative rounded-lg shadow-sm">
+<div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+<span class="material-symbols-outlined text-gray-400 dark:text-text-secondary text-[20px]">lock</span>
+</div>
+<input autocomplete="current-password" class="block w-full rounded-lg border-0 py-3 pl-10 pr-10 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary dark:bg-surface-dark dark:text-white dark:ring-border-dark dark:placeholder:text-text-secondary sm:text-sm sm:leading-6" id="password" name="password" placeholder="Enter your password" required="" type="password"/>
+<div class="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer group">
+<span class="material-symbols-outlined text-gray-400 group-hover:text-primary transition-colors text-[20px]">visibility_off</span>
+</div>
+</div>
+</div>
+<!-- Forgot Password / Remember Me -->
+<div class="flex items-center justify-between">
+<div class="flex items-center">
+<input class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary dark:bg-surface-dark dark:border-border-dark dark:ring-offset-background-dark" id="remember-me" name="remember-me" type="checkbox"/>
+<label class="ml-2 block text-sm leading-6 text-gray-900 dark:text-gray-300" for="remember-me">Remember me</label>
+</div>
+<div class="text-sm leading-6">
+<a class="font-semibold text-primary hover:text-primary/80" href="#">Forgot password?</a>
+</div>
+</div>
+<!-- Submit Button -->
+<div>
+<button class="flex w-full justify-center rounded-lg bg-primary px-3 py-3 text-sm font-bold leading-6 text-background-dark shadow-sm hover:bg-[#0fdc53] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary transition-all duration-200" type="submit">
+                                Sign in
+                            </button>
+</div>
+</form>
+</div>
+<!-- Footer -->
+<p class="mt-10 text-center text-xs text-gray-500 dark:text-gray-500">
+                    © 2024 Smart Garden Corp. System Access Only.
+                </p>
+</div>
+</div>
+<!-- Right Side: Hero Image -->
+<div class="relative hidden w-0 flex-1 lg:block h-full">
+<img class="absolute inset-0 h-full w-full object-cover" data-alt="Futuristic greenhouse interior with glowing green lights and modern hydroponic plants" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCGnj_PgFdf93xrg_s46LheieLMCOpiBOTPkXETejn8paNua1haYxNqlV7bWTa0fQpcbXIorsP6q5UR6JIKPRnr4LSQ2CTGLzuwt3DBSBGaRfRJt7lKGWL4P80HjCfNOKo1kErIMBljlJ31HmsfXcDACDY0MNeMwpiwuTJfyVrrLyPzQqqQ7YdkM1CKRGb0X9WjmVfCRMH0Gw1yq9s3iJIHn1x90XfPNY2P6gtaysJ0eT8mNH-w32ZC6XdAXO_xJJBbb4uj767VGH-k"/>
+<!-- Overlay Gradient -->
+<div class="absolute inset-0 bg-gradient-to-t from-background-dark/90 via-background-dark/20 to-transparent"></div>
+<div class="absolute inset-0 bg-primary/10 mix-blend-overlay"></div>
+<!-- Hero Content -->
+<div class="absolute bottom-0 left-0 right-0 p-12 text-white z-20">
+<div class="max-w-md">
+<div class="mb-4 inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-sm font-medium text-primary backdrop-blur-sm">
+<span>v2.4.0 Stable</span>
+</div>
+<h1 class="text-4xl font-bold tracking-tight sm:text-5xl mb-4">Cultivating the Future</h1>
+<p class="text-lg text-gray-300">
+                        Advanced monitoring and automation for your smart agricultural ecosystems.
+                    </p>
+</div>
+</div>
+</div>
+</div>
+</body></html>

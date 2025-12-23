@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Manager - Quản lý cây trồng</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&amp;family=Noto+Sans:wght@300..800&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Theme Configuration -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#13ec5b",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#102216",
+                        "surface-dark": "#1c2a23", // Adjusted for better contrast on background-dark
+                        "surface-card": "#28392e", // From example
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "Noto Sans", "sans-serif"],
+                        "body": ["Manrope", "Noto Sans", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "1rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Manrope', sans-serif;
+        }
+        
+        /* Custom scrollbar for webkit */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #102216; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #28392e; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3e5246; 
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-[#111813] dark:text-white h-screen flex overflow-hidden">
+<!-- Sidebar -->
+<aside class="w-64 flex-shrink-0 flex flex-col justify-between border-r border-[#28392e] bg-background-light dark:bg-background-dark h-full transition-all duration-300 relative z-20">
+<div class="flex flex-col gap-4 p-4">
+<!-- Logo / Brand -->
+<div class="flex gap-3 items-center mb-4 px-2">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 shadow-lg shadow-primary/20" data-alt="Logo showing a stylized leaf in neon green" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCK87vki63TZ4MD-qC_ERoM6O1qadEkGOiOdWDhKQJiqWYgw7xBy_biOVD5es-9J5q1F3fkc4kDk5gXSZxhDvDg1PH5DocNBluzpBY4ceMJp-fGrDsoRSs2dY53CwoBz80MYmPbIOEoZWJQGb8hR6P9hn7BWnb9JMF3ErxNmtqlDxxcq3kXE8J0DEwnbqGoAEUUwUgChWRA46RjDEgWvFu6x7uzE7XhvaSGdryTLOR-meGhLMSiCO4aC2hSkMNA4x-KanraXMWBsTOq");'></div>
+<div class="flex flex-col">
+<h1 class="text-[#111813] dark:text-white text-lg font-bold leading-normal">Smart Garden</h1>
+<p class="text-[#6b7280] dark:text-[#9db9a6] text-xs font-normal leading-normal">Quản lý</p>
+</div>
+</div>
+<!-- Navigation -->
+<nav class="flex flex-col gap-2">
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors group" href="#">
+<span class="material-symbols-outlined text-[#111813] dark:text-white group-hover:text-primary transition-colors">dashboard</span>
+<p class="text-[#111813] dark:text-white text-sm font-medium leading-normal">Tổng quan</p>
+</a>
+<!-- Active Item -->
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-surface-card border border-primary/20 shadow-sm" href="#">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">potted_plant</span>
+<p class="text-white text-sm font-bold leading-normal">Cây trồng</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors group" href="#">
+<span class="material-symbols-outlined text-[#111813] dark:text-white group-hover:text-primary transition-colors">sensors</span>
+<p class="text-[#111813] dark:text-white text-sm font-medium leading-normal">Cảm biến</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors group" href="#">
+<span class="material-symbols-outlined text-[#111813] dark:text-white group-hover:text-primary transition-colors">settings</span>
+<p class="text-[#111813] dark:text-white text-sm font-medium leading-normal">Cài đặt</p>
+</a>
+</nav>
+</div>
+<!-- Bottom Actions -->
+<div class="flex flex-col gap-1 p-4 border-t border-[#28392e]">
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-red-500/10 transition-colors group" href="#">
+<span class="material-symbols-outlined text-[#111813] dark:text-[#9db9a6] group-hover:text-red-500 transition-colors">logout</span>
+<p class="text-[#111813] dark:text-[#9db9a6] group-hover:text-red-500 text-sm font-medium leading-normal transition-colors">Đăng xuất</p>
+</a>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 flex flex-col h-full overflow-hidden bg-background-light dark:bg-background-dark relative">
+<!-- Top Search & Profile Header -->
+<header class="h-16 flex items-center justify-between px-6 border-b border-[#28392e] bg-background-light/50 dark:bg-background-dark/50 backdrop-blur-md sticky top-0 z-10">
+<!-- Mobile Menu Trigger (Hidden on Desktop) -->
+<button class="lg:hidden text-white mr-4">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<!-- Search Bar (Compact) -->
+<div class="flex-1 max-w-md hidden md:block">
+<div class="relative group">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-[#9db9a6] text-[20px]">search</span>
+</div>
+<input class="block w-full pl-10 pr-3 py-2 rounded-lg leading-5 bg-[#28392e]/50 text-white placeholder-[#9db9a6] focus:outline-none focus:bg-[#28392e] focus:ring-1 focus:ring-primary border-none sm:text-sm transition-all" placeholder="Tìm kiếm nhanh..." type="text"/>
+</div>
+</div>
+<!-- Right Actions -->
+<div class="flex items-center gap-4 ml-auto">
+<button class="relative p-2 text-[#9db9a6] hover:text-white transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-1.5 right-1.5 flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+</span>
+</button>
+<div class="flex items-center gap-3 pl-4 border-l border-[#28392e]">
+<div class="text-right hidden sm:block">
+<p class="text-sm font-medium text-white">Nguyễn Văn A</p>
+<p class="text-xs text-[#9db9a6]">Quản lý kỹ thuật</p>
+</div>
+<div class="h-9 w-9 rounded-full bg-cover bg-center ring-2 ring-[#28392e]" data-alt="User profile picture" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAXKXDSnv1mkVIvS8KXbtlUNABFzGQLMgBHlTlMxBflRaNSPNMC2JiFAsVMLQelAqylwp3AEcHtZqTpiCRpUxNGSUA87ZdyxO1xSY6Xv2fa_V-cQ9v_RqV-blNvWidk7qbtk3ERvLvY5WgSOe2TquB7iL2cwVXX22Hk44RA91u2aak9IVFfKXvnem0yUgm8cLaPIHUPlqig4uFGLojIrNmSVN9cOyTf5DjpH3Gu_CQzSYzDJO1Ot_rqDPr1Ez1XD-0uUQ8aqEpTT3Ca");'></div>
+</div>
+</div>
+</header>
+<!-- Scrollable Content Area -->
+<div class="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth">
+<div class="max-w-[1400px] mx-auto flex flex-col gap-8">
+<!-- Page Heading & Actions -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+<div class="flex flex-col gap-1">
+<h2 class="text-[#111813] dark:text-white text-3xl font-black leading-tight tracking-[-0.033em]">Danh sách cây trồng</h2>
+<p class="text-[#6b7280] dark:text-[#9db9a6] text-base font-normal">Quản lý và theo dõi trạng thái phát triển của khu vườn</p>
+</div>
+<button class="flex items-center gap-2 bg-primary hover:bg-[#10d650] text-[#102216] px-5 py-2.5 rounded-lg font-bold text-sm transition-all shadow-lg shadow-primary/20 hover:shadow-primary/40 active:scale-95">
+<span class="material-symbols-outlined text-[20px]">add</span>
+                        Thêm cây mới
+                    </button>
+</div>
+<!-- Stats Cards -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+<!-- Total -->
+<div class="bg-surface-card rounded-xl p-5 flex flex-col gap-3 relative overflow-hidden group">
+<div class="absolute -right-4 -top-4 bg-white/5 rounded-full p-8 transition-transform group-hover:scale-110">
+<span class="material-symbols-outlined text-white/10 text-6xl">potted_plant</span>
+</div>
+<p class="text-[#9db9a6] text-sm font-medium">Tổng số cây</p>
+<div class="flex items-baseline gap-2">
+<h3 class="text-white text-3xl font-bold">120</h3>
+<span class="text-primary text-sm font-medium flex items-center bg-primary/10 px-1.5 py-0.5 rounded">+5%</span>
+</div>
+</div>
+<!-- Developing -->
+<div class="bg-surface-card rounded-xl p-5 flex flex-col gap-3 relative overflow-hidden group">
+<div class="absolute -right-4 -top-4 bg-white/5 rounded-full p-8 transition-transform group-hover:scale-110">
+<span class="material-symbols-outlined text-white/10 text-6xl">trending_up</span>
+</div>
+<p class="text-[#9db9a6] text-sm font-medium">Đang phát triển</p>
+<div class="flex items-baseline gap-2">
+<h3 class="text-white text-3xl font-bold">98</h3>
+<span class="text-primary text-sm font-medium flex items-center bg-primary/10 px-1.5 py-0.5 rounded">+12%</span>
+</div>
+</div>
+<!-- Harvest Soon -->
+<div class="bg-surface-card rounded-xl p-5 flex flex-col gap-3 relative overflow-hidden group">
+<div class="absolute -right-4 -top-4 bg-white/5 rounded-full p-8 transition-transform group-hover:scale-110">
+<span class="material-symbols-outlined text-white/10 text-6xl">agriculture</span>
+</div>
+<p class="text-[#9db9a6] text-sm font-medium">Sắp thu hoạch</p>
+<div class="flex items-baseline gap-2">
+<h3 class="text-white text-3xl font-bold">15</h3>
+<span class="text-orange-500 text-sm font-medium flex items-center bg-orange-500/10 px-1.5 py-0.5 rounded">-2%</span>
+</div>
+</div>
+<!-- Needs Care -->
+<div class="bg-surface-card rounded-xl p-5 flex flex-col gap-3 relative overflow-hidden group">
+<div class="absolute -right-4 -top-4 bg-white/5 rounded-full p-8 transition-transform group-hover:scale-110">
+<span class="material-symbols-outlined text-white/10 text-6xl">medical_services</span>
+</div>
+<p class="text-[#9db9a6] text-sm font-medium">Cần chăm sóc</p>
+<div class="flex items-baseline gap-2">
+<h3 class="text-white text-3xl font-bold">7</h3>
+<span class="text-[#9db9a6] text-sm font-medium">Ổn định</span>
+</div>
+</div>
+</div>
+<!-- Filters & Search Toolbar -->
+<div class="bg-surface-card rounded-xl p-4 flex flex-col md:flex-row gap-4 items-center justify-between">
+<!-- Chips -->
+<div class="flex gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 no-scrollbar">
+<button class="whitespace-nowrap h-9 px-4 rounded-lg bg-primary text-[#102216] text-sm font-bold shadow-md shadow-primary/20">Tất cả</button>
+<button class="whitespace-nowrap h-9 px-4 rounded-lg bg-[#102216] border border-[#3e5246] hover:border-primary/50 text-[#9db9a6] hover:text-white text-sm font-medium transition-colors">Rau ăn lá</button>
+<button class="whitespace-nowrap h-9 px-4 rounded-lg bg-[#102216] border border-[#3e5246] hover:border-primary/50 text-[#9db9a6] hover:text-white text-sm font-medium transition-colors">Rau ăn quả</button>
+<button class="whitespace-nowrap h-9 px-4 rounded-lg bg-[#102216] border border-[#3e5246] hover:border-primary/50 text-[#9db9a6] hover:text-white text-sm font-medium transition-colors">Củ quả</button>
+</div>
+<!-- Main Search -->
+<div class="relative w-full md:w-80">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-[#9db9a6]">search</span>
+</div>
+<input class="block w-full pl-10 pr-10 py-2.5 rounded-lg bg-[#102216] border border-[#3e5246] text-white placeholder-[#9db9a6] focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm" placeholder="Tìm theo tên hoặc mã số..." type="text"/>
+<div class="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer text-[#9db9a6] hover:text-white">
+<span class="material-symbols-outlined text-[20px]">tune</span>
+</div>
+</div>
+</div>
+<!-- Data Table -->
+<div class="bg-surface-card rounded-xl overflow-hidden shadow-xl border border-[#3e5246]/30">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-[#102216]/50 border-b border-[#3e5246]">
+<th class="p-4 text-xs font-semibold tracking-wide text-[#9db9a6] uppercase w-[250px]">Tên cây trồng</th>
+<th class="p-4 text-xs font-semibold tracking-wide text-[#9db9a6] uppercase">Loại</th>
+<th class="p-4 text-xs font-semibold tracking-wide text-[#9db9a6] uppercase">Ngày trồng</th>
+<th class="p-4 text-xs font-semibold tracking-wide text-[#9db9a6] uppercase">Thu hoạch (Dự kiến)</th>
+<th class="p-4 text-xs font-semibold tracking-wide text-[#9db9a6] uppercase w-[200px]">Tiến độ</th>
+<th class="p-4 text-xs font-semibold tracking-wide text-[#9db9a6] uppercase text-center">Hành động</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-[#3e5246]">
+<!-- Row 1 -->
+<tr class="group hover:bg-[#102216]/30 transition-colors">
+<td class="p-4">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-lg bg-cover bg-center shrink-0 border border-[#3e5246]" data-alt="Close up of fresh cherry tomatoes on the vine" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCeYRsClFLDGr3QtBULGpv0gc11BFyWELIlUBd_lcdYm97exuRgSsRJPkqkGnnqTjAhE68uhg8c3OD2eW8fWIyNXYFMALOj1LLXEd7jcPf1tSCxSIj1CBzzr2tdHAcrwMYrl5sW3d10VBfl4rAE5kJp87ZyjS1hZ9HnjIKb-fPnZp-0UNo8Rayn__E4pG1pAtl0lKlxt26yYmZAsXfPkdOEXUbIxatwAKEJVHj9eDwbn0aQtMxIonpYgMFf-81WQi2PjTyBxr-xMRsN");'></div>
+<div>
+<p class="text-white font-bold text-sm">Cà chua bi #01</p>
+<p class="text-[#9db9a6] text-xs">Khu A - Hàng 2</p>
+</div>
+</div>
+</td>
+<td class="p-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                                            Rau ăn quả
+                                        </span>
+</td>
+<td class="p-4 text-sm text-white">12/01/2023</td>
+<td class="p-4 text-sm text-white">15/04/2023</td>
+<td class="p-4">
+<div class="flex flex-col gap-1.5">
+<div class="flex justify-between items-center">
+<span class="text-xs font-medium text-[#9db9a6]">Đang lớn</span>
+<span class="text-xs font-bold text-primary">70%</span>
+</div>
+<div class="w-full bg-[#102216] rounded-full h-2">
+<div class="bg-primary h-2 rounded-full" style="width: 70%"></div>
+</div>
+</div>
+</td>
+<td class="p-4">
+<div class="flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-2 text-[#9db9a6] hover:text-white hover:bg-[#3e5246] rounded-lg transition-colors" title="Chỉnh sửa">
+<span class="material-symbols-outlined text-[20px]">edit</span>
+</button>
+<button class="p-2 text-[#9db9a6] hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors" title="Xóa">
+<span class="material-symbols-outlined text-[20px]">delete</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="group hover:bg-[#102216]/30 transition-colors">
+<td class="p-4">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-lg bg-cover bg-center shrink-0 border border-[#3e5246]" data-alt="Fresh green lettuce growing in soil" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCjvxytPqvV0GA9JBXVQNnF8_3jBnluoRXoi1WAGVS8HTkcg5LFFnbbQQXT06gDKks4j7tiZ4sxfSWo8fEIOQ2Ol3t5DteCjuU_h7HWkk295TgMZsVNmH08E2XIwGPqLLyZcj5fdOhj4EBSP2SY2cr9zrZcfGXDVtXZgQzuHYCQX6-dUMFGdRaoSqzOCoTeY5qkDd2wIsMQQ0BxG2ds8duDruKwMQ4bTIOu74W3uNbSJsHFf580b_FLHpieKIlMa-5R4JwlhQUTtPab");'></div>
+<div>
+<p class="text-white font-bold text-sm">Xà lách mỡ #05</p>
+<p class="text-[#9db9a6] text-xs">Khu B - Thủy canh</p>
+</div>
+</div>
+</td>
+<td class="p-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500/10 text-green-400 border border-green-500/20">
+                                            Rau ăn lá
+                                        </span>
+</td>
+<td class="p-4 text-sm text-white">20/02/2023</td>
+<td class="p-4 text-sm text-white">10/03/2023</td>
+<td class="p-4">
+<div class="flex flex-col gap-1.5">
+<div class="flex justify-between items-center">
+<span class="text-xs font-medium text-orange-400">Cần nước</span>
+<span class="text-xs font-bold text-white">45%</span>
+</div>
+<div class="w-full bg-[#102216] rounded-full h-2">
+<div class="bg-orange-400 h-2 rounded-full" style="width: 45%"></div>
+</div>
+</div>
+</td>
+<td class="p-4">
+<div class="flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-2 text-[#9db9a6] hover:text-white hover:bg-[#3e5246] rounded-lg transition-colors">
+<span class="material-symbols-outlined text-[20px]">edit</span>
+</button>
+<button class="p-2 text-[#9db9a6] hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors">
+<span class="material-symbols-outlined text-[20px]">delete</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="group hover:bg-[#102216]/30 transition-colors">
+<td class="p-4">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-lg bg-cover bg-center shrink-0 border border-[#3e5246]" data-alt="Bright orange carrots with green tops" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAg3fyVcn4x4FEY-rVnwOBjy7L_Lyc-NGIFb2zPawJ2NfzCsGD_VlDsApkw-o1Ry7fWvhd3LgEfJWfY8B-_Ej81DTAWxLRnVqBX2E0ViJ-4IZF7-ubbf2gj1F51MQ4WSliYoY_rtL65eE9X_zuxii-9FAmHd8gd5GsQtc0XujUUW-UPH40D4THtx_iKAgGHseTCjQYX42fEyn8W25WZshAXliMoLOkyjjiAMkjZgoP3GMfkR3fkcw_lpGSJloB5XgKfYdpX6UqxdJmS");'></div>
+<div>
+<p class="text-white font-bold text-sm">Cà rốt #08</p>
+<p class="text-[#9db9a6] text-xs">Khu C - Đất thịt</p>
+</div>
+</div>
+</td>
+<td class="p-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                                            Củ quả
+                                        </span>
+</td>
+<td class="p-4 text-sm text-white">05/01/2023</td>
+<td class="p-4 text-sm text-white">05/04/2023</td>
+<td class="p-4">
+<div class="flex flex-col gap-1.5">
+<div class="flex justify-between items-center">
+<span class="text-xs font-medium text-[#9db9a6]">Sắp thu hoạch</span>
+<span class="text-xs font-bold text-primary">95%</span>
+</div>
+<div class="w-full bg-[#102216] rounded-full h-2">
+<div class="bg-primary h-2 rounded-full" style="width: 95%"></div>
+</div>
+</div>
+</td>
+<td class="p-4">
+<div class="flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-2 text-[#9db9a6] hover:text-white hover:bg-[#3e5246] rounded-lg transition-colors">
+<span class="material-symbols-outlined text-[20px]">edit</span>
+</button>
+<button class="p-2 text-[#9db9a6] hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors">
+<span class="material-symbols-outlined text-[20px]">delete</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="group hover:bg-[#102216]/30 transition-colors">
+<td class="p-4">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-lg bg-cover bg-center shrink-0 border border-[#3e5246]" data-alt="Green bell peppers hanging from a plant" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDJuLLVjZCRvoYvepa3DbbqaHWBmisP2aWKGfFZ4uOnMeZB7RQmeq9cNTSbtnPEmJoO9hqz4r4ioMeyHCdJhA5lYlePPI_J1Nlt3-Q6tFPAHkNmui_cNa9BHN-rZZ19QBNIGa4qgDBgqLutD8y_d3oRt-ojEB2rJI_XCJ22Hu3X6W7KlhaMwRylsXMJbrWsUPTd8iR9Gss0snDG6EF-F_ctJrPnT0VLDKJk6MZJLVepyWhwao64USNFcl2ukJg_8Yd1v9Sq7_Uq5Vvh");'></div>
+<div>
+<p class="text-white font-bold text-sm">Ớt chuông #12</p>
+<p class="text-[#9db9a6] text-xs">Khu A - Hàng 5</p>
+</div>
+</div>
+</td>
+<td class="p-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                                            Rau ăn quả
+                                        </span>
+</td>
+<td class="p-4 text-sm text-white">15/02/2023</td>
+<td class="p-4 text-sm text-white">30/05/2023</td>
+<td class="p-4">
+<div class="flex flex-col gap-1.5">
+<div class="flex justify-between items-center">
+<span class="text-xs font-medium text-[#9db9a6]">Mới trồng</span>
+<span class="text-xs font-bold text-white">10%</span>
+</div>
+<div class="w-full bg-[#102216] rounded-full h-2">
+<div class="bg-primary h-2 rounded-full" style="width: 10%"></div>
+</div>
+</div>
+</td>
+<td class="p-4">
+<div class="flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-2 text-[#9db9a6] hover:text-white hover:bg-[#3e5246] rounded-lg transition-colors">
+<span class="material-symbols-outlined text-[20px]">edit</span>
+</button>
+<button class="p-2 text-[#9db9a6] hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors">
+<span class="material-symbols-outlined text-[20px]">delete</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination -->
+<div class="flex items-center justify-between p-4 border-t border-[#3e5246] bg-[#102216]/30">
+<p class="text-xs text-[#9db9a6]">Hiển thị 1-4 trong 120 kết quả</p>
+<div class="flex gap-2">
+<button class="flex items-center justify-center w-8 h-8 rounded border border-[#3e5246] text-[#9db9a6] hover:text-white hover:border-[#9db9a6] transition-colors disabled:opacity-50">
+<span class="material-symbols-outlined text-sm">chevron_left</span>
+</button>
+<button class="flex items-center justify-center w-8 h-8 rounded bg-primary text-[#102216] font-bold text-sm">1</button>
+<button class="flex items-center justify-center w-8 h-8 rounded border border-[#3e5246] text-[#9db9a6] hover:text-white hover:border-[#9db9a6] transition-colors">2</button>
+<button class="flex items-center justify-center w-8 h-8 rounded border border-[#3e5246] text-[#9db9a6] hover:text-white hover:border-[#9db9a6] transition-colors">3</button>
+<span class="flex items-center justify-center w-8 h-8 text-[#9db9a6]">...</span>
+<button class="flex items-center justify-center w-8 h-8 rounded border border-[#3e5246] text-[#9db9a6] hover:text-white hover:border-[#9db9a6] transition-colors">
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Bottom spacing -->
+<div class="h-10"></div>
+</div>
+</main>
+</body></html>

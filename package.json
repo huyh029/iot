@@ -1,0 +1,38 @@
+{
+  "name": "smart-garden-system",
+  "version": "1.0.0",
+  "description": "Smart Garden Management System with IoT Integration",
+  "main": "index.js",
+  "scripts": {
+    "install-all": "npm install && cd be && npm install && cd ../fe/superadmin && npm install && cd ../manager && npm install && cd ../user && npm install",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:superadmin\" \"npm run dev:manager\" \"npm run dev:user\"",
+    "dev:backend": "cd be && npm run dev",
+    "dev:superadmin": "cd fe/superadmin && npm start",
+    "dev:manager": "cd fe/manager && REACT_APP_PORT=3001 npm start",
+    "dev:user": "cd fe/user && REACT_APP_PORT=3002 npm start",
+    "build": "cd be && npm install && cd ../fe/superadmin && npm run build && cd ../manager && npm run build && cd ../user && npm run build",
+    "start": "cd be && npm start",
+    "seed": "cd be && npm run seed",
+    "create-admin": "cd be && npm run create-admin",
+    "test-db": "cd be && npm run test-db"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  },
+  "keywords": [
+    "smart-garden",
+    "iot",
+    "agriculture",
+    "esp32",
+    "react",
+    "nodejs",
+    "mongodb",
+    "websocket"
+  ],
+  "author": "Smart Garden Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/smart-garden-system.git"
+  }
+}
