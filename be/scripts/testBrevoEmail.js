@@ -2,8 +2,8 @@ require('dotenv').config();
 const emailService = require('../services/emailService');
 
 async function testEmail() {
-  console.log('🧪 Testing Brevo Email Service...\n');
-  console.log('BREVO_API_KEY:', process.env.BREVO_API_KEY ? '***configured***' : 'NOT SET');
+  console.log('🧪 Testing Brevo SMTP Service...\n');
+  console.log('BREVO_SMTP_KEY:', process.env.BREVO_SMTP_KEY ? '***configured***' : 'NOT SET');
   
   const testEmail = 'huyh01480@gmail.com';
   
@@ -11,8 +11,8 @@ async function testEmail() {
   console.log('\n📧 Test 1: Sending simple email...');
   const result1 = await emailService.sendEmail(
     testEmail,
-    '🧪 Test Email từ Smart Garden',
-    '<h1>Hello!</h1><p>Đây là email test từ hệ thống Smart Garden sử dụng Brevo API.</p>'
+    '🧪 Test Email từ Smart Garden (SMTP)',
+    '<h1>Hello!</h1><p>Đây là email test từ hệ thống Smart Garden sử dụng Brevo SMTP.</p>'
   );
   console.log('Result:', result1 ? '✅ SUCCESS' : '❌ FAILED');
 

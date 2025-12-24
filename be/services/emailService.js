@@ -1,28 +1,35 @@
-const brevo = require('@getbrevo/brevo');
+const nodemailer = require('nodemailer');
 
 class EmailService {
   constructor() {
-    this.apiInstance = null;
+    this.transporter = null;
     this.isConfigured = false;
   }
 
   ensureConnection() {
-    if (this.isConfigured && this.apiInstance) {
+    if (this.isConfigured && this.transporter) {
       return true;
     }
 
-    const apiKey = process.env.BREVO_API_KEY;
+    const smtpKey = process.env.BREVO_SMTP_KEY;
     
-    if (!apiKey) {
-      console.log('⚠️ Email service not configured (missing BREVO_API_KEY)');
+    if (!smtpKey) {
+      console.log('⚠️ Email service not configured (missing BREVO_SMTP_KEY)');
       return false;
     }
 
-    this.apiInstance = new brevo.TransactionalEmailsApi();
-    this.apiInstance.setApiKey(brevo.TransactionalEmailsApiApiKeys.apiKey, apiKey);
-    
+    this.transporter = nodemailer.createTransport({
+      host: 'smtp-relay.brevo.com',
+      port: 587,
+      secure: false,
+      auth: {
+        user: '9eb0aa001@smtp-brevo.com',
+        pass: smtpKey
+      }
+    });
+
     this.isConfigured = true;
-    console.log('✅ Brevo email service configured');
+    console.log('✅ Brevo SMTP configured');
     return true;
   }
 
@@ -35,17 +42,17 @@ class EmailService {
     try {
       console.log(`📧 Sending email to: ${to}`);
       
-      const sendSmtpEmail = new brevo.SendSmtpEmail();
-      sendSmtpEmail.subject = subject;
-      sendSmtpEmail.htmlContent = html;
-      sendSmtpEmail.sender = { name: 'Smart Garden', email: 'noreply@smartgarden.io' };
-      sendSmtpEmail.to = [{ email: to }];
+      const info = await this.transporter.sendMail({
+        from: '"Smart Garden" <hhhh1112223335661@gmail.com>',
+        to: to,
+        subject: subject,
+        html: html
+      });
 
-      const result = await this.apiInstance.sendTransacEmail(sendSmtpEmail);
-      console.log('📧 Email sent successfully:', result.body.messageId);
+      console.log('📧 Email sent successfully:', info.messageId);
       return true;
     } catch (error) {
-      console.error('❌ Send email error:', error.body || error.message);
+      console.error('❌ Send email error:', error.message);
       return false;
     }
   }
