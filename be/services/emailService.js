@@ -1,35 +1,23 @@
-const nodemailer = require('nodemailer');
-
 class EmailService {
   constructor() {
-    this.transporter = null;
+    this.apiKey = null;
     this.isConfigured = false;
   }
 
   ensureConnection() {
-    if (this.isConfigured && this.transporter) {
+    if (this.isConfigured && this.apiKey) {
       return true;
     }
 
-    const smtpKey = process.env.BREVO_SMTP_KEY;
+    this.apiKey = process.env.BREVO_API_KEY;
     
-    if (!smtpKey) {
-      console.log('⚠️ Email service not configured (missing BREVO_SMTP_KEY)');
+    if (!this.apiKey) {
+      console.log('⚠️ Email service not configured (missing BREVO_API_KEY)');
       return false;
     }
-
-    this.transporter = nodemailer.createTransport({
-      host: 'smtp-relay.brevo.com',
-      port: 587,
-      secure: false,
-      auth: {
-        user: '9eb0aa001@smtp-brevo.com',
-        pass: smtpKey
-      }
-    });
-
+    
     this.isConfigured = true;
-    console.log('✅ Brevo SMTP configured');
+    console.log('✅ Brevo API configured');
     return true;
   }
 
@@ -42,15 +30,33 @@ class EmailService {
     try {
       console.log(`📧 Sending email to: ${to}`);
       
-      const info = await this.transporter.sendMail({
-        from: '"Smart Garden" <hhhh1112223335661@gmail.com>',
-        to: to,
-        subject: subject,
-        html: html
+      const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+          'accept': 'application/json',
+          'api-key': this.apiKey,
+          'content-type': 'application/json'
+        },
+        body: JSON.stringify({
+          sender: { 
+            name: 'Smart Garden', 
+            email: 'hhhh1112223335661@gmail.com'
+          },
+          to: [{ email: to }],
+          subject: subject,
+          htmlContent: html
+        })
       });
 
-      console.log('📧 Email sent successfully:', info.messageId);
-      return true;
+      const data = await response.json();
+      
+      if (response.ok) {
+        console.log('📧 Email sent successfully:', data.messageId);
+        return true;
+      } else {
+        console.error('❌ Brevo API error:', data);
+        return false;
+      }
     } catch (error) {
       console.error('❌ Send email error:', error.message);
       return false;

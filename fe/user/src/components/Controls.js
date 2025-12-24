@@ -31,7 +31,13 @@ const Controls = () => {
       condition: 'above', 
       value: 80, 
       action: 'activate', 
-      intensity: 100 
+      intensity: 100,
+      sensorType: 'temperature',
+      notifications: {
+        enabled: true,
+        methods: ['email'],
+        cooldown: 5
+      }
     }
   });
 
@@ -121,7 +127,13 @@ const Controls = () => {
             condition: 'above', 
             value: 80, 
             action: 'activate', 
-            intensity: 100 
+            intensity: 100,
+            sensorType: 'temperature',
+            notifications: {
+              enabled: true,
+              methods: ['email'],
+              cooldown: 5
+            }
           }
         });
       } else {
@@ -465,7 +477,25 @@ const Controls = () => {
               {/* Threshold Settings */}
               {newControl.mode === 'threshold' && (
                 <div className="mode-settings">
-                  <h4 className="settings-title">Cài đặt ngưỡng</h4>
+                  <h4 className="settings-title">Cài đặt ngưỡng cảnh báo</h4>
+                  
+                  <div className="form-group">
+                    <label className="form-label">Loại cảm biến</label>
+                    <select
+                      className="form-select"
+                      value={newControl.thresholdSettings.sensorType}
+                      onChange={(e) => setNewControl({
+                        ...newControl,
+                        thresholdSettings: { ...newControl.thresholdSettings, sensorType: e.target.value }
+                      })}
+                    >
+                      <option value="temperature">🌡️ Nhiệt độ</option>
+                      <option value="humidity">💧 Độ ẩm không khí</option>
+                      <option value="soil_moisture">🌱 Độ ẩm đất</option>
+                      <option value="light">☀️ Ánh sáng</option>
+                    </select>
+                  </div>
+
                   <div className="form-grid">
                     <div className="form-group">
                       <label className="form-label">Điều kiện</label>
@@ -477,8 +507,8 @@ const Controls = () => {
                           thresholdSettings: { ...newControl.thresholdSettings, condition: e.target.value }
                         })}
                       >
-                        <option value="above">Trên</option>
-                        <option value="below">Dưới</option>
+                        <option value="above">📈 Vượt trên</option>
+                        <option value="below">📉 Dưới mức</option>
                       </select>
                     </div>
                     <div className="form-group">
@@ -493,6 +523,55 @@ const Controls = () => {
                         })}
                       />
                     </div>
+                  </div>
+
+                  <div className="notification-settings">
+                    <h5 className="settings-subtitle">📧 Cài đặt thông báo</h5>
+                    
+                    <div className="form-group checkbox-group">
+                      <label className="checkbox-label">
+                        <input
+                          type="checkbox"
+                          checked={newControl.thresholdSettings.notifications?.enabled}
+                          onChange={(e) => setNewControl({
+                            ...newControl,
+                            thresholdSettings: { 
+                              ...newControl.thresholdSettings, 
+                              notifications: {
+                                ...newControl.thresholdSettings.notifications,
+                                enabled: e.target.checked
+                              }
+                            }
+                          })}
+                        />
+                        <span className="checkmark"></span>
+                        Bật thông báo qua Email
+                      </label>
+                    </div>
+
+                    {newControl.thresholdSettings.notifications?.enabled && (
+                      <div className="form-group">
+                        <label className="form-label">Thời gian chờ giữa các thông báo (phút)</label>
+                        <input
+                          type="number"
+                          className="form-input"
+                          min="1"
+                          max="60"
+                          value={newControl.thresholdSettings.notifications?.cooldown || 5}
+                          onChange={(e) => setNewControl({
+                            ...newControl,
+                            thresholdSettings: { 
+                              ...newControl.thresholdSettings, 
+                              notifications: {
+                                ...newControl.thresholdSettings.notifications,
+                                cooldown: parseInt(e.target.value) || 5
+                              }
+                            }
+                          })}
+                        />
+                        <small className="form-hint">Tránh spam email khi sensor liên tục vượt ngưỡng</small>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
