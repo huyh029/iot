@@ -1,25 +1,36 @@
-const { Resend } = require('resend');
+const nodemailer = require('nodemailer');
 
 class EmailService {
   constructor() {
-    this.resend = null;
+    this.transporter = null;
     this.isConfigured = false;
   }
 
   ensureConnection() {
-    if (this.isConfigured && this.resend) {
+    if (this.isConfigured && this.transporter) {
       return true;
     }
 
-    const apiKey = process.env.RESEND_API_KEY;
-    if (!apiKey) {
-      console.log('⚠️ Email service not configured (missing RESEND_API_KEY)');
+    const smtpUser = process.env.BREVO_SMTP_USER;
+    const smtpPass = process.env.BREVO_SMTP_PASS;
+    
+    if (!smtpUser || !smtpPass) {
+      console.log('⚠️ Email service not configured (missing BREVO_SMTP_USER or BREVO_SMTP_PASS)');
       return false;
     }
 
-    this.resend = new Resend(apiKey);
+    this.transporter = nodemailer.createTransport({
+      host: 'smtp-relay.brevo.com',
+      port: 587,
+      secure: false,
+      auth: {
+        user: smtpUser,
+        pass: smtpPass
+      }
+    });
+
     this.isConfigured = true;
-    console.log('✅ Resend email service configured');
+    console.log('✅ Brevo email service configured');
     return true;
   }
 
@@ -32,19 +43,14 @@ class EmailService {
     try {
       console.log(`📧 Sending email to: ${to}`);
       
-      const { data, error } = await this.resend.emails.send({
-        from: 'Smart Garden <onboarding@resend.dev>',
-        to: [to],
+      const info = await this.transporter.sendMail({
+        from: '"Smart Garden" <noreply@smartgarden.io>',
+        to: to,
         subject: subject,
         html: html
       });
 
-      if (error) {
-        console.error('❌ Resend error:', error);
-        return false;
-      }
-
-      console.log('📧 Email sent successfully:', data.id);
+      console.log('📧 Email sent successfully:', info.messageId);
       return true;
     } catch (error) {
       console.error('❌ Send email error:', error.message);
