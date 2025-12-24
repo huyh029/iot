@@ -128,6 +128,7 @@ app.use('/api/devices', require('./routes/devices'));
 app.use('/api/sensors', require('./routes/sensors'));
 app.use('/api/plants', require('./routes/plants'));
 app.use('/api/controls', require('./routes/controls'));
+app.use('/api/reminders', require('./routes/reminders'));
 app.use('/api/weather', require('./routes/weather'));
 app.use('/api/dashboard', require('./routes/dashboard'));
 app.use('/api/thingsboard', require('./routes/thingsboard'));

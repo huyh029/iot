@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
+import Reminders from './components/Reminders';
 
 // API Base URL - change this to switch between environments
 const API_BASE_URL = 'https://beiot.onrender.com';
@@ -333,6 +334,13 @@ function App() {
                 <span className="nav-text">Điều khiển</span>
               </button>
               <button 
+                className={`nav-item ${currentPage === 'reminders' ? 'nav-item-active' : ''}`}
+                onClick={() => setCurrentPage('reminders')}
+              >
+                <span className="material-symbols-outlined">notifications</span>
+                <span className="nav-text">Nhắc nhở</span>
+              </button>
+              <button 
                 className={`nav-item ${currentPage === 'garden' ? 'nav-item-active' : ''}`}
                 onClick={() => setCurrentPage('garden')}
               >
@@ -375,6 +383,7 @@ function App() {
                 {currentPage === 'devices' && 'Quản lý thiết bị'}
                 {currentPage === 'plants' && 'Quản lý cây trồng'}
                 {currentPage === 'controls' && 'Điều khiển'}
+                {currentPage === 'reminders' && 'Nhắc nhở'}
                 {currentPage === 'garden' && 'Xem vườn'}
                 {currentPage === 'info' && 'Thông tin'}
               </h1>
@@ -389,6 +398,7 @@ function App() {
                   {currentPage === 'devices' && 'Thiết bị'}
                   {currentPage === 'plants' && 'Cây trồng'}
                   {currentPage === 'controls' && 'Điều khiển'}
+                  {currentPage === 'reminders' && 'Nhắc nhở'}
                   {currentPage === 'garden' && 'Vườn'}
                   {currentPage === 'info' && 'Thông tin'}
                 </span>
@@ -443,6 +453,7 @@ function App() {
           {currentPage === 'devices' && <DevicesPage />}
           {currentPage === 'plants' && <PlantsPage />}
           {currentPage === 'controls' && <ControlsPage />}
+          {currentPage === 'reminders' && <RemindersPage />}
           {currentPage === 'garden' && <GardenPage />}
           {currentPage === 'info' && <InfoPage user={user} />}
         </div>
@@ -3207,6 +3218,11 @@ function ControlCard({ control, onAction }) {
       </div>
     </div>
   );
+}
+
+// Reminders Page - Import from component
+function RemindersPage() {
+  return <Reminders />;
 }
 
 // Garden View Page - Canvas-based drag-drop layout
