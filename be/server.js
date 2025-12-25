@@ -95,44 +95,78 @@ setInterval(async () => {
       
       // Broadcast notifications and send emails
       for (const device of devicesToMarkOffline) {
+        console.log(`📴 Processing offline device: ${device.name} (${device.deviceId})`);
+        console.log(`📴 Owner data:`, device.ownerId);
+        
         // Broadcast status change via WebSocket
         wsService.broadcastDeviceStatus(device._id.toString(), 'offline');
         
-        // Notify owner via WebSocket
-        wsService.sendNotificationToUser(device.ownerId._id.toString(), {
-          type: 'device_offline',
-          message: `Thiết bị "${device.name}" đã offline`,
-          severity: 'warning',
-          deviceId: device._id
-        });
-        
-        // Send email to owner
-        if (device.ownerId?.email) {
-          emailService.sendDeviceOfflineAlert(device.ownerId.email, {
-            deviceName: device.name,
-            deviceId: device.deviceId,
-            lastSeen: device.lastSeen
-          });
-          console.log(`📧 Offline alert email sent to owner: ${device.ownerId.email}`);
+        // Get owner email - handle both populated and non-populated cases
+        let ownerEmail = null;
+        if (device.ownerId) {
+          if (typeof device.ownerId === 'object' && device.ownerId.email) {
+            ownerEmail = device.ownerId.email;
+          } else {
+            // If not populated, fetch owner manually
+            const owner = await User.findById(device.ownerId).select('email');
+            ownerEmail = owner?.email;
+          }
         }
         
-        // Notify assigned users
-        for (const user of device.assignedUsers) {
-          wsService.sendNotificationToUser(user._id.toString(), {
+        console.log(`📴 Owner email: ${ownerEmail}`);
+        
+        // Notify owner via WebSocket
+        const ownerId = device.ownerId?._id || device.ownerId;
+        if (ownerId) {
+          wsService.sendNotificationToUser(ownerId.toString(), {
             type: 'device_offline',
             message: `Thiết bị "${device.name}" đã offline`,
             severity: 'warning',
             deviceId: device._id
           });
-          
-          // Send email to assigned users
-          if (user.email) {
-            emailService.sendDeviceOfflineAlert(user.email, {
+        }
+        
+        // Send email to owner
+        if (ownerEmail) {
+          try {
+            const result = await emailService.sendDeviceOfflineAlert(ownerEmail, {
               deviceName: device.name,
               deviceId: device.deviceId,
               lastSeen: device.lastSeen
             });
-            console.log(`📧 Offline alert email sent to user: ${user.email}`);
+            console.log(`📧 Offline alert email to owner ${ownerEmail}: ${result ? 'SUCCESS' : 'FAILED'}`);
+          } catch (emailErr) {
+            console.error(`📧 Email error to owner:`, emailErr.message);
+          }
+        } else {
+          console.log(`📧 No owner email found for device ${device.name}`);
+        }
+        
+        // Notify assigned users
+        if (device.assignedUsers && device.assignedUsers.length > 0) {
+          for (const user of device.assignedUsers) {
+            const userId = user._id || user;
+            wsService.sendNotificationToUser(userId.toString(), {
+              type: 'device_offline',
+              message: `Thiết bị "${device.name}" đã offline`,
+              severity: 'warning',
+              deviceId: device._id
+            });
+            
+            // Send email to assigned users
+            const userEmail = user.email;
+            if (userEmail) {
+              try {
+                const result = await emailService.sendDeviceOfflineAlert(userEmail, {
+                  deviceName: device.name,
+                  deviceId: device.deviceId,
+                  lastSeen: device.lastSeen
+                });
+                console.log(`📧 Offline alert email to user ${userEmail}: ${result ? 'SUCCESS' : 'FAILED'}`);
+              } catch (emailErr) {
+                console.error(`📧 Email error to user:`, emailErr.message);
+              }
+            }
           }
         }
       }
