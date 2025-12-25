@@ -132,6 +132,35 @@ class EmailService {
 
     return this.sendEmail(userEmail, subject, html);
   }
+
+  async sendDeviceOfflineAlert(userEmail, deviceData) {
+    const { deviceName, deviceId, lastSeen } = deviceData;
+    
+    const subject = `📴 Cảnh báo: Thiết bị "${deviceName}" đã ngừng hoạt động`;
+    
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: #dc2626; color: white; padding: 20px; text-align: center;">
+          <h1 style="margin: 0;">🌱 Smart Garden</h1>
+        </div>
+        <div style="padding: 20px; background: #f9f9f9;">
+          <h2 style="color: #dc2626;">📴 Thiết bị đã ngừng hoạt động</h2>
+          <p><strong>Thiết bị:</strong> ${deviceName}</p>
+          <p><strong>Mã thiết bị:</strong> ${deviceId}</p>
+          <p><strong>Lần hoạt động cuối:</strong> ${new Date(lastSeen).toLocaleString('vi-VN')}</p>
+          <p><strong>Thời gian phát hiện:</strong> ${new Date().toLocaleString('vi-VN')}</p>
+          <div style="background: #fef2f2; border-left: 4px solid #dc2626; padding: 10px; margin-top: 15px;">
+            <p style="margin: 0; color: #991b1b;">⚠️ Vui lòng kiểm tra kết nối mạng hoặc nguồn điện của thiết bị.</p>
+          </div>
+        </div>
+        <div style="padding: 15px; background: #e5e5e5; text-align: center; font-size: 12px; color: #666;">
+          Email tự động từ hệ thống Smart Garden
+        </div>
+      </div>
+    `;
+
+    return this.sendEmail(userEmail, subject, html);
+  }
 }
 
 const emailService = new EmailService();

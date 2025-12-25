@@ -30,12 +30,12 @@ const ALERT_COOLDOWN = 5 * 60 * 1000; // 5 phút giữa các email cùng loại
 
 // GET /api/controls/esp/:deviceId
 // ESP32 gọi API này để lấy trạng thái điều khiển
-// Kết hợp: ThingsBoard states + Automation rules từ DB + Email alerts
+// Kết hợp: MQTT states + Automation rules từ DB + Email alerts
 router.get('/esp/:deviceId', async (req, res) => {
   try {
     const { deviceId } = req.params;
     const { telemetry } = req.query; // Optional: ESP gửi kèm telemetry để check automation
-    const thingsBoardService = require('../services/thingsboard');
+    const mqttService = req.app.get('mqttService');
 
     // Tìm device theo deviceId (mã thiết bị)
     const device = await Device.findOne({ deviceId: deviceId }).populate('ownerId', 'email fullName');
@@ -48,26 +48,8 @@ router.get('/esp/:deviceId', async (req, res) => {
     device.lastSeen = new Date();
     await device.save();
 
-    const tbToken = device.thingsboard?.accessToken;
-    if (!tbToken) {
-      return res.status(400).json({ success: false, message: 'Device not connected to ThingsBoard' });
-    }
-
-    // 1. Lấy trạng thái điều khiển từ ThingsBoard
-    let controlStates = {
-      light: { enabled: false, intensity: 100 },
-      fan: { enabled: false, intensity: 100 },
-      pump: { enabled: false, intensity: 100 },
-      watering: { enabled: false, intensity: 100 },
-      heater: { enabled: false, intensity: 100 },
-      cooler: { enabled: false, intensity: 100 },
-      mist: { enabled: false, intensity: 100 }
-    };
-
-    const tbStates = await thingsBoardService.getDeviceControlStates(tbToken);
-    if (tbStates) {
-      controlStates = tbStates;
-    }
+    // 1. Lấy trạng thái điều khiển từ MQTT cache
+    let controlStates = mqttService.getDeviceControlStates(deviceId);
 
     // 2. Kiểm tra automation rules từ DB
     const automationChanges = [];
@@ -200,11 +182,11 @@ router.get('/esp/:deviceId', async (req, res) => {
       }
     }
 
-    // 3. Nếu có thay đổi từ automation, đồng bộ lên ThingsBoard
+    // 3. Nếu có thay đổi từ automation, gửi qua MQTT
     if (automationChanges.length > 0) {
       for (const change of automationChanges) {
-        await thingsBoardService.controlDevice(
-          tbToken, 
+        mqttService.controlDevice(
+          deviceId, 
           change.controlType, 
           change.action, 
           controlStates[change.controlType]?.intensity || 100
@@ -573,11 +555,11 @@ router.delete('/:controlId', auth, async (req, res) => {
   }
 });
 
-// Get control states from ThingsBoard (primary source)
+// Get control states from MQTT cache
 router.get('/states/:deviceId', auth, async (req, res) => {
   try {
     const { deviceId } = req.params;
-    const thingsBoardService = require('../services/thingsboard');
+    const mqttService = req.app.get('mqttService');
     const user = req.userDoc;
 
     // Check device access
@@ -590,43 +572,26 @@ router.get('/states/:deviceId', auth, async (req, res) => {
       return res.status(403).json({ message: 'Access denied' });
     }
 
-    // Get control states from ThingsBoard
-    const tbToken = device.thingsboard?.accessToken;
-    if (!tbToken) {
-      return res.json({ 
-        success: false, 
-        message: 'Device not connected to ThingsBoard',
-        controls: getDefaultControlStates()
-      });
-    }
-
-    const controlStates = await thingsBoardService.getDeviceControlStates(tbToken);
+    // Get control states from MQTT cache
+    const controlStates = mqttService.getDeviceControlStates(device.deviceId);
     
-    if (controlStates) {
-      res.json({ 
-        success: true, 
-        source: 'thingsboard',
-        controls: controlStates 
-      });
-    } else {
-      res.json({ 
-        success: false, 
-        message: 'Could not fetch from ThingsBoard',
-        controls: getDefaultControlStates()
-      });
-    }
+    res.json({ 
+      success: true, 
+      source: 'mqtt',
+      controls: controlStates 
+    });
   } catch (error) {
     console.error('Get control states error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
-// Set control state to ThingsBoard (primary source)
+// Set control state via MQTT
 router.post('/states/:deviceId', auth, async (req, res) => {
   try {
     const { deviceId } = req.params;
     const { controlType, enabled, intensity } = req.body;
-    const thingsBoardService = require('../services/thingsboard');
+    const mqttService = req.app.get('mqttService');
     const wsService = req.app.get('wsService');
     const user = req.userDoc;
 
@@ -640,18 +605,10 @@ router.post('/states/:deviceId', auth, async (req, res) => {
       return res.status(403).json({ message: 'Access denied' });
     }
 
-    const tbToken = device.thingsboard?.accessToken;
-    if (!tbToken) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Device not connected to ThingsBoard'
-      });
-    }
-
-    // Send control command to ThingsBoard
+    // Send control command via MQTT
     const action = enabled ? 'on' : 'off';
-    const result = await thingsBoardService.controlDevice(
-      tbToken,
+    const result = mqttService.controlDevice(
+      device.deviceId,
       controlType,
       action,
       intensity || 100
@@ -666,9 +623,9 @@ router.post('/states/:deviceId', auth, async (req, res) => {
     });
 
     res.json({ 
-      success: result.success || result.attributesSaved,
+      success: result.success,
       message: enabled ? `${controlType} đã bật` : `${controlType} đã tắt`,
-      thingsboard: result
+      mqtt: result
     });
   } catch (error) {
     console.error('Set control state error:', error);
@@ -694,7 +651,7 @@ router.post('/command', auth, async (req, res) => {
   try {
     const { deviceId, controlType, action, intensity } = req.body;
     const wsService = req.app.get('wsService');
-    const thingsBoardService = require('../services/thingsboard');
+    const mqttService = req.app.get('mqttService');
     const user = req.userDoc;
 
     // Check device access
@@ -716,21 +673,14 @@ router.post('/command', auth, async (req, res) => {
       userId: user._id
     };
 
-    // Send command to ThingsBoard (PRIMARY SOURCE)
-    let thingsBoardResult = { success: false, error: 'No ThingsBoard token' };
-    const tbToken = device.thingsboard?.accessToken;
-    
-    if (tbToken) {
-      thingsBoardResult = await thingsBoardService.controlDevice(
-        tbToken,
-        controlType,
-        action,
-        intensity || 100
-      );
-      console.log('ThingsBoard control result:', thingsBoardResult);
-    } else {
-      console.log('Device has no ThingsBoard token, skipping RPC');
-    }
+    // Send command via MQTT
+    const mqttResult = mqttService.controlDevice(
+      device.deviceId,
+      controlType,
+      action,
+      intensity || 100
+    );
+    console.log('MQTT control result:', mqttResult);
 
     // Broadcast control command via WebSocket (for UI updates)
     wsService.broadcastToDevice(deviceId, 'control_command', command);
@@ -747,15 +697,15 @@ router.post('/command', auth, async (req, res) => {
     wsService.sendNotificationToUser(user._id, {
       type: 'control_command_sent',
       message: `Lệnh ${action} ${controlType} đã được gửi`,
-      severity: thingsBoardResult.success || thingsBoardResult.attributesSaved ? 'success' : 'info',
+      severity: mqttResult.success ? 'success' : 'info',
       deviceId: deviceId
     });
 
     res.json({ 
-      success: thingsBoardResult.success || thingsBoardResult.attributesSaved, 
+      success: mqttResult.success, 
       message: 'Control command sent',
       command,
-      thingsboard: thingsBoardResult
+      mqtt: mqttResult
     });
   } catch (error) {
     console.error('Control command error:', error);
@@ -769,6 +719,8 @@ router.post('/automation', auth, async (req, res) => {
     const { deviceId, type, settings } = req.body;
     const user = req.userDoc;
 
+    console.log('Automation request:', { deviceId, type, settings });
+
     // Check device access
     const device = await Device.findById(deviceId);
     if (!device) {
@@ -779,10 +731,25 @@ router.post('/automation', auth, async (req, res) => {
       return res.status(403).json({ message: 'Access denied' });
     }
 
+    // For alerts, we don't need a specific controlType - use 'light' as default or map sensor to control
+    let controlType = settings.action || settings.controlType;
+    
+    // Map sensor type to control type for alerts
+    if (type === 'alert' && !controlType) {
+      const sensorToControl = {
+        'light': 'light',
+        'temperature': 'fan',
+        'humidity': 'fan', 
+        'soil': 'irrigation',
+        'soil_moisture': 'irrigation'
+      };
+      controlType = sensorToControl[settings.sensor] || 'light';
+    }
+
     // Create or update control with automation settings
     let control = await Control.findOne({ 
       deviceId, 
-      controlType: settings.action || settings.controlType,
+      controlType,
       isActive: true 
     });
 
@@ -790,8 +757,8 @@ router.post('/automation', auth, async (req, res) => {
       control = new Control({
         deviceId,
         userId: user._id,
-        controlType: settings.action || settings.controlType,
-        mode: type === 'schedule' ? 'scheduled' : 'automatic'
+        controlType,
+        mode: type === 'schedule' ? 'scheduled' : type === 'alert' ? 'threshold' : 'auto'
       });
     }
 

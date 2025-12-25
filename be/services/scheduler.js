@@ -1,6 +1,6 @@
 const Control = require('../models/Control');
 const moment = require('moment-timezone');
-const thingsBoardService = require('./thingsboard');
+const mqttService = require('./mqttService');
 
 class SchedulerService {
   static async checkScheduledControls(wsService) {
@@ -14,7 +14,7 @@ class SchedulerService {
         mode: 'scheduled',
         isActive: true,
         'scheduleSettings.schedules': { $exists: true, $ne: [] }
-      }).populate('deviceId', 'name location thingsboard');
+      }).populate('deviceId', 'name location deviceId');
 
       for (const control of scheduledControls) {
         for (const schedule of control.scheduleSettings.schedules) {
@@ -49,7 +49,7 @@ class SchedulerService {
         isActive: true,
         'scheduleSettings.enabled': true,
         'scheduleSettings.schedules': { $exists: true, $ne: [] }
-      }).populate('deviceId', 'name thingsboard');
+      }).populate('deviceId', 'name deviceId');
 
       for (const control of controls) {
         if (!control.scheduleSettings?.schedules) continue;
@@ -61,22 +61,22 @@ class SchedulerService {
           if (schedule.time === currentTime) {
             console.log(`⏰ Schedule triggered: ${control.controlType} at ${currentTime}`);
             
-            // Send command to ThingsBoard
-            const tbToken = control.deviceId?.thingsboard?.accessToken;
-            if (tbToken) {
-              const result = await thingsBoardService.controlDevice(
-                tbToken,
+            // Send command via MQTT
+            const espDeviceId = control.deviceId?.deviceId;
+            if (espDeviceId) {
+              mqttService.controlDevice(
+                espDeviceId,
                 schedule.action || control.controlType,
                 'on',
                 schedule.intensity || 100
               );
-              console.log('ThingsBoard scheduled control result:', result);
+              console.log('MQTT scheduled control sent');
 
               // If duration is set, schedule auto-off
               if (schedule.duration && schedule.duration > 0) {
-                setTimeout(async () => {
-                  await thingsBoardService.controlDevice(
-                    tbToken,
+                setTimeout(() => {
+                  mqttService.controlDevice(
+                    espDeviceId,
                     schedule.action || control.controlType,
                     'off',
                     0
@@ -102,16 +102,16 @@ class SchedulerService {
 
   static async activateScheduledControl(control, schedule, wsService) {
     try {
-      // Send command to ThingsBoard if device has token
-      const tbToken = control.deviceId?.thingsboard?.accessToken;
-      if (tbToken) {
-        const result = await thingsBoardService.controlDevice(
-          tbToken,
+      // Send command via MQTT
+      const espDeviceId = control.deviceId?.deviceId;
+      if (espDeviceId) {
+        mqttService.controlDevice(
+          espDeviceId,
           control.controlType,
           'on',
           schedule.intensity || 100
         );
-        console.log('ThingsBoard activation result:', result);
+        console.log('MQTT activation sent');
       }
 
       // Update control state
@@ -150,16 +150,16 @@ class SchedulerService {
 
   static async deactivateScheduledControl(control, schedule, wsService) {
     try {
-      // Send command to ThingsBoard if device has token
-      const tbToken = control.deviceId?.thingsboard?.accessToken;
-      if (tbToken) {
-        const result = await thingsBoardService.controlDevice(
-          tbToken,
+      // Send command via MQTT
+      const espDeviceId = control.deviceId?.deviceId;
+      if (espDeviceId) {
+        mqttService.controlDevice(
+          espDeviceId,
           control.controlType,
           'off',
           0
         );
-        console.log('ThingsBoard deactivation result:', result);
+        console.log('MQTT deactivation sent');
       }
 
       // Calculate runtime
@@ -209,7 +209,7 @@ class SchedulerService {
         isActive: true,
         'automaticSettings.enabled': true,
         'automaticSettings.triggers': { $exists: true, $ne: [] }
-      }).populate('deviceId', 'name thingsboard');
+      }).populate('deviceId', 'name deviceId');
 
       for (const control of controls) {
         if (!control.automaticSettings?.triggers) continue;
@@ -229,11 +229,11 @@ class SchedulerService {
           if (shouldTrigger && !control.currentState.isOn) {
             console.log(`🤖 Sensor automation triggered: ${trigger.sensorType} ${trigger.condition} ${trigger.threshold}`);
             
-            // Send command to ThingsBoard
-            const tbToken = control.deviceId?.thingsboard?.accessToken;
-            if (tbToken) {
-              await thingsBoardService.controlDevice(
-                tbToken,
+            // Send command via MQTT
+            const espDeviceId = control.deviceId?.deviceId;
+            if (espDeviceId) {
+              mqttService.controlDevice(
+                espDeviceId,
                 trigger.action || control.controlType,
                 'on',
                 trigger.intensity || 100

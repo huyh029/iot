@@ -4,7 +4,7 @@ const Reminder = require('../models/Reminder');
 const AlertHistory = require('../models/AlertHistory');
 const Device = require('../models/Device');
 const User = require('../models/User');
-const auth = require('../middleware/auth');
+const { auth } = require('../middleware/auth');
 const emailService = require('../services/emailService');
 
 // Get all reminders for a device

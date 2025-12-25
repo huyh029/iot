@@ -1,0 +1,9 @@
+[wokwi]
+version = 1
+firmware = "sketch.ino"
+elf = ""
+
+# Wokwi simulation settings
+[wokwi.simulation]
+# Enable WiFi simulation
+wifi = true

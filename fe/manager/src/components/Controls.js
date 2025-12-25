@@ -117,26 +117,56 @@ function Controls() {
 
   const handleCreateControl = async () => {
     try {
-      const response = await fetch(`${API_BASE}/api/controls`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({
-          deviceId: selectedDevice,
-          ...newControl
-        })
-      });
+      // Nếu mode là threshold, gọi API reminders
+      if (newControl.mode === 'threshold') {
+        const response = await fetch(`${API_BASE}/api/reminders`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify({
+            deviceId: selectedDevice,
+            sensorType: newControl.thresholdSettings.sensorType,
+            condition: newControl.thresholdSettings.condition,
+            value: newControl.thresholdSettings.value,
+            enabled: true,
+            emailNotification: newControl.thresholdSettings.notifications?.enabled,
+            cooldown: newControl.thresholdSettings.notifications?.cooldown || 5
+          })
+        });
 
-      if (response.ok) {
-        setOpenDialog(false);
-        fetchControls(selectedDevice);
-        toast.success('Tạo điều khiển thành công!');
-        resetNewControl();
+        if (response.ok) {
+          setOpenDialog(false);
+          toast.success('Tạo nhắc nhở thành công!');
+          resetNewControl();
+        } else {
+          const error = await response.json();
+          toast.error(error.message || 'Tạo nhắc nhở thất bại');
+        }
       } else {
-        const error = await response.json();
-        toast.error(error.message || 'Tạo điều khiển thất bại');
+        // Các mode khác vẫn gọi API controls
+        const response = await fetch(`${API_BASE}/api/controls`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify({
+            deviceId: selectedDevice,
+            ...newControl
+          })
+        });
+
+        if (response.ok) {
+          setOpenDialog(false);
+          fetchControls(selectedDevice);
+          toast.success('Tạo điều khiển thành công!');
+          resetNewControl();
+        } else {
+          const error = await response.json();
+          toast.error(error.message || 'Tạo điều khiển thất bại');
+        }
       }
     } catch (error) {
       console.error('Create control error:', error);

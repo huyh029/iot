@@ -47,9 +47,10 @@ io.on('connection', (socket) => {
 app.set('io', io);
 app.set('wsService', wsService);
 
-// Connect ThingsBoard service to WebSocket
-const thingsBoardService = require('./services/thingsboard');
-thingsBoardService.setWsService(wsService);
+// Connect MQTT service to WebSocket
+const mqttService = require('./services/mqttService');
+mqttService.setWsService(wsService);
+app.set('mqttService', mqttService);
 
 // Note: Removed default telemetry polling cron job
 // Telemetry is now fetched per-device when ESP32 calls /api/devices/controls/:deviceId
@@ -66,11 +67,14 @@ cron.schedule('*/5 * * * *', () => {
   require('./services/plantService').updateGrowthProgress(wsService);
 });
 
-// Check device offline status every minute
+// Check device offline status every 15 seconds
 const Device = require('./models/Device');
-const OFFLINE_TIMEOUT = 1 * 60 * 1000; // 1 phút không gọi API thì offline
+const User = require('./models/User');
+const emailService = require('./services/emailService');
+const OFFLINE_TIMEOUT = 15 * 1000; // 15 giây không gọi API thì offline
 
-cron.schedule('* * * * *', async () => {
+// Use setInterval for more frequent checks (every 15 seconds)
+setInterval(async () => {
   try {
     const cutoffTime = new Date(Date.now() - OFFLINE_TIMEOUT);
     
@@ -78,7 +82,7 @@ cron.schedule('* * * * *', async () => {
     const devicesToMarkOffline = await Device.find({
       status: 'online',
       lastSeen: { $lt: cutoffTime }
-    }).populate('assignedUsers', '_id');
+    }).populate('assignedUsers', '_id email').populate('ownerId', '_id email');
     
     if (devicesToMarkOffline.length > 0) {
       // Update status
@@ -89,18 +93,28 @@ cron.schedule('* * * * *', async () => {
       
       console.log(`📴 ${devicesToMarkOffline.length} device(s) marked offline`);
       
-      // Broadcast notifications
+      // Broadcast notifications and send emails
       for (const device of devicesToMarkOffline) {
         // Broadcast status change via WebSocket
         wsService.broadcastDeviceStatus(device._id.toString(), 'offline');
         
-        // Notify owner
-        wsService.sendNotificationToUser(device.ownerId.toString(), {
+        // Notify owner via WebSocket
+        wsService.sendNotificationToUser(device.ownerId._id.toString(), {
           type: 'device_offline',
           message: `Thiết bị "${device.name}" đã offline`,
           severity: 'warning',
           deviceId: device._id
         });
+        
+        // Send email to owner
+        if (device.ownerId?.email) {
+          emailService.sendDeviceOfflineAlert(device.ownerId.email, {
+            deviceName: device.name,
+            deviceId: device.deviceId,
+            lastSeen: device.lastSeen
+          });
+          console.log(`📧 Offline alert email sent to owner: ${device.ownerId.email}`);
+        }
         
         // Notify assigned users
         for (const user of device.assignedUsers) {
@@ -110,13 +124,23 @@ cron.schedule('* * * * *', async () => {
             severity: 'warning',
             deviceId: device._id
           });
+          
+          // Send email to assigned users
+          if (user.email) {
+            emailService.sendDeviceOfflineAlert(user.email, {
+              deviceName: device.name,
+              deviceId: device.deviceId,
+              lastSeen: device.lastSeen
+            });
+            console.log(`📧 Offline alert email sent to user: ${user.email}`);
+          }
         }
       }
     }
   } catch (error) {
     console.error('Offline check error:', error.message);
   }
-});
+}, 15000); // Check every 15 seconds
 
 // Note: Threshold check và email alerts được tích hợp trong API /api/controls/esp/:deviceId
 // Khi ESP32 gọi API, hệ thống sẽ check automation rules và gửi email nếu cần
@@ -131,7 +155,6 @@ app.use('/api/controls', require('./routes/controls'));
 app.use('/api/reminders', require('./routes/reminders'));
 app.use('/api/weather', require('./routes/weather'));
 app.use('/api/dashboard', require('./routes/dashboard'));
-app.use('/api/thingsboard', require('./routes/thingsboard'));
 app.use('/api/garden', require('./routes/garden'));
 app.use('/api/camera', require('./routes/camera'));
 

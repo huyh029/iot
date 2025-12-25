@@ -4,7 +4,6 @@ const Device = require('../models/Device');
 const User = require('../models/User');
 const SensorData = require('../models/SensorData');
 const Control = require('../models/Control');
-const thingsBoardService = require('../services/thingsboard');
 const emailService = require('../services/emailService');
 
 const router = express.Router();
@@ -42,7 +41,7 @@ router.get('/test-email/:email', async (req, res) => {
 // Get all devices with status (public - for debugging)
 router.get('/status/all', async (req, res) => {
   try {
-    const devices = await Device.find({}, 'deviceId name status lastSeen thingsboard.accessToken')
+    const devices = await Device.find({}, 'deviceId name status lastSeen')
       .sort({ lastSeen: -1 });
     
     res.json({
@@ -52,8 +51,7 @@ router.get('/status/all', async (req, res) => {
         deviceId: d.deviceId,
         name: d.name,
         status: d.status,
-        lastSeen: d.lastSeen,
-        hasThingsBoard: !!d.thingsboard?.accessToken
+        lastSeen: d.lastSeen
       }))
     });
   } catch (error) {
@@ -62,13 +60,11 @@ router.get('/status/all', async (req, res) => {
   }
 });
 
-// Get ThingsBoard access token by device ID (for ESP32)
-// No auth required - ESP32 uses this to get its access token
-router.get('/token/:deviceId', async (req, res) => {
+// Get MQTT config for ESP32
+router.get('/mqtt-config/:deviceId', async (req, res) => {
   try {
     const { deviceId } = req.params;
     
-    // Find device by deviceId field (e.g., "100100C40A24")
     const device = await Device.findOne({ deviceId: deviceId });
     
     if (!device) {
@@ -78,32 +74,31 @@ router.get('/token/:deviceId', async (req, res) => {
       });
     }
     
-    if (!device.thingsboard?.accessToken) {
-      return res.status(404).json({ 
-        success: false,
-        message: 'Device not connected to ThingsBoard' 
-      });
-    }
-    
     res.json({
       success: true,
       deviceId: device.deviceId,
-      accessToken: device.thingsboard.accessToken,
-      thingsboardHost: 'thingsboard.cloud',
-      mqttPort: 1883
+      mqttBroker: process.env.ESP32_MQTT_BROKER || 'broker.emqx.io',
+      mqttPort: parseInt(process.env.ESP32_MQTT_PORT) || 1883,
+      topicPrefix: process.env.ESP32_TOPIC_PREFIX || 'smartgarden',
+      topics: {
+        telemetry: `${process.env.ESP32_TOPIC_PREFIX || 'smartgarden'}/${deviceId}/telemetry`,
+        control: `${process.env.ESP32_TOPIC_PREFIX || 'smartgarden'}/${deviceId}/control`,
+        status: `${process.env.ESP32_TOPIC_PREFIX || 'smartgarden'}/${deviceId}/status`
+      }
     });
   } catch (error) {
-    console.error('Get device token error:', error);
+    console.error('Get MQTT config error:', error);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
 
 // Get control states by device ID (for ESP32)
-// Also acts as heartbeat + reads telemetry from ThingsBoard + checks thresholds from DB
+// Also acts as heartbeat + reads telemetry from MQTT + checks thresholds from DB
 router.get('/controls/:deviceId', async (req, res) => {
   try {
     const { deviceId } = req.params;
     const wsService = req.app.get('wsService');
+    const mqttService = req.app.get('mqttService');
     
     // Find device by deviceId field (e.g., "100100C40A24")
     const device = await Device.findOne({ deviceId: deviceId }).populate('ownerId', 'email fullName');
@@ -138,7 +133,7 @@ router.get('/controls/:deviceId', async (req, res) => {
     }
     // === END HEARTBEAT ===
     
-    // === READ TELEMETRY FROM THINGSBOARD ===
+    // === READ TELEMETRY FROM MQTT CACHE ===
     let sensorData = {
       temperature: null,
       humidity: null,
@@ -147,21 +142,15 @@ router.get('/controls/:deviceId', async (req, res) => {
       wind: null
     };
     
-    if (device.thingsboard?.accessToken && device.thingsboard?.deviceId) {
-      const telemetry = await thingsBoardService.getDeviceTelemetry(
-        device.thingsboard.accessToken,
-        device.thingsboard.deviceId
-      );
-      
-      if (telemetry) {
-        sensorData = {
-          temperature: telemetry.temperature ?? null,
-          humidity: telemetry.humidity ?? null,
-          light: telemetry.light ?? null,
-          soil_moisture: telemetry.soil_moisture ?? null,
-          wind: telemetry.wind ?? null
-        };
-      }
+    const telemetry = mqttService.getDeviceTelemetry(deviceId);
+    if (telemetry) {
+      sensorData = {
+        temperature: telemetry.temperature ?? null,
+        humidity: telemetry.humidity ?? null,
+        light: telemetry.light ?? null,
+        soil_moisture: telemetry.soil_moisture ?? null,
+        wind: telemetry.wind ?? null
+      };
     }
     // === END READ TELEMETRY ===
     
@@ -292,23 +281,8 @@ router.get('/controls/:deviceId', async (req, res) => {
     }
     // === END THRESHOLD CHECK ===
     
-    // Get control states from ThingsBoard attributes
-    let controls = {
-      light: { enabled: false, intensity: 100 },
-      fan: { enabled: false, intensity: 100 },
-      pump: { enabled: false, intensity: 100 },
-      watering: { enabled: false, intensity: 100 },
-      heater: { enabled: false, intensity: 100 },
-      cooler: { enabled: false, intensity: 100 },
-      mist: { enabled: false, intensity: 100 }
-    };
-    
-    if (device.thingsboard?.accessToken) {
-      const tbControls = await thingsBoardService.getDeviceControlStates(device.thingsboard.accessToken);
-      if (tbControls) {
-        controls = tbControls;
-      }
-    }
+    // Get control states from MQTT cache
+    const controls = mqttService.getDeviceControlStates(deviceId);
     
     res.json({
       success: true,
@@ -437,28 +411,7 @@ router.post('/', auth, authorize('superadmin', 'manager'), async (req, res) => {
       return res.status(400).json({ message: 'Device ID already exists' });
     }
 
-    // Provision device on ThingsBoard
-    const tbDeviceName = `${deviceId}_${name.replace(/\s+/g, '_')}`;
-    const provisionResult = await thingsBoardService.provisionDevice(tbDeviceName);
-    
-    if (!provisionResult.success) {
-      console.error('❌ ThingsBoard provision failed:', provisionResult.error);
-      return res.status(500).json({ 
-        message: 'Không thể tạo thiết bị trên ThingsBoard', 
-        error: provisionResult.error 
-      });
-    }
-
-    const thingsboardData = {
-      deviceId: provisionResult.deviceId,
-      accessToken: provisionResult.accessToken,
-      provisionKey: provisionResult.provisionKey,
-      provisionSecret: provisionResult.provisionSecret,
-      createdAt: new Date()
-    };
-    console.log('✅ ThingsBoard device provisioned:', tbDeviceName);
-
-    // Create device
+    // Create device (no ThingsBoard provisioning needed - using direct MQTT)
     const device = new Device({
       deviceId,
       name,
@@ -466,7 +419,6 @@ router.post('/', auth, authorize('superadmin', 'manager'), async (req, res) => {
       location,
       specifications,
       configuration,
-      thingsboard: thingsboardData,
       ownerId: currentUser.role === 'superadmin' ? req.body.ownerId || currentUser._id : currentUser._id
     });
 
@@ -670,14 +622,6 @@ router.delete('/:deviceId', auth, async (req, res) => {
       return res.status(403).json({ message: 'Access denied' });
     } else if (currentUser.role === 'user') {
       return res.status(403).json({ message: 'Users cannot delete devices' });
-    }
-
-    // Delete device from ThingsBoard
-    if (device.thingsboard?.deviceId) {
-      const tbResult = await thingsBoardService.deleteDevice(device.thingsboard.deviceId);
-      if (!tbResult.success) {
-        console.error('⚠️ Could not delete device from ThingsBoard:', tbResult.error);
-      }
     }
 
     // Hard delete from MongoDB

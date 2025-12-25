@@ -488,34 +488,35 @@ function DashboardPage({ stats, user }) {
     }));
   };
 
-  // Fetch sensor data for selected device
-  const fetchDeviceSensorData = async (deviceId) => {
-    if (!deviceId) return;
+  // Fetch sensor data for selected device (from MQTT via backend)
+  const fetchDeviceSensorData = async (device) => {
+    if (!device?.deviceId) return;
     
     try {
       const token = localStorage.getItem('token');
-      const response = await apiFetch(`/api/thingsboard/device/${deviceId}/sensors`, {
+      // Use new MQTT-based endpoint with device's deviceId field
+      const response = await apiFetch(`/api/devices/controls/${device.deviceId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
       if (response.ok) {
         const data = await response.json();
-        if (data.available) {
+        if (data.success && data.telemetry) {
           updateSensorData({
-            temperature: data.temperature?.value,
-            humidity: data.humidity?.value,
-            light: data.light?.value,
-            soil_moisture: data.soil_moisture?.value,
-            wind: data.wind?.value,
-            timestamp: data.timestamp,
-            source: data.source,
-            deviceName: data.deviceName
+            temperature: data.telemetry.temperature,
+            humidity: data.telemetry.humidity,
+            light: data.telemetry.light,
+            soil_moisture: data.telemetry.soil_moisture,
+            wind: data.telemetry.wind,
+            timestamp: new Date().toISOString(),
+            source: 'mqtt',
+            deviceName: device.name
           });
         } else {
           setSensorData(prev => ({ 
             ...prev, 
             loading: false,
-            deviceName: data.deviceName,
+            deviceName: device.name,
             temperature: { value: null, unit: '°C' },
             humidity: { value: null, unit: '%' },
             light: { value: null, unit: 'lux' },
@@ -532,7 +533,7 @@ function DashboardPage({ stats, user }) {
   // When selected device changes, fetch its sensor data
   useEffect(() => {
     if (selectedDevice) {
-      fetchDeviceSensorData(selectedDevice._id);
+      fetchDeviceSensorData(selectedDevice);
     }
   }, [selectedDevice]);
 
@@ -541,7 +542,7 @@ function DashboardPage({ stats, user }) {
     if (!selectedDevice) return;
     
     const interval = setInterval(() => {
-      fetchDeviceSensorData(selectedDevice._id);
+      fetchDeviceSensorData(selectedDevice);
     }, 5000);
 
     return () => clearInterval(interval);
@@ -2287,10 +2288,10 @@ function ControlsPage() {
     }
   };
 
-  // Fetch control states from ThingsBoard
+  // Fetch control states from MQTT cache
   const fetchControlStates = async (deviceId) => {
     try {
-      const response = await apiFetch(`/api/thingsboard/device/${deviceId}/controls`, {
+      const response = await apiFetch(`/api/controls/states/${deviceId}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -2298,20 +2299,20 @@ function ControlsPage() {
       
       if (response.ok) {
         const data = await response.json();
-        if (data.available && data.controls) {
-          // Update preset controls with ThingsBoard states
+        if (data.success && data.controls) {
+          // Update preset controls with MQTT states
           setPresetControls(prev => prev.map(control => {
-            const tbState = data.controls[control.id];
-            if (tbState) {
+            const mqttState = data.controls[control.id];
+            if (mqttState) {
               return {
                 ...control,
-                enabled: tbState.enabled || false,
-                intensity: tbState.intensity || 100
+                enabled: mqttState.enabled || false,
+                intensity: mqttState.intensity || 100
               };
             }
             return control;
           }));
-          console.log('Loaded control states from ThingsBoard:', data.controls);
+          console.log('Loaded control states from MQTT:', data.controls);
         }
       }
     } catch (error) {
@@ -2452,7 +2453,14 @@ function ControlsPage() {
   };
 
   const addSensorAlert = async () => {
-    if (!newSensorAlert.name || !selectedDevice) return;
+    console.log('=== addSensorAlert called ===');
+    console.log('newSensorAlert:', newSensorAlert);
+    console.log('selectedDevice:', selectedDevice);
+    
+    if (!newSensorAlert.name || !selectedDevice) {
+      console.log('Validation failed - name:', newSensorAlert.name, 'device:', selectedDevice);
+      return;
+    }
     const alert = { ...newSensorAlert, id: Date.now() };
     setSensorAlerts([...sensorAlerts, alert]);
     setNewSensorAlert({ name: '', sensor: 'light', conditionType: 'range', minValue: 10, maxValue: 90, message: '', enabled: true });
