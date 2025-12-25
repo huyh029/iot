@@ -1,5 +1,6 @@
 const mqtt = require('mqtt');
 const EventEmitter = require('events');
+const Device = require('../models/Device');
 
 class MQTTService extends EventEmitter {
   constructor() {
@@ -117,7 +118,7 @@ class MQTTService extends EventEmitter {
     }
   }
 
-  handleTelemetry(deviceId, data) {
+  async handleTelemetry(deviceId, data) {
     // Update cache
     const existing = this.deviceTelemetryCache.get(deviceId) || {};
     const updated = {
@@ -130,6 +131,27 @@ class MQTTService extends EventEmitter {
     };
     this.deviceTelemetryCache.set(deviceId, updated);
 
+    // === UPDATE DEVICE STATUS & LASTSEEN IN DATABASE ===
+    try {
+      const device = await Device.findOne({ deviceId: deviceId });
+      if (device) {
+        const wasOffline = device.status !== 'online';
+        device.status = 'online';
+        device.lastSeen = new Date();
+        await device.save();
+        
+        console.log(`📡 Device ${deviceId} heartbeat via MQTT (lastSeen: ${device.lastSeen.toISOString()})`);
+        
+        // Broadcast status change if device was offline
+        if (wasOffline && this.wsService) {
+          this.wsService.broadcastDeviceStatus(device._id.toString(), 'online');
+        }
+      }
+    } catch (err) {
+      console.error(`❌ Failed to update device ${deviceId} status:`, err.message);
+    }
+    // === END UPDATE ===
+
     // Emit event for other services
     this.emit('telemetry', { deviceId, data: updated });
 
@@ -139,8 +161,22 @@ class MQTTService extends EventEmitter {
     }
   }
 
-  handleStatus(deviceId, data) {
+  async handleStatus(deviceId, data) {
     console.log(`📡 Device ${deviceId} status:`, data.status);
+    
+    // Update device status in database
+    try {
+      const device = await Device.findOne({ deviceId: deviceId });
+      if (device) {
+        device.status = data.status;
+        device.lastSeen = new Date();
+        await device.save();
+        console.log(`📡 Device ${deviceId} status updated to ${data.status}`);
+      }
+    } catch (err) {
+      console.error(`❌ Failed to update device ${deviceId} status:`, err.message);
+    }
+    
     this.emit('status', { deviceId, status: data.status });
     
     if (this.wsService) {
