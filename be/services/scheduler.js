@@ -1,13 +1,17 @@
 const Control = require('../models/Control');
-const moment = require('moment-timezone');
 const mqttService = require('./mqttService');
 
 class SchedulerService {
   static async checkScheduledControls(wsService) {
     try {
-      const now = moment().tz('Asia/Ho_Chi_Minh');
-      const currentDay = now.format('dddd').toLowerCase();
-      const currentTime = now.format('HH:mm');
+      // Get current time in Vietnam timezone
+      const now = new Date();
+      const vnTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }));
+      const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+      const currentDay = days[vnTime.getDay()];
+      const currentTime = vnTime.toTimeString().slice(0, 5); // HH:mm
+      
+      console.log(`⏰ Scheduler: ${currentDay} ${currentTime}`);
 
       // Find all scheduled controls
       const scheduledControls = await Control.find({
@@ -51,11 +55,18 @@ class SchedulerService {
         'scheduleSettings.schedules': { $exists: true, $ne: [] }
       }).populate('deviceId', 'name deviceId');
 
+      console.log(`⏰ Checking schedules: ${currentDay} ${currentTime}, found ${controls.length} controls`);
+
       for (const control of controls) {
         if (!control.scheduleSettings?.schedules) continue;
 
         for (const schedule of control.scheduleSettings.schedules) {
-          if (!schedule.days?.includes(currentDay)) continue;
+          console.log(`⏰ Schedule: ${control.controlType} at ${schedule.time}, days: ${schedule.days?.join(',')}, current: ${currentDay} ${currentTime}`);
+          
+          if (!schedule.days?.includes(currentDay)) {
+            console.log(`⏰ Day not matched, skipping`);
+            continue;
+          }
 
           // Check if current time matches
           if (schedule.time === currentTime) {
@@ -64,24 +75,31 @@ class SchedulerService {
             // Send command via MQTT
             const espDeviceId = control.deviceId?.deviceId;
             if (espDeviceId) {
+              // Map action names to ESP32 control names
+              const actionMap = {
+                'water': 'pump',      // water -> pump
+                'irrigation': 'pump'  // irrigation -> pump
+              };
+              const controlType = actionMap[schedule.action] || schedule.action || control.controlType;
+              
               mqttService.controlDevice(
                 espDeviceId,
-                schedule.action || control.controlType,
+                controlType,
                 'on',
                 schedule.intensity || 100
               );
-              console.log('MQTT scheduled control sent');
-
+              console.log(`MQTT scheduled control sent: ${controlType}`);
               // If duration is set, schedule auto-off
               if (schedule.duration && schedule.duration > 0) {
+                const offControlType = controlType; // Use same mapped type
                 setTimeout(() => {
                   mqttService.controlDevice(
                     espDeviceId,
-                    schedule.action || control.controlType,
+                    offControlType,
                     'off',
                     0
                   );
-                  console.log(`⏰ Auto-off after ${schedule.duration} minutes`);
+                  console.log(`⏰ Auto-off ${offControlType} after ${schedule.duration} minutes`);
                 }, schedule.duration * 60 * 1000);
               }
             }

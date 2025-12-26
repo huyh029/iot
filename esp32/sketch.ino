@@ -246,21 +246,33 @@ void handleControlCommand(JsonDocument& doc) {
     }
   }
   
+  Serial.print("Control index: ");
+  Serial.println(idx);
+  
   if (idx >= 0) {
     bool enabled = (strcmp(action, "on") == 0);
     controls[idx].enabled = enabled;
     controls[idx].intensity = intensity;
     
+    Serial.print("Enabled: ");
+    Serial.println(enabled ? "true" : "false");
+    
     // Apply to LED (PWM for intensity)
     if (enabled) {
       int pwmValue = map(intensity, 0, 100, 0, 255);
       analogWrite(controlPins[idx], pwmValue);
+      Serial.print("LED ON with PWM: ");
+      Serial.println(pwmValue);
     } else {
       digitalWrite(controlPins[idx], LOW);
+      Serial.println("LED OFF");
     }
     
     // Send acknowledgment
     sendControlAck(type, enabled, intensity);
+  } else {
+    Serial.print("Unknown control type: ");
+    Serial.println(type);
   }
 }
 
