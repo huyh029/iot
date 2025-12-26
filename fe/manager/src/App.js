@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
+import { Canvas, useFrame } from '@react-three/fiber';
+import { Sky, Cloud, OrbitControls, useTexture, Stars } from '@react-three/drei';
+import * as THREE from 'three';
 
 // API Base URL - change this to switch between environments
 const API_BASE_URL = 'https://beiot.onrender.com';
@@ -3737,7 +3740,7 @@ function GardenPage() {
 
   if (loading) return <div className="loading"><div className="loading-spinner"></div></div>;
 
-  const tabs = [{ id: 'map', label: 'Sơ đồ vườn', icon: 'grid_view' }, { id: 'camera', label: 'Camera', icon: 'videocam' }];
+  const tabs = [{ id: 'map', label: 'Sơ đồ vườn', icon: 'grid_view' }, { id: '3d', label: '3D Minecraft', icon: 'view_in_ar' }, { id: 'camera', label: 'Camera', icon: 'videocam' }];
 
   return (
     <div>
@@ -3794,13 +3797,16 @@ function GardenPage() {
           </div>
 
           {/* Center - Canvas */}
-          <div style={{ background: 'white', borderRadius: '0.75rem', padding: '1rem', border: '1px solid #e2e8f0' }}>
+          <div style={{ background: 'white', borderRadius: '0.75rem', padding: '1rem', border: '1px solid #e2e8f0', overflow: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
               <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: '700', color: '#0f172a' }}>Sơ đồ khu vườn</h3>
-              <p style={{ margin: 0, fontSize: '0.75rem', color: '#94a3b8' }}>Kéo thả để di chuyển • Kéo góc để thay đổi kích thước</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <span style={{ fontSize: '0.75rem', color: '#64748b', background: '#f1f5f9', padding: '0.25rem 0.5rem', borderRadius: '0.25rem' }}>800 × 500 px</span>
+                <p style={{ margin: 0, fontSize: '0.75rem', color: '#94a3b8' }}>Kéo thả để di chuyển • Kéo góc để thay đổi kích thước</p>
+              </div>
             </div>
             
-            {/* Canvas Area */}
+            {/* Canvas Area - Fixed size 800x500px for accurate 3D mapping */}
             <div
               ref={canvasRef}
               onDragOver={handleCanvasDragOver}
@@ -3811,8 +3817,8 @@ function GardenPage() {
               onClick={() => setSelectedZone(null)}
               style={{
                 position: 'relative',
-                width: '100%',
-                height: '450px',
+                width: '800px',
+                height: '500px',
                 background: 'linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%)',
                 borderRadius: '0.75rem',
                 border: '2px dashed #86efac',
@@ -3979,6 +3985,10 @@ function GardenPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {activeTab === '3d' && (
+        <Garden3DView zones={placedZones} zoneTemplates={zoneTemplates} />
       )}
 
       {activeTab === 'camera' && (
@@ -4282,6 +4292,704 @@ function InfoPage({ user }) {
                 <p style={{ margin: '0.125rem 0 0', fontSize: '0.875rem', fontWeight: '500', color: '#0f172a' }}>{user?.purchaseDate ? new Date(user.purchaseDate).toLocaleDateString('vi-VN') : 'N/A'}</p>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// 3D Garden Components
+function Ground({ size = 80 }) {
+  const texture = useTexture('/textures/dirt.jpg');
+  texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+  texture.repeat.set(size / 4, size / 4);
+  texture.magFilter = THREE.NearestFilter;
+  
+  return (
+    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
+      <planeGeometry args={[size, size]} />
+      <meshStandardMaterial map={texture} roughness={0.9} />
+    </mesh>
+  );
+}
+
+function Water({ position, size }) {
+  const waterRef = React.useRef();
+  
+  useFrame((state) => {
+    if (waterRef.current) {
+      waterRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 2) * 0.05;
+    }
+  });
+  
+  return (
+    <mesh ref={waterRef} position={position} receiveShadow>
+      <boxGeometry args={size} />
+      <meshStandardMaterial 
+        color="#3b82f6" 
+        transparent 
+        opacity={0.7} 
+        roughness={0.1}
+        metalness={0.3}
+      />
+    </mesh>
+  );
+}
+
+function Tree({ position, scale = 1 }) {
+  return (
+    <group position={position} scale={scale}>
+      {/* Trunk */}
+      <mesh position={[0, 2, 0]} castShadow>
+        <cylinderGeometry args={[0.3, 0.5, 4, 8]} />
+        <meshStandardMaterial color="#5D4037" roughness={0.9} />
+      </mesh>
+      {/* Leaves - multiple layers */}
+      <mesh position={[0, 5, 0]} castShadow>
+        <coneGeometry args={[2.5, 3, 8]} />
+        <meshStandardMaterial color="#2E7D32" roughness={0.8} />
+      </mesh>
+      <mesh position={[0, 6.5, 0]} castShadow>
+        <coneGeometry args={[2, 2.5, 8]} />
+        <meshStandardMaterial color="#388E3C" roughness={0.8} />
+      </mesh>
+      <mesh position={[0, 7.8, 0]} castShadow>
+        <coneGeometry args={[1.2, 2, 8]} />
+        <meshStandardMaterial color="#43A047" roughness={0.8} />
+      </mesh>
+    </group>
+  );
+}
+
+function Flower({ position, color }) {
+  const flowerRef = React.useRef();
+  
+  useFrame((state) => {
+    if (flowerRef.current) {
+      flowerRef.current.rotation.y = Math.sin(state.clock.elapsedTime + position[0]) * 0.1;
+    }
+  });
+  
+  return (
+    <group ref={flowerRef} position={position}>
+      {/* Stem */}
+      <mesh position={[0, 0.3, 0]}>
+        <cylinderGeometry args={[0.03, 0.03, 0.6, 6]} />
+        <meshStandardMaterial color="#4CAF50" />
+      </mesh>
+      {/* Petals */}
+      {[0, 1, 2, 3, 4].map((i) => (
+        <mesh key={i} position={[Math.cos(i * 1.26) * 0.15, 0.65, Math.sin(i * 1.26) * 0.15]} rotation={[0.3, i * 1.26, 0]}>
+          <sphereGeometry args={[0.12, 8, 8]} />
+          <meshStandardMaterial color={color} />
+        </mesh>
+      ))}
+      {/* Center */}
+      <mesh position={[0, 0.65, 0]}>
+        <sphereGeometry args={[0.1, 8, 8]} />
+        <meshStandardMaterial color="#FFC107" />
+      </mesh>
+    </group>
+  );
+}
+
+function RicePlant({ position }) {
+  const plantRef = React.useRef();
+  
+  useFrame((state) => {
+    if (plantRef.current) {
+      plantRef.current.rotation.z = Math.sin(state.clock.elapsedTime * 2 + position[0]) * 0.05;
+    }
+  });
+  
+  return (
+    <group ref={plantRef} position={position}>
+      {/* Stems */}
+      {[0, 1, 2].map((i) => (
+        <mesh key={i} position={[(i - 1) * 0.1, 0.4, 0]} rotation={[0, 0, (i - 1) * 0.1]}>
+          <cylinderGeometry args={[0.02, 0.03, 0.8, 6]} />
+          <meshStandardMaterial color="#7CB342" />
+        </mesh>
+      ))}
+      {/* Rice grains */}
+      <mesh position={[0, 0.85, 0]} rotation={[0.3, 0, 0.2]}>
+        <sphereGeometry args={[0.08, 6, 6]} />
+        <meshStandardMaterial color="#FFD54F" />
+      </mesh>
+      <mesh position={[0.05, 0.8, 0.02]} rotation={[0.2, 0.3, 0.1]}>
+        <sphereGeometry args={[0.06, 6, 6]} />
+        <meshStandardMaterial color="#FFCA28" />
+      </mesh>
+    </group>
+  );
+}
+
+function Vegetable({ position, type }) {
+  const colors = {
+    carrot: '#FF5722',
+    cabbage: '#8BC34A',
+    tomato: '#F44336',
+    default: '#4CAF50'
+  };
+  
+  return (
+    <group position={position}>
+      {/* Leaves */}
+      <mesh position={[0, 0.3, 0]}>
+        <coneGeometry args={[0.2, 0.4, 6]} />
+        <meshStandardMaterial color="#66BB6A" />
+      </mesh>
+      {/* Vegetable body */}
+      <mesh position={[0, 0.1, 0]}>
+        <sphereGeometry args={[0.15, 8, 8]} />
+        <meshStandardMaterial color={colors[type] || colors.default} />
+      </mesh>
+    </group>
+  );
+}
+
+function FruitTree({ position }) {
+  return (
+    <group position={position}>
+      {/* Trunk */}
+      <mesh position={[0, 1.5, 0]} castShadow>
+        <cylinderGeometry args={[0.25, 0.35, 3, 8]} />
+        <meshStandardMaterial color="#5D4037" roughness={0.9} />
+      </mesh>
+      {/* Canopy */}
+      <mesh position={[0, 4, 0]} castShadow>
+        <sphereGeometry args={[2, 16, 16]} />
+        <meshStandardMaterial color="#388E3C" roughness={0.8} />
+      </mesh>
+      {/* Fruits */}
+      {[[-0.8, 3.5, 0.5], [0.7, 3.8, -0.4], [0, 3.2, 0.8], [-0.5, 4.2, -0.6]].map((pos, i) => (
+        <mesh key={i} position={pos} castShadow>
+          <sphereGeometry args={[0.2, 8, 8]} />
+          <meshStandardMaterial color={i % 2 === 0 ? '#F44336' : '#FF9800'} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+function Greenhouse({ position, size }) {
+  return (
+    <group position={position}>
+      {/* Frame */}
+      <mesh position={[0, size[1] / 2, 0]}>
+        <boxGeometry args={size} />
+        <meshStandardMaterial color="#90CAF9" transparent opacity={0.4} roughness={0.1} metalness={0.2} />
+      </mesh>
+      {/* Frame edges */}
+      <lineSegments>
+        <edgesGeometry args={[new THREE.BoxGeometry(...size)]} />
+        <lineBasicMaterial color="#1565C0" />
+      </lineSegments>
+    </group>
+  );
+}
+
+function FishPond({ position, size }) {
+  const fishRef = React.useRef([]);
+  
+  useFrame((state) => {
+    fishRef.current.forEach((fish, i) => {
+      if (fish) {
+        const t = state.clock.elapsedTime + i * 2;
+        fish.position.x = position[0] + Math.sin(t * 0.5) * (size[0] / 3);
+        fish.position.z = position[2] + Math.cos(t * 0.3) * (size[2] / 3);
+        fish.rotation.y = Math.atan2(Math.cos(t * 0.5) * 0.5, -Math.sin(t * 0.3) * 0.3);
+      }
+    });
+  });
+  
+  return (
+    <group>
+      {/* Water */}
+      <Water position={position} size={size} />
+      {/* Fish */}
+      {[0, 1, 2].map((i) => (
+        <mesh key={i} ref={(el) => (fishRef.current[i] = el)} position={[position[0], position[1] + 0.2, position[2]]}>
+          <coneGeometry args={[0.1, 0.4, 6]} rotation={[0, 0, Math.PI / 2]} />
+          <meshStandardMaterial color={['#FF9800', '#F44336', '#FFEB3B'][i]} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+function Fence({ groundSize }) {
+  const posts = [];
+  for (let i = -groundSize / 2; i <= groundSize / 2; i += 4) {
+    posts.push([i, 0, -groundSize / 2]);
+    posts.push([i, 0, groundSize / 2]);
+    posts.push([-groundSize / 2, 0, i]);
+    posts.push([groundSize / 2, 0, i]);
+  }
+  
+  return (
+    <group>
+      {posts.map((pos, i) => (
+        <mesh key={i} position={[pos[0], 0.75, pos[2]]} castShadow>
+          <boxGeometry args={[0.2, 1.5, 0.2]} />
+          <meshStandardMaterial color="#6D4C41" roughness={0.9} />
+        </mesh>
+      ))}
+      {/* Rails */}
+      {[-groundSize / 2, groundSize / 2].map((z, i) => (
+        <mesh key={`rail-z-${i}`} position={[0, 0.5, z]}>
+          <boxGeometry args={[groundSize, 0.15, 0.1]} />
+          <meshStandardMaterial color="#5D4037" />
+        </mesh>
+      ))}
+      {[-groundSize / 2, groundSize / 2].map((x, i) => (
+        <mesh key={`rail-x-${i}`} position={[x, 0.5, 0]}>
+          <boxGeometry args={[0.1, 0.15, groundSize]} />
+          <meshStandardMaterial color="#5D4037" />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+function Butterfly({ startPosition }) {
+  const butterflyRef = React.useRef();
+  const wingRef1 = React.useRef();
+  const wingRef2 = React.useRef();
+  
+  useFrame((state) => {
+    if (butterflyRef.current) {
+      const t = state.clock.elapsedTime;
+      butterflyRef.current.position.x = startPosition[0] + Math.sin(t * 0.5) * 5;
+      butterflyRef.current.position.y = startPosition[1] + Math.sin(t * 2) * 0.5;
+      butterflyRef.current.position.z = startPosition[2] + Math.cos(t * 0.3) * 5;
+      butterflyRef.current.rotation.y = Math.atan2(Math.cos(t * 0.5), -Math.sin(t * 0.3));
+    }
+    if (wingRef1.current && wingRef2.current) {
+      const wingAngle = Math.sin(state.clock.elapsedTime * 15) * 0.5;
+      wingRef1.current.rotation.y = wingAngle;
+      wingRef2.current.rotation.y = -wingAngle;
+    }
+  });
+  
+  const color = ['#E91E63', '#9C27B0', '#FF9800', '#03A9F4'][Math.floor(Math.random() * 4)];
+  
+  return (
+    <group ref={butterflyRef} position={startPosition}>
+      {/* Body */}
+      <mesh>
+        <capsuleGeometry args={[0.03, 0.15, 4, 8]} />
+        <meshStandardMaterial color="#333" />
+      </mesh>
+      {/* Wings */}
+      <mesh ref={wingRef1} position={[0.1, 0, 0]}>
+        <planeGeometry args={[0.2, 0.15]} />
+        <meshStandardMaterial color={color} side={THREE.DoubleSide} transparent opacity={0.8} />
+      </mesh>
+      <mesh ref={wingRef2} position={[-0.1, 0, 0]}>
+        <planeGeometry args={[0.2, 0.15]} />
+        <meshStandardMaterial color={color} side={THREE.DoubleSide} transparent opacity={0.8} />
+      </mesh>
+    </group>
+  );
+}
+
+function Bird({ startPosition }) {
+  const birdRef = React.useRef();
+  const wingRef1 = React.useRef();
+  const wingRef2 = React.useRef();
+  
+  useFrame((state) => {
+    if (birdRef.current) {
+      const t = state.clock.elapsedTime * 0.3;
+      birdRef.current.position.x = startPosition[0] + Math.sin(t) * 20;
+      birdRef.current.position.z = startPosition[2] + Math.cos(t) * 20;
+      birdRef.current.rotation.y = t + Math.PI / 2;
+    }
+    if (wingRef1.current && wingRef2.current) {
+      const wingAngle = Math.sin(state.clock.elapsedTime * 8) * 0.4;
+      wingRef1.current.rotation.z = wingAngle;
+      wingRef2.current.rotation.z = -wingAngle;
+    }
+  });
+  
+  return (
+    <group ref={birdRef} position={startPosition}>
+      {/* Body */}
+      <mesh>
+        <capsuleGeometry args={[0.15, 0.4, 4, 8]} rotation={[0, 0, Math.PI / 2]} />
+        <meshStandardMaterial color="#37474F" />
+      </mesh>
+      {/* Wings */}
+      <mesh ref={wingRef1} position={[0, 0.1, 0.2]}>
+        <boxGeometry args={[0.5, 0.05, 0.3]} />
+        <meshStandardMaterial color="#455A64" />
+      </mesh>
+      <mesh ref={wingRef2} position={[0, 0.1, -0.2]}>
+        <boxGeometry args={[0.5, 0.05, 0.3]} />
+        <meshStandardMaterial color="#455A64" />
+      </mesh>
+      {/* Beak */}
+      <mesh position={[0.35, 0, 0]} rotation={[0, 0, -Math.PI / 2]}>
+        <coneGeometry args={[0.05, 0.15, 4]} />
+        <meshStandardMaterial color="#FF9800" />
+      </mesh>
+    </group>
+  );
+}
+
+function ZoneContent({ zone, position, size, groundSize, canvasWidth, canvasHeight }) {
+  const zoneX = (zone.x / canvasWidth) * groundSize - groundSize / 2;
+  const zoneZ = (zone.y / canvasHeight) * groundSize - groundSize / 2;
+  const zoneWidth = (zone.width / canvasWidth) * groundSize;
+  const zoneDepth = (zone.height / canvasHeight) * groundSize;
+  
+  const centerX = zoneX + zoneWidth / 2;
+  const centerZ = zoneZ + zoneDepth / 2;
+  
+  // Generate items based on zone type
+  const items = [];
+  const itemCount = Math.floor((zoneWidth * zoneDepth) / 4);
+  
+  for (let i = 0; i < Math.min(itemCount, 30); i++) {
+    const x = zoneX + Math.random() * zoneWidth;
+    const z = zoneZ + Math.random() * zoneDepth;
+    items.push({ x, z, key: `${zone.id}-${i}` });
+  }
+  
+  switch (zone.type) {
+    case 'rice':
+      return (
+        <group>
+          {/* Rice paddy water */}
+          <Water position={[centerX, 0.05, centerZ]} size={[zoneWidth, 0.1, zoneDepth]} />
+          {/* Rice plants */}
+          {items.map((item) => (
+            <RicePlant key={item.key} position={[item.x, 0.1, item.z]} />
+          ))}
+        </group>
+      );
+    case 'vegetable':
+    case 'herb':
+      return (
+        <group>
+          {/* Soil bed */}
+          <mesh position={[centerX, 0.05, centerZ]} receiveShadow>
+            <boxGeometry args={[zoneWidth, 0.1, zoneDepth]} />
+            <meshStandardMaterial color="#5D4037" roughness={1} />
+          </mesh>
+          {/* Vegetables */}
+          {items.map((item, i) => (
+            <Vegetable key={item.key} position={[item.x, 0.1, item.z]} type={['carrot', 'cabbage', 'tomato'][i % 3]} />
+          ))}
+        </group>
+      );
+    case 'flower':
+      return (
+        <group>
+          {items.map((item, i) => (
+            <Flower key={item.key} position={[item.x, 0, item.z]} color={['#E91E63', '#9C27B0', '#FF5722', '#FFEB3B', '#03A9F4'][i % 5]} />
+          ))}
+        </group>
+      );
+    case 'fruit':
+      return (
+        <group>
+          {items.slice(0, 4).map((item) => (
+            <FruitTree key={item.key} position={[item.x, 0, item.z]} />
+          ))}
+        </group>
+      );
+    case 'fish':
+      return <FishPond position={[centerX, 0.3, centerZ]} size={[zoneWidth * 0.9, 0.6, zoneDepth * 0.9]} />;
+    case 'greenhouse':
+      return <Greenhouse position={[centerX, 0, centerZ]} size={[zoneWidth, 4, zoneDepth]} />;
+    default:
+      return (
+        <mesh position={[centerX, 0.1, centerZ]} receiveShadow>
+          <boxGeometry args={[zoneWidth, 0.2, zoneDepth]} />
+          <meshStandardMaterial color="#9E9E9E" />
+        </mesh>
+      );
+  }
+}
+
+function Scene({ zones, viewMode }) {
+  const groundSize = 80;
+  const canvasWidth = 800;
+  const canvasHeight = 500;
+  
+  return (
+    <>
+      {/* Environment */}
+      {viewMode === 'day' ? (
+        <>
+          <Sky sunPosition={[100, 50, 100]} turbidity={0.3} rayleigh={0.5} />
+          <Cloud position={[-20, 25, -10]} speed={0.2} opacity={0.6} />
+          <Cloud position={[20, 30, 20]} speed={0.3} opacity={0.5} />
+          <Cloud position={[0, 28, -30]} speed={0.25} opacity={0.7} />
+        </>
+      ) : (
+        <>
+          <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
+          <mesh position={[50, 40, 50]}>
+            <sphereGeometry args={[5, 32, 32]} />
+            <meshBasicMaterial color="#F5F5DC" />
+          </mesh>
+        </>
+      )}
+      
+      {/* Lighting */}
+      <ambientLight intensity={viewMode === 'day' ? 0.5 : 0.2} />
+      <directionalLight
+        position={[50, 50, 25]}
+        intensity={viewMode === 'day' ? 1.2 : 0.3}
+        castShadow
+        shadow-mapSize={[2048, 2048]}
+        shadow-camera-far={150}
+        shadow-camera-left={-50}
+        shadow-camera-right={50}
+        shadow-camera-top={50}
+        shadow-camera-bottom={-50}
+      />
+      <hemisphereLight
+        color={viewMode === 'day' ? '#87CEEB' : '#1a1a2e'}
+        groundColor={viewMode === 'day' ? '#8B4513' : '#0a0a0a'}
+        intensity={0.4}
+      />
+      
+      {/* Ground */}
+      <Ground size={groundSize} />
+      
+      {/* Fence */}
+      <Fence groundSize={groundSize} />
+      
+      {/* Trees at corners */}
+      <Tree position={[-35, 0, -35]} scale={1.2} />
+      <Tree position={[35, 0, -35]} scale={1} />
+      <Tree position={[-35, 0, 35]} scale={1.1} />
+      <Tree position={[35, 0, 35]} scale={0.9} />
+      
+      {/* Additional decorative trees */}
+      <Tree position={[-25, 0, 0]} scale={0.8} />
+      <Tree position={[25, 0, 0]} scale={0.85} />
+      
+      {/* Decorative pond */}
+      <Water position={[-25, 0.15, 20]} size={[8, 0.3, 6]} />
+      
+      {/* Zone contents */}
+      {zones.map((zone) => (
+        <ZoneContent
+          key={zone.id}
+          zone={zone}
+          groundSize={groundSize}
+          canvasWidth={canvasWidth}
+          canvasHeight={canvasHeight}
+        />
+      ))}
+      
+      {/* Animated creatures */}
+      {viewMode === 'day' && (
+        <>
+          <Butterfly startPosition={[5, 3, 5]} />
+          <Butterfly startPosition={[-10, 2.5, -5]} />
+          <Butterfly startPosition={[15, 4, -10]} />
+          <Bird startPosition={[0, 15, 0]} />
+          <Bird startPosition={[10, 18, 10]} />
+        </>
+      )}
+      
+      {/* Random flowers on ground */}
+      {Array.from({ length: 50 }).map((_, i) => (
+        <Flower
+          key={`ground-flower-${i}`}
+          position={[
+            (Math.random() - 0.5) * groundSize * 0.9,
+            0,
+            (Math.random() - 0.5) * groundSize * 0.9
+          ]}
+          color={['#E91E63', '#9C27B0', '#FF5722', '#FFEB3B', '#03A9F4'][i % 5]}
+        />
+      ))}
+    </>
+  );
+}
+
+// 3D Garden View Component with React Three Fiber
+function Garden3DView({ zones, zoneTemplates }) {
+  const wrapperRef = React.useRef(null);
+  const [viewMode, setViewMode] = React.useState('day');
+  const [isFullscreen, setIsFullscreen] = React.useState(false);
+
+  // Toggle fullscreen
+  const toggleFullscreen = () => {
+    if (!wrapperRef.current) return;
+    if (!document.fullscreenElement) {
+      wrapperRef.current.requestFullscreen().catch(console.error);
+    } else {
+      document.exitFullscreen();
+    }
+  };
+
+  // Listen for fullscreen change
+  React.useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+      {/* Controls */}
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        background: 'white',
+        padding: '1rem 1.25rem',
+        borderRadius: '0.75rem',
+        border: '1px solid #e2e8f0'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: '700', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span className="material-symbols-outlined" style={{ color: '#4cbe00' }}>view_in_ar</span>
+            Vườn 3D
+          </h3>
+          <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Kéo chuột để xoay • Cuộn để zoom</span>
+        </div>
+        
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <button
+            onClick={() => setViewMode('day')}
+            style={{
+              padding: '0.5rem 1rem',
+              borderRadius: '0.5rem',
+              border: 'none',
+              cursor: 'pointer',
+              fontWeight: '600',
+              fontSize: '0.8125rem',
+              background: viewMode === 'day' ? '#fbbf24' : '#f1f5f9',
+              color: viewMode === 'day' ? 'white' : '#64748b'
+            }}
+          >
+            ☀️ Ngày
+          </button>
+          <button
+            onClick={() => setViewMode('night')}
+            style={{
+              padding: '0.5rem 1rem',
+              borderRadius: '0.5rem',
+              border: 'none',
+              cursor: 'pointer',
+              fontWeight: '600',
+              fontSize: '0.8125rem',
+              background: viewMode === 'night' ? '#6366f1' : '#f1f5f9',
+              color: viewMode === 'night' ? 'white' : '#64748b'
+            }}
+          >
+            🌙 Đêm
+          </button>
+          <button
+            onClick={toggleFullscreen}
+            style={{
+              padding: '0.5rem 1rem',
+              borderRadius: '0.5rem',
+              border: 'none',
+              cursor: 'pointer',
+              fontWeight: '600',
+              fontSize: '0.8125rem',
+              background: isFullscreen ? '#ef4444' : '#4cbe00',
+              color: 'white'
+            }}
+          >
+            {isFullscreen ? '✕ Thoát' : '⛶ Phóng to'}
+          </button>
+        </div>
+      </div>
+
+      {/* 3D Canvas */}
+      <div 
+        ref={wrapperRef}
+        style={{ 
+          background: viewMode === 'day' ? '#87CEEB' : '#0f172a', 
+          borderRadius: isFullscreen ? 0 : '0.75rem', 
+          overflow: 'hidden',
+          border: isFullscreen ? 'none' : '1px solid #334155',
+          position: 'relative',
+          height: isFullscreen ? '100vh' : '500px'
+        }}
+      >
+        {isFullscreen && (
+          <button onClick={toggleFullscreen} style={{ position: 'absolute', top: '1rem', right: '1rem', zIndex: 100, padding: '0.75rem 1.25rem', borderRadius: '0.5rem', border: 'none', cursor: 'pointer', background: 'rgba(239,68,68,0.9)', color: 'white', fontWeight: '600' }}>
+            ✕ Thoát (ESC)
+          </button>
+        )}
+        
+        <Canvas
+          shadows
+          camera={{ position: [40, 30, 40], fov: 50 }}
+          style={{ width: '100%', height: '100%' }}
+        >
+          <React.Suspense fallback={null}>
+            <Scene zones={zones} viewMode={viewMode} />
+            <OrbitControls 
+              enablePan={true}
+              enableZoom={true}
+              enableRotate={true}
+              minDistance={20}
+              maxDistance={120}
+              maxPolarAngle={Math.PI / 2.1}
+              target={[0, 0, 0]}
+            />
+          </React.Suspense>
+        </Canvas>
+      </div>
+
+      {/* Legend */}
+      {!isFullscreen && (
+        <div style={{ 
+          padding: '1rem', 
+          background: 'white',
+          borderRadius: '0.75rem',
+          border: '1px solid #e2e8f0',
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: '1rem',
+          justifyContent: 'center'
+        }}>
+          {zoneTemplates.map(template => (
+            <div key={template.type} style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '0.5rem',
+              padding: '0.375rem 0.75rem',
+              background: '#f8fafc',
+              borderRadius: '0.375rem'
+            }}>
+              <span style={{ fontSize: '1rem' }}>{template.icon}</span>
+              <span style={{ fontSize: '0.75rem', color: '#64748b' }}>{template.name}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Info */}
+      <div style={{
+        background: 'linear-gradient(135deg, #4cbe00 0%, #3da600 100%)',
+        borderRadius: '0.75rem',
+        padding: '1rem 1.25rem',
+        color: 'white'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <span className="material-symbols-outlined" style={{ fontSize: '1.5rem' }}>tips_and_updates</span>
+          <div>
+            <p style={{ margin: 0, fontWeight: '700', fontSize: '0.9375rem' }}>Mẹo sử dụng</p>
+            <p style={{ margin: '0.25rem 0 0', fontSize: '0.8125rem', opacity: 0.9 }}>
+              Thêm khu vực ở tab "Sơ đồ vườn" để hiển thị trong chế độ 3D. Có bầu trời, mây, bướm và chim bay!
+            </p>
           </div>
         </div>
       </div>
