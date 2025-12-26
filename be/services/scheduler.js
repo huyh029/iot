@@ -49,9 +49,19 @@ class SchedulerService {
   // Check schedules saved from frontend (in scheduleSettings)
   static async checkSavedSchedules(wsService, currentDay, currentTime) {
     try {
+      // First, log all controls with scheduleSettings for debugging
+      const allScheduleControls = await Control.find({
+        isActive: true,
+        'scheduleSettings.schedules': { $exists: true, $ne: [] }
+      }).populate('deviceId', 'name deviceId');
+      
+      console.log(`⏰ All schedule controls in DB: ${allScheduleControls.length}`);
+      allScheduleControls.forEach(c => {
+        console.log(`  - ${c.controlType}: enabled=${c.scheduleSettings?.enabled}, schedules=${JSON.stringify(c.scheduleSettings?.schedules)}`);
+      });
+
       const controls = await Control.find({
         isActive: true,
-        'scheduleSettings.enabled': true,
         'scheduleSettings.schedules': { $exists: true, $ne: [] }
       }).populate('deviceId', 'name deviceId');
 
@@ -61,19 +71,36 @@ class SchedulerService {
         if (!control.scheduleSettings?.schedules) continue;
 
         for (const schedule of control.scheduleSettings.schedules) {
-          console.log(`⏰ Schedule: ${control.controlType} at ${schedule.time}, days: ${schedule.days?.join(',')}, current: ${currentDay} ${currentTime}`);
+          console.log(`⏰ Schedule: ${control.controlType} at ${schedule.time}, days: ${JSON.stringify(schedule.days)}, current: ${currentDay} ${currentTime}`);
           
-          if (!schedule.days?.includes(currentDay)) {
+          // Check days - support both string array ['monday', 'tuesday'] and number array [0, 1, 2]
+          let dayMatched = false;
+          if (schedule.days) {
+            if (typeof schedule.days[0] === 'string') {
+              dayMatched = schedule.days.includes(currentDay);
+            } else {
+              // Number array: 0=sunday, 1=monday, etc
+              const dayIndex = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'].indexOf(currentDay);
+              dayMatched = schedule.days.includes(dayIndex);
+            }
+          } else {
+            // No days specified = every day
+            dayMatched = true;
+          }
+          
+          if (!dayMatched) {
             console.log(`⏰ Day not matched, skipping`);
             continue;
           }
 
           // Check if current time matches
           if (schedule.time === currentTime) {
-            console.log(`⏰ Schedule triggered: ${control.controlType} at ${currentTime}`);
+            console.log(`🚀 Schedule triggered: ${control.controlType} at ${currentTime}`);
             
             // Send command via MQTT
             const espDeviceId = control.deviceId?.deviceId;
+            console.log(`🚀 ESP Device ID: ${espDeviceId}`);
+            
             if (espDeviceId) {
               // Map action names to ESP32 control names
               const actionMap = {
@@ -82,17 +109,21 @@ class SchedulerService {
               };
               const controlType = actionMap[schedule.action] || schedule.action || control.controlType;
               
-              mqttService.controlDevice(
+              console.log(`🚀 Sending MQTT command: device=${espDeviceId}, type=${controlType}, action=on`);
+              
+              const result = mqttService.controlDevice(
                 espDeviceId,
                 controlType,
                 'on',
                 schedule.intensity || 100
               );
-              console.log(`MQTT scheduled control sent: ${controlType}`);
+              console.log(`🚀 MQTT result:`, result);
               // If duration is set, schedule auto-off
               if (schedule.duration && schedule.duration > 0) {
                 const offControlType = controlType; // Use same mapped type
+                console.log(`⏰ Will auto-off ${offControlType} after ${schedule.duration} minutes`);
                 setTimeout(() => {
+                  console.log(`⏰ Auto-off triggered for ${offControlType}`);
                   mqttService.controlDevice(
                     espDeviceId,
                     offControlType,
@@ -102,6 +133,8 @@ class SchedulerService {
                   console.log(`⏰ Auto-off ${offControlType} after ${schedule.duration} minutes`);
                 }, schedule.duration * 60 * 1000);
               }
+            } else {
+              console.log(`⚠️ No ESP Device ID found for control ${control._id}`);
             }
 
             // Broadcast to WebSocket

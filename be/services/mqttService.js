@@ -310,6 +310,9 @@ class MQTTService extends EventEmitter {
 
   // Send control command to device
   controlDevice(deviceId, controlType, action, intensity = 100) {
+    console.log(`📤 controlDevice called: deviceId=${deviceId}, type=${controlType}, action=${action}, intensity=${intensity}`);
+    console.log(`📤 MQTT connected: ${this.connected}`);
+    
     if (!this.connected) {
       console.error('❌ MQTT not connected');
       return { success: false, error: 'MQTT not connected' };
@@ -323,11 +326,14 @@ class MQTTService extends EventEmitter {
       timestamp: Date.now()
     };
 
+    console.log(`📤 Publishing to topic: ${topic}`);
+    console.log(`📤 Payload: ${JSON.stringify(payload)}`);
+
     this.client.publish(topic, JSON.stringify(payload), { qos: 1 }, (err) => {
       if (err) {
         console.error(`❌ Failed to publish control to ${deviceId}:`, err);
       } else {
-        console.log(`📤 Control sent to ${deviceId}:`, payload);
+        console.log(`✅ Control sent successfully to ${deviceId}:`, payload);
       }
     });
 

@@ -144,10 +144,13 @@ void loop() {
 // ==================== FUNCTIONS ====================
 
 void initPins() {
-  // LED outputs
+  // LED outputs - Setup PWM for ESP32 (Arduino Core 3.x API)
   for (int i = 0; i < 7; i++) {
     pinMode(controlPins[i], OUTPUT);
     digitalWrite(controlPins[i], LOW);
+    
+    // New ESP32 Arduino Core 3.x API: ledcAttach(pin, freq, resolution)
+    ledcAttach(controlPins[i], 5000, 8);  // 5kHz, 8-bit resolution
   }
   
   // PIR input
@@ -155,6 +158,8 @@ void initPins() {
   
   // LDR input
   pinMode(LDR_PIN, INPUT);
+  
+  Serial.println("Pins initialized with LEDC PWM");
 }
 
 void connectWiFi() {
@@ -204,9 +209,16 @@ void connectMQTT() {
 }
 
 void mqttCallback(char* topic, byte* payload, unsigned int length) {
-  Serial.print("Message received [");
-  Serial.print(topic);
-  Serial.print("]: ");
+  Serial.println("\n========== MQTT MESSAGE RECEIVED ==========");
+  Serial.print("Topic: ");
+  Serial.println(topic);
+  Serial.print("Length: ");
+  Serial.println(length);
+  Serial.print("Raw payload: ");
+  for (unsigned int i = 0; i < length; i++) {
+    Serial.print((char)payload[i]);
+  }
+  Serial.println();
   
   // Parse JSON payload
   StaticJsonDocument<256> doc;
@@ -218,24 +230,37 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     return;
   }
   
+  Serial.println("JSON parsed successfully!");
+  
   // Handle control command
   if (String(topic) == String(topicControl)) {
+    Serial.println("Topic matched control topic!");
     handleControlCommand(doc);
+  } else {
+    Serial.print("Topic NOT matched. Expected: ");
+    Serial.println(topicControl);
   }
+  Serial.println("============================================\n");
 }
 
 void handleControlCommand(JsonDocument& doc) {
+  Serial.println("--- handleControlCommand ---");
+  
   const char* type = doc["type"];
   const char* action = doc["action"];
   int intensity = doc["intensity"] | 100;
   
-  Serial.print("Control: ");
-  Serial.print(type);
-  Serial.print(" -> ");
-  Serial.print(action);
-  Serial.print(" (");
-  Serial.print(intensity);
-  Serial.println("%)");
+  Serial.print("Type: ");
+  Serial.println(type ? type : "NULL");
+  Serial.print("Action: ");
+  Serial.println(action ? action : "NULL");
+  Serial.print("Intensity: ");
+  Serial.println(intensity);
+  
+  if (!type || !action) {
+    Serial.println("ERROR: type or action is NULL!");
+    return;
+  }
   
   // Find control index
   int idx = -1;
@@ -248,32 +273,45 @@ void handleControlCommand(JsonDocument& doc) {
   
   Serial.print("Control index: ");
   Serial.println(idx);
+  Serial.print("Available controls: ");
+  for (int i = 0; i < 7; i++) {
+    Serial.print(controlNames[i]);
+    Serial.print(" ");
+  }
+  Serial.println();
   
   if (idx >= 0) {
     bool enabled = (strcmp(action, "on") == 0);
     controls[idx].enabled = enabled;
     controls[idx].intensity = intensity;
     
-    Serial.print("Enabled: ");
-    Serial.println(enabled ? "true" : "false");
+    Serial.print("Setting ");
+    Serial.print(controlNames[idx]);
+    Serial.print(" to ");
+    Serial.println(enabled ? "ON" : "OFF");
+    Serial.print("Pin: ");
+    Serial.println(controlPins[idx]);
     
-    // Apply to LED (PWM for intensity)
+    // Apply to LED using LEDC PWM (ESP32 Arduino Core 3.x)
     if (enabled) {
       int pwmValue = map(intensity, 0, 100, 0, 255);
-      analogWrite(controlPins[idx], pwmValue);
+      ledcWrite(controlPins[idx], pwmValue);  // Use pin directly, not channel
       Serial.print("LED ON with PWM: ");
       Serial.println(pwmValue);
     } else {
-      digitalWrite(controlPins[idx], LOW);
-      Serial.println("LED OFF");
+      ledcWrite(controlPins[idx], 0);  // Turn off using LEDC
+      digitalWrite(controlPins[idx], LOW);  // Also force LOW
+      Serial.println("LED OFF (LEDC=0, digitalWrite=LOW)");
     }
     
     // Send acknowledgment
     sendControlAck(type, enabled, intensity);
+    Serial.println("ACK sent!");
   } else {
-    Serial.print("Unknown control type: ");
+    Serial.print("ERROR: Unknown control type: ");
     Serial.println(type);
   }
+  Serial.println("--- end handleControlCommand ---");
 }
 
 void sendControlAck(const char* type, bool enabled, int intensity) {

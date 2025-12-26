@@ -60,6 +60,57 @@ router.get('/status/all', async (req, res) => {
   }
 });
 
+// DEBUG: Get all controls with schedules (for debugging scheduler)
+router.get('/debug/schedules', async (req, res) => {
+  try {
+    const controls = await Control.find({
+      isActive: true,
+      'scheduleSettings.schedules': { $exists: true, $ne: [] }
+    }).populate('deviceId', 'name deviceId');
+    
+    res.json({
+      success: true,
+      count: controls.length,
+      controls: controls.map(c => ({
+        id: c._id,
+        controlType: c.controlType,
+        mode: c.mode,
+        deviceId: c.deviceId?.deviceId,
+        deviceName: c.deviceId?.name,
+        scheduleSettings: c.scheduleSettings
+      }))
+    });
+  } catch (error) {
+    console.error('Debug schedules error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// DEBUG: Get all alert controls (for debugging alerts)
+router.get('/debug/alerts', async (req, res) => {
+  try {
+    const controls = await Control.find({
+      isActive: true,
+      controlType: 'alert'
+    }).populate('deviceId', 'name deviceId');
+    
+    res.json({
+      success: true,
+      count: controls.length,
+      controls: controls.map(c => ({
+        id: c._id,
+        controlType: c.controlType,
+        deviceId: c.deviceId?.deviceId,
+        deviceName: c.deviceId?.name,
+        alertSettings: c.alertSettings
+      }))
+    });
+  } catch (error) {
+    console.error('Debug alerts error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
 // Get MQTT config for ESP32
 router.get('/mqtt-config/:deviceId', async (req, res) => {
   try {

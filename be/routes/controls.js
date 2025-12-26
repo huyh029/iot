@@ -746,19 +746,20 @@ router.post('/automation', auth, async (req, res) => {
     }
 
     // For alert and reminder, always create new (allow multiple)
-    // For other types, find existing or create new
+    // For schedule and sensor, also allow multiple (don't overwrite)
     let control;
     
-    if (type === 'alert' || type === 'reminder') {
-      // Always create new alert/reminder
+    if (type === 'alert' || type === 'reminder' || type === 'schedule' || type === 'sensor') {
+      // Always create new - allow multiple automations of same type
       control = new Control({
         deviceId,
         userId: user._id,
         controlType,
-        mode: type === 'alert' ? 'threshold' : 'scheduled'
+        mode: type === 'alert' ? 'threshold' : (type === 'schedule' || type === 'reminder') ? 'scheduled' : 'auto'
       });
+      console.log(`Creating new ${type} control for ${controlType}`);
     } else {
-      // Find existing or create new for schedule/sensor
+      // Find existing or create new for other types
       control = await Control.findOne({ 
         deviceId, 
         controlType,
@@ -770,15 +771,16 @@ router.post('/automation', auth, async (req, res) => {
           deviceId,
           userId: user._id,
           controlType,
-          mode: type === 'schedule' ? 'scheduled' : 'auto'
+          mode: 'manual'
         });
       }
     }
 
     if (type === 'schedule') {
       control.scheduleSettings = {
-        enabled: settings.enabled,
+        enabled: settings.enabled !== false,
         schedules: [{
+          name: settings.name,
           time: settings.time,
           days: settings.days,
           action: settings.action,
@@ -788,8 +790,9 @@ router.post('/automation', auth, async (req, res) => {
       };
     } else if (type === 'sensor') {
       control.automaticSettings = {
-        enabled: settings.enabled,
+        enabled: settings.enabled !== false,
         triggers: [{
+          name: settings.name,
           sensorType: settings.trigger,
           condition: settings.condition,
           threshold: settings.value,
@@ -873,7 +876,13 @@ router.get('/automation/:deviceId', auth, async (req, res) => {
           schedules.push({
             id: control._id,
             controlType: control.controlType,
-            ...s
+            name: s.title || s.name || `${control.controlType} schedule`,
+            time: s.time,
+            days: s.days,
+            action: s.action,
+            actionValue: s.intensity || s.actionValue || 100,  // Map intensity -> actionValue for FE
+            duration: s.duration,
+            enabled: true
           });
         });
       }
@@ -882,7 +891,13 @@ router.get('/automation/:deviceId', auth, async (req, res) => {
           automations.push({
             id: control._id,
             controlType: control.controlType,
-            ...t
+            name: t.name || `${control.controlType} automation`,
+            trigger: t.sensorType,
+            condition: t.condition,
+            value: t.threshold,
+            action: t.action,
+            actionValue: t.intensity || t.actionValue || 100,  // Map intensity -> actionValue for FE
+            enabled: true
           });
         });
       }
@@ -890,7 +905,9 @@ router.get('/automation/:deviceId', auth, async (req, res) => {
         alerts.push({
           id: control._id,
           controlType: control.controlType,
-          ...control.alertSettings
+          name: control.alertSettings.name || `${control.alertSettings.sensor} alert`,
+          ...control.alertSettings,
+          enabled: true
         });
       }
     });

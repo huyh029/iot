@@ -145,21 +145,86 @@ async function seedDatabase() {
 
     // 6. Create Sample Plants
     const plantTypes = [
+      // Rau củ
       { name: 'Cà chua', type: 'vegetable', variety: 'Cherry Tomato', days: 75 },
       { name: 'Rau xà lách', type: 'vegetable', variety: 'Butter Lettuce', days: 45 },
       { name: 'Ớt', type: 'vegetable', variety: 'Bell Pepper', days: 80 },
+      { name: 'Dưa chuột', type: 'vegetable', variety: 'Cucumber', days: 55 },
+      { name: 'Cà rốt', type: 'vegetable', variety: 'Carrot', days: 70 },
+      { name: 'Bắp cải', type: 'vegetable', variety: 'Cabbage', days: 90 },
+      
+      // Thảo mộc
       { name: 'Húng quế', type: 'herb', variety: 'Sweet Basil', days: 60 },
-      { name: 'Dưa chuột', type: 'vegetable', variety: 'Cucumber', days: 55 }
+      { name: 'Rau mùi', type: 'herb', variety: 'Coriander', days: 45 },
+      { name: 'Bạc hà', type: 'herb', variety: 'Mint', days: 50 },
+      
+      // Cây ăn quả - Trái cây nhiệt đới
+      { name: 'Xoài', type: 'fruit', variety: 'Mango Cat Hoa Loc', days: 120 },
+      { name: 'Bưởi', type: 'fruit', variety: 'Pomelo Da Xanh', days: 180 },
+      { name: 'Cam', type: 'fruit', variety: 'Orange Sanh', days: 150 },
+      { name: 'Chanh', type: 'fruit', variety: 'Lime', days: 90 },
+      { name: 'Ổi', type: 'fruit', variety: 'Guava', days: 100 },
+      { name: 'Mít', type: 'fruit', variety: 'Jackfruit Thai', days: 150 },
+      { name: 'Sầu riêng', type: 'fruit', variety: 'Durian Ri6', days: 180 },
+      { name: 'Măng cụt', type: 'fruit', variety: 'Mangosteen', days: 150 },
+      { name: 'Chôm chôm', type: 'fruit', variety: 'Rambutan', days: 120 },
+      { name: 'Nhãn', type: 'fruit', variety: 'Longan', days: 130 },
+      { name: 'Vải', type: 'fruit', variety: 'Lychee', days: 120 },
+      { name: 'Thanh long', type: 'fruit', variety: 'Dragon Fruit', days: 100 },
+      { name: 'Dừa', type: 'fruit', variety: 'Coconut', days: 365 },
+      { name: 'Chuối', type: 'fruit', variety: 'Banana Cavendish', days: 270 },
+      { name: 'Đu đủ', type: 'fruit', variety: 'Papaya', days: 180 },
+      { name: 'Dưa hấu', type: 'fruit', variety: 'Watermelon', days: 80 },
+      { name: 'Dưa lưới', type: 'fruit', variety: 'Cantaloupe', days: 75 },
+      { name: 'Táo', type: 'fruit', variety: 'Apple', days: 150 },
+      { name: 'Lê', type: 'fruit', variety: 'Pear', days: 140 },
+      { name: 'Nho', type: 'fruit', variety: 'Grape', days: 150 },
+      { name: 'Dâu tây', type: 'fruit', variety: 'Strawberry', days: 90 },
+      { name: 'Bơ', type: 'fruit', variety: 'Avocado', days: 180 },
+      { name: 'Mận', type: 'fruit', variety: 'Plum', days: 120 },
+      { name: 'Đào', type: 'fruit', variety: 'Peach', days: 130 },
+      { name: 'Khế', type: 'fruit', variety: 'Star Fruit', days: 100 },
+      { name: 'Sapoche', type: 'fruit', variety: 'Sapodilla', days: 150 },
+      { name: 'Mãng cầu', type: 'fruit', variety: 'Soursop', days: 140 },
+      { name: 'Vú sữa', type: 'fruit', variety: 'Star Apple', days: 150 },
+      { name: 'Quýt', type: 'fruit', variety: 'Tangerine', days: 140 },
+      
+      // Hoa
+      { name: 'Hoa hồng', type: 'flower', variety: 'Rose', days: 60 },
+      { name: 'Hoa cúc', type: 'flower', variety: 'Chrysanthemum', days: 75 },
+      { name: 'Hoa lan', type: 'flower', variety: 'Orchid', days: 90 }
     ];
 
     for (const device of devices) {
       const deviceUsers = users.filter(u => u.deviceIds.includes(device._id));
       
-      for (let i = 0; i < 3; i++) {
-        const plantType = plantTypes[i % plantTypes.length];
+      // Tạo 5 cây mẫu cho mỗi thiết bị với các loại khác nhau
+      const shuffledPlants = [...plantTypes].sort(() => Math.random() - 0.5);
+      const selectedPlants = shuffledPlants.slice(0, 5);
+      
+      for (let i = 0; i < selectedPlants.length; i++) {
+        const plantType = selectedPlants[i];
         const plantedDaysAgo = Math.floor(Math.random() * plantType.days);
         const plantedDate = new Date(Date.now() - plantedDaysAgo * 24 * 60 * 60 * 1000);
         const expectedHarvestDate = new Date(plantedDate.getTime() + plantType.days * 24 * 60 * 60 * 1000);
+        
+        // Điều kiện tối ưu theo loại cây
+        let optimalConditions = {
+          temperature: { min: 20, max: 30, unit: '°C' },
+          humidity: { min: 60, max: 80, unit: '%' },
+          light: { min: 1000, max: 3000, unit: 'lux' },
+          soilMoisture: { min: 40, max: 70, unit: '%' }
+        };
+        
+        // Điều chỉnh điều kiện theo loại cây ăn quả
+        if (plantType.type === 'fruit') {
+          optimalConditions = {
+            temperature: { min: 22, max: 35, unit: '°C' },
+            humidity: { min: 65, max: 85, unit: '%' },
+            light: { min: 2000, max: 5000, unit: 'lux' },
+            soilMoisture: { min: 50, max: 75, unit: '%' }
+          };
+        }
         
         const plant = new Plant({
           name: `${plantType.name} ${i + 1}`,
@@ -174,12 +239,7 @@ async function seedDatabase() {
             row: Math.floor(i / 3) + 1,
             column: (i % 3) + 1
           },
-          optimalConditions: {
-            temperature: { min: 20, max: 30, unit: '°C' },
-            humidity: { min: 60, max: 80, unit: '%' },
-            light: { min: 1000, max: 3000, unit: 'lux' },
-            soilMoisture: { min: 40, max: 70, unit: '%' }
-          },
+          optimalConditions,
           isActive: true
         });
         
@@ -187,7 +247,7 @@ async function seedDatabase() {
         await plant.save();
       }
     }
-    console.log('✅ Sample plants created');
+    console.log('✅ Sample plants created (including fruit trees)');
 
     // 7. Create Sample Sensor Data
     const sensorTypes = ['temperature', 'humidity', 'light', 'soil_moisture'];

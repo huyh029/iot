@@ -2202,11 +2202,8 @@ function ControlsPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('control');
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [reminderType, setReminderType] = useState('time'); // 'time' hoặc 'sensor'
-  const [reminders, setReminders] = useState([]);
   const [sensorAlerts, setSensorAlerts] = useState([]);
   const [automations, setAutomations] = useState([]);
-  const [newReminder, setNewReminder] = useState({ title: '', message: '', time: '08:00', days: ['monday'], enabled: true });
   const [newSensorAlert, setNewSensorAlert] = useState({ 
     name: '', 
     sensor: 'light', 
@@ -2333,9 +2330,15 @@ function ControlsPage() {
       
       if (response.ok) {
         const data = await response.json();
-        if (data.schedules) setSchedules(data.schedules.map((s, i) => ({ ...s, id: s.id || Date.now() + i })));
-        if (data.automations) setAutomations(data.automations.map((a, i) => ({ ...a, id: a.id || Date.now() + i })));
-        if (data.alerts) setSensorAlerts(data.alerts.map((a, i) => ({ ...a, id: a.id || Date.now() + i })));
+        if (data.schedules) setSchedules(data.schedules
+          .filter(s => s.name) // Lọc bỏ schedule không có tên
+          .map((s, i) => ({ ...s, id: s.id || Date.now() + i })));
+        if (data.automations) setAutomations(data.automations
+          .filter(a => a.name) // Lọc bỏ automation không có tên
+          .map((a, i) => ({ ...a, id: a.id || Date.now() + i })));
+        if (data.alerts) setSensorAlerts(data.alerts
+          .filter(a => a.name && a.sensor) // Lọc bỏ alert không có tên hoặc sensor
+          .map((a, i) => ({ ...a, id: a.id || Date.now() + i })));
       }
     } catch (error) {
       console.error('Failed to fetch automations:', error);
@@ -2429,32 +2432,6 @@ function ControlsPage() {
     }
   };
 
-  const addReminder = async () => {
-    if (!newReminder.title || !selectedDevice) return;
-    const reminder = { ...newReminder, id: Date.now() };
-    setReminders([...reminders, reminder]);
-    setNewReminder({ title: '', message: '', time: '08:00', days: ['monday'], enabled: true });
-    setShowCreateForm(false);
-    
-    // Save to backend (optional - reminders can be local)
-    try {
-      await apiFetch('/api/controls/automation', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({
-          deviceId: selectedDevice._id,
-          type: 'reminder',
-          settings: reminder
-        })
-      });
-    } catch (error) {
-      console.error('Save reminder error:', error);
-    }
-  };
-
   const addSensorAlert = async () => {
     console.log('=== addSensorAlert called ===');
     console.log('newSensorAlert:', newSensorAlert);
@@ -2514,10 +2491,8 @@ function ControlsPage() {
     }
   };
 
-  const toggleReminder = (id) => setReminders(reminders.map(r => r.id === id ? { ...r, enabled: !r.enabled } : r));
   const toggleSensorAlert = (id) => setSensorAlerts(sensorAlerts.map(a => a.id === id ? { ...a, enabled: !a.enabled } : a));
   const toggleAutomation = (id) => setAutomations(automations.map(a => a.id === id ? { ...a, enabled: !a.enabled } : a));
-  const deleteReminder = (id) => setReminders(reminders.filter(r => r.id !== id));
   const deleteSensorAlert = (id) => setSensorAlerts(sensorAlerts.filter(a => a.id !== id));
   const deleteAutomation = (id) => setAutomations(automations.filter(a => a.id !== id));
 
@@ -4369,6 +4344,234 @@ function Tree({ position, scale = 1 }) {
   );
 }
 
+// Người nông dân 3D
+function Farmer({ position, rotation = 0, action = 'standing', shirtColor = '#1976D2', pantsColor = '#5D4037', walkRadius = 5, walkSpeed = 0.3 }) {
+  const groupRef = React.useRef();
+  const leftLegRef = React.useRef();
+  const rightLegRef = React.useRef();
+  const leftArmRef = React.useRef();
+  const rightArmRef = React.useRef();
+  
+  // Các vùng cấm đi vào (ao, cây, nhà kính, kho...)
+  const forbiddenZones = [
+    { x: -25, z: 20, rx: 5, rz: 4 }, // Ao trang trí
+    { x: -35, z: -35, rx: 3, rz: 3 }, // Cây góc
+    { x: 35, z: -35, rx: 3, rz: 3 },
+    { x: -35, z: 35, rx: 3, rz: 3 },
+    { x: 35, z: 35, rx: 3, rz: 3 },
+    { x: -25, z: 0, rx: 2, rz: 2 }, // Cây trang trí
+    { x: 25, z: 0, rx: 2, rz: 2 },
+  ];
+  
+  // Kiểm tra điểm có nằm trong vùng cấm không
+  const isInForbiddenZone = (x, z) => {
+    if (Math.abs(x) > 36 || Math.abs(z) > 36) return true;
+    for (const zone of forbiddenZones) {
+      const dx = (x - zone.x) / zone.rx;
+      const dz = (z - zone.z) / zone.rz;
+      if (dx * dx + dz * dz < 1) return true;
+    }
+    return false;
+  };
+  
+  // State cho di chuyển tự nhiên
+  const state = React.useRef({
+    x: position[0],
+    z: position[2],
+    targetX: position[0],
+    targetZ: position[2],
+    rotation: rotation,
+    isPaused: false,
+    pauseTime: 0,
+    nextPauseAt: Math.random() * 5 + 3,
+    speed: walkSpeed * (0.8 + Math.random() * 0.4),
+  });
+  
+  // Chọn điểm đến mới ngẫu nhiên, tránh vùng cấm
+  const pickNewTarget = () => {
+    const s = state.current;
+    let attempts = 0;
+    let newX, newZ;
+    do {
+      const angle = Math.random() * Math.PI * 2;
+      const dist = walkRadius * (0.5 + Math.random() * 0.5);
+      newX = s.x + Math.cos(angle) * dist;
+      newZ = s.z + Math.sin(angle) * dist;
+      attempts++;
+    } while (isInForbiddenZone(newX, newZ) && attempts < 20);
+    if (attempts >= 20) {
+      newX = position[0] + (Math.random() - 0.5) * 2;
+      newZ = position[2] + (Math.random() - 0.5) * 2;
+    }
+    s.targetX = newX;
+    s.targetZ = newZ;
+  };
+  
+  useFrame((frameState, delta) => {
+    if (!groupRef.current) return;
+    const s = state.current;
+    const t = frameState.clock.elapsedTime;
+    
+    if (action === 'walking') {
+      if (s.isPaused) {
+        s.pauseTime += delta;
+        groupRef.current.rotation.y = s.rotation + Math.sin(t * 0.8) * 0.4;
+        groupRef.current.position.y = position[1] + Math.sin(t * 2) * 0.01;
+        if (s.pauseTime > 1.5 + Math.random() * 2) {
+          s.isPaused = false;
+          s.pauseTime = 0;
+          s.nextPauseAt = t + 4 + Math.random() * 6;
+          pickNewTarget();
+        }
+        return;
+      }
+      
+      if (t > s.nextPauseAt) {
+        s.isPaused = true;
+        s.pauseTime = 0;
+        return;
+      }
+      
+      const dx = s.targetX - s.x;
+      const dz = s.targetZ - s.z;
+      const dist = Math.sqrt(dx * dx + dz * dz);
+      
+      if (dist < 0.3) {
+        pickNewTarget();
+      } else {
+        const moveSpeed = s.speed * delta * 2;
+        const nextX = s.x + (dx / dist) * moveSpeed;
+        const nextZ = s.z + (dz / dist) * moveSpeed;
+        
+        if (!isInForbiddenZone(nextX, nextZ)) {
+          s.x = nextX;
+          s.z = nextZ;
+        } else {
+          pickNewTarget();
+        }
+        
+        const targetRot = Math.atan2(dx, dz);
+        let rotDiff = targetRot - s.rotation;
+        while (rotDiff > Math.PI) rotDiff -= Math.PI * 2;
+        while (rotDiff < -Math.PI) rotDiff += Math.PI * 2;
+        s.rotation += rotDiff * 0.08;
+        
+        groupRef.current.position.x = s.x;
+        groupRef.current.position.z = s.z;
+        groupRef.current.rotation.y = s.rotation;
+        
+        const walkCycle = t * 6 * s.speed;
+        groupRef.current.position.y = position[1] + Math.abs(Math.sin(walkCycle)) * 0.04;
+        
+        if (leftLegRef.current && rightLegRef.current) {
+          leftLegRef.current.rotation.x = Math.sin(walkCycle) * 0.6;
+          rightLegRef.current.rotation.x = Math.sin(walkCycle + Math.PI) * 0.6;
+        }
+        if (leftArmRef.current && rightArmRef.current) {
+          leftArmRef.current.rotation.x = Math.sin(walkCycle + Math.PI) * 0.35;
+          rightArmRef.current.rotation.x = Math.sin(walkCycle) * 0.35;
+        }
+      }
+    } else if (action === 'working') {
+      const workCycle = t * 1.5;
+      const workPhase = Math.sin(workCycle);
+      
+      if (rightArmRef.current) rightArmRef.current.rotation.x = -0.3 + workPhase * 0.6;
+      if (leftArmRef.current) leftArmRef.current.rotation.x = -0.2 + workPhase * 0.3;
+      groupRef.current.rotation.x = 0.05 + Math.max(0, workPhase) * 0.15;
+      groupRef.current.position.y = position[1] - Math.max(0, workPhase) * 0.05;
+      
+      if (Math.sin(t * 0.3) > 0.9) {
+        groupRef.current.rotation.x = 0;
+        groupRef.current.rotation.y = rotation + Math.sin(t) * 0.2;
+      }
+    } else if (action === 'standing') {
+      groupRef.current.position.y = position[1] + Math.sin(t * 1.5) * 0.015;
+      const lookCycle = Math.sin(t * 0.4) * Math.sin(t * 0.17);
+      groupRef.current.rotation.y = rotation + lookCycle * 0.5;
+      
+      if (leftArmRef.current && rightArmRef.current) {
+        leftArmRef.current.rotation.x = Math.sin(t * 0.8) * 0.05;
+        rightArmRef.current.rotation.x = Math.sin(t * 0.8 + 0.5) * 0.05;
+      }
+    }
+  });
+  
+  return (
+    <group ref={groupRef} position={position} rotation={[0, rotation, 0]}>
+      <mesh position={[0, 1.6, 0]}>
+        <sphereGeometry args={[0.15, 12, 12]} />
+        <meshStandardMaterial color="#FFCC80" />
+      </mesh>
+      <mesh position={[0, 1.72, -0.02]}>
+        <sphereGeometry args={[0.13, 10, 10, 0, Math.PI * 2, 0, Math.PI / 2]} />
+        <meshStandardMaterial color="#3E2723" />
+      </mesh>
+      <mesh position={[0, 1.8, 0]} rotation={[0.1, 0, 0]}>
+        <coneGeometry args={[0.35, 0.15, 16]} />
+        <meshStandardMaterial color="#D7CCC8" />
+      </mesh>
+      <mesh position={[0, 1.2, 0]}>
+        <cylinderGeometry args={[0.18, 0.22, 0.5, 8]} />
+        <meshStandardMaterial color={shirtColor} />
+      </mesh>
+      <group ref={leftArmRef} position={[-0.25, 1.35, 0]}>
+        <mesh position={[0, -0.15, 0]}>
+          <capsuleGeometry args={[0.05, 0.25, 4, 8]} />
+          <meshStandardMaterial color={shirtColor} />
+        </mesh>
+        <mesh position={[0, -0.35, 0]}>
+          <sphereGeometry args={[0.05, 8, 8]} />
+          <meshStandardMaterial color="#FFCC80" />
+        </mesh>
+      </group>
+      <group ref={rightArmRef} position={[0.25, 1.35, 0]}>
+        <mesh position={[0, -0.15, 0]}>
+          <capsuleGeometry args={[0.05, 0.25, 4, 8]} />
+          <meshStandardMaterial color={shirtColor} />
+        </mesh>
+        <mesh position={[0, -0.35, 0]}>
+          <sphereGeometry args={[0.05, 8, 8]} />
+          <meshStandardMaterial color="#FFCC80" />
+        </mesh>
+        {action === 'working' && (
+          <group position={[0, -0.4, 0.1]}>
+            <mesh position={[0, -0.3, 0]} rotation={[0.5, 0, 0]}>
+              <cylinderGeometry args={[0.02, 0.02, 0.8, 6]} />
+              <meshStandardMaterial color="#8D6E63" />
+            </mesh>
+          </group>
+        )}
+      </group>
+      <mesh position={[0, 0.75, 0]}>
+        <cylinderGeometry args={[0.2, 0.18, 0.4, 8]} />
+        <meshStandardMaterial color={pantsColor} />
+      </mesh>
+      <group ref={leftLegRef} position={[-0.1, 0.55, 0]}>
+        <mesh position={[0, -0.2, 0]}>
+          <capsuleGeometry args={[0.06, 0.35, 4, 8]} />
+          <meshStandardMaterial color={pantsColor} />
+        </mesh>
+        <mesh position={[0, -0.47, 0.05]}>
+          <boxGeometry args={[0.1, 0.08, 0.18]} />
+          <meshStandardMaterial color="#212121" />
+        </mesh>
+      </group>
+      <group ref={rightLegRef} position={[0.1, 0.55, 0]}>
+        <mesh position={[0, -0.2, 0]}>
+          <capsuleGeometry args={[0.06, 0.35, 4, 8]} />
+          <meshStandardMaterial color={pantsColor} />
+        </mesh>
+        <mesh position={[0, -0.47, 0.05]}>
+          <boxGeometry args={[0.1, 0.08, 0.18]} />
+          <meshStandardMaterial color="#212121" />
+        </mesh>
+      </group>
+    </group>
+  );
+}
+
+
 // Đèn vườn - bật sáng khi trời tối
 function GardenLamp({ position, isNight = false, lampType = 'street' }) {
   const lightIntensity = isNight ? 15 : 0;
@@ -5646,145 +5849,321 @@ function Greenhouse({ position, size }) {
   );
 }
 
-function FishPond({ position, size }) {
-  const fishRef = React.useRef([]);
-  const sharkRef = React.useRef();
-  const fishCount = 15; // Nhiều cá hơn
+// Optimized Storage Items using InstancedMesh - renders many crates/sacks without lag
+function StorageItems({ storageWidth, storageDepth, storageHeight }) {
+  const cratesRef = React.useRef();
+  const sacksRef = React.useRef();
   
-  useFrame((state) => {
-    // Cá nhỏ bơi
-    fishRef.current.forEach((fish, i) => {
-      if (fish) {
-        const t = state.clock.elapsedTime + i * 1.2;
-        const speed = 0.4 + (i % 4) * 0.1;
-        const radius = (size[0] / 3) * (0.4 + (i % 5) * 0.12);
-        
-        fish.position.x = position[0] + Math.sin(t * speed + i) * radius;
-        fish.position.z = position[2] + Math.cos(t * speed * 0.7 + i * 0.5) * (size[2] / 3) * (0.5 + (i % 4) * 0.15);
-        fish.position.y = position[1] + 0.08 + Math.sin(t * 2.5 + i) * 0.04;
-        
-        const nextX = Math.cos(t * speed + i) * speed;
-        const nextZ = -Math.sin(t * speed * 0.7 + i * 0.5) * speed * 0.7;
-        fish.rotation.y = Math.atan2(nextX, nextZ);
-        fish.rotation.z = Math.sin(t * 10 + i) * 0.15;
-      }
-    });
+  // Tạo vị trí cho thùng gỗ - phủ kín 2 bên, chừa lối đi giữa
+  const cratePositions = React.useMemo(() => {
+    const positions = [];
+    const crateSize = 0.35;
+    const pathWidth = 0.8; // Lối đi giữa
     
-    // Cá mập bơi
-    if (sharkRef.current) {
-      const t = state.clock.elapsedTime;
-      sharkRef.current.position.x = position[0] + Math.sin(t * 0.25) * (size[0] / 2.5);
-      sharkRef.current.position.z = position[2] + Math.cos(t * 0.2) * (size[2] / 2.5);
-      sharkRef.current.position.y = position[1] + 0.05 + Math.sin(t * 0.8) * 0.03;
-      sharkRef.current.rotation.y = Math.atan2(Math.cos(t * 0.25), -Math.sin(t * 0.2));
-      sharkRef.current.rotation.z = Math.sin(t * 3) * 0.05;
+    // Bên trái (từ tường trái đến lối đi)
+    for (let x = -storageWidth / 2 + 0.4; x < -pathWidth / 2; x += crateSize + 0.05) {
+      for (let z = -storageDepth / 2 + 0.4; z < storageDepth / 2 - 0.4; z += crateSize + 0.05) {
+        // Tầng 1
+        positions.push({ x, y: crateSize / 2, z, scale: 0.8 + Math.random() * 0.4, color: Math.floor(Math.random() * 4) });
+        // Tầng 2 (ngẫu nhiên)
+        if (Math.random() > 0.3) {
+          positions.push({ x: x + (Math.random() - 0.5) * 0.1, y: crateSize * 1.3, z: z + (Math.random() - 0.5) * 0.1, scale: 0.6 + Math.random() * 0.3, color: Math.floor(Math.random() * 4) });
+        }
+        // Tầng 3 (ít hơn)
+        if (Math.random() > 0.7) {
+          positions.push({ x, y: crateSize * 2.1, z, scale: 0.5 + Math.random() * 0.2, color: Math.floor(Math.random() * 4) });
+        }
+      }
     }
-  });
+    
+    // Bên phải (từ lối đi đến tường phải)
+    for (let x = pathWidth / 2; x < storageWidth / 2 - 0.4; x += crateSize + 0.05) {
+      for (let z = -storageDepth / 2 + 0.4; z < storageDepth / 2 - 0.4; z += crateSize + 0.05) {
+        positions.push({ x, y: crateSize / 2, z, scale: 0.8 + Math.random() * 0.4, color: Math.floor(Math.random() * 4) });
+        if (Math.random() > 0.3) {
+          positions.push({ x: x + (Math.random() - 0.5) * 0.1, y: crateSize * 1.3, z: z + (Math.random() - 0.5) * 0.1, scale: 0.6 + Math.random() * 0.3, color: Math.floor(Math.random() * 4) });
+        }
+        if (Math.random() > 0.7) {
+          positions.push({ x, y: crateSize * 2.1, z, scale: 0.5 + Math.random() * 0.2, color: Math.floor(Math.random() * 4) });
+        }
+      }
+    }
+    
+    // Phía sau (dọc tường sau)
+    for (let x = -storageWidth / 2 + 0.5; x < storageWidth / 2 - 0.5; x += crateSize + 0.08) {
+      const z = -storageDepth / 2 + 0.35;
+      positions.push({ x, y: crateSize / 2, z, scale: 0.7 + Math.random() * 0.5, color: Math.floor(Math.random() * 4) });
+      if (Math.random() > 0.4) {
+        positions.push({ x, y: crateSize * 1.3, z, scale: 0.5 + Math.random() * 0.3, color: Math.floor(Math.random() * 4) });
+      }
+    }
+    
+    return positions;
+  }, [storageWidth, storageDepth]);
   
-  const fishColors = ['#FF9800', '#F44336', '#FFEB3B', '#FF5722', '#FFC107', '#E91E63', '#FF7043', '#FFB300', '#4CAF50', '#03A9F4', '#9C27B0', '#00BCD4', '#8BC34A', '#CDDC39', '#FF4081'];
+  // Tạo vị trí cho bao tải
+  const sackPositions = React.useMemo(() => {
+    const positions = [];
+    
+    // Rải bao tải xen kẽ với thùng
+    for (let x = -storageWidth / 2 + 0.5; x < -0.5; x += 0.5) {
+      for (let z = -storageDepth / 2 + 0.5; z < storageDepth / 2 - 0.5; z += 0.6) {
+        if (Math.random() > 0.5) {
+          positions.push({ x: x + Math.random() * 0.2, y: 0.25, z: z + Math.random() * 0.2, scale: 0.7 + Math.random() * 0.5, color: Math.floor(Math.random() * 3) });
+        }
+      }
+    }
+    for (let x = 0.5; x < storageWidth / 2 - 0.3; x += 0.5) {
+      for (let z = -storageDepth / 2 + 0.5; z < storageDepth / 2 - 0.5; z += 0.6) {
+        if (Math.random() > 0.5) {
+          positions.push({ x: x + Math.random() * 0.2, y: 0.25, z: z + Math.random() * 0.2, scale: 0.7 + Math.random() * 0.5, color: Math.floor(Math.random() * 3) });
+        }
+      }
+    }
+    
+    return positions;
+  }, [storageWidth, storageDepth]);
+  
+  const crateColors = React.useMemo(() => [
+    new THREE.Color('#A1887F'),
+    new THREE.Color('#8D6E63'),
+    new THREE.Color('#6D4C41'),
+    new THREE.Color('#5D4037')
+  ], []);
+  
+  const sackColors = React.useMemo(() => [
+    new THREE.Color('#795548'),
+    new THREE.Color('#6D4C41'),
+    new THREE.Color('#8D6E63')
+  ], []);
+  
+  React.useEffect(() => {
+    if (cratesRef.current) {
+      const dummy = new THREE.Object3D();
+      cratePositions.forEach((pos, i) => {
+        dummy.position.set(pos.x, pos.y, pos.z);
+        dummy.rotation.set(0, Math.random() * 0.2 - 0.1, 0);
+        dummy.scale.setScalar(pos.scale * 0.35);
+        dummy.updateMatrix();
+        cratesRef.current.setMatrixAt(i, dummy.matrix);
+        cratesRef.current.setColorAt(i, crateColors[pos.color]);
+      });
+      cratesRef.current.instanceMatrix.needsUpdate = true;
+      cratesRef.current.instanceColor.needsUpdate = true;
+    }
+    
+    if (sacksRef.current) {
+      const dummy = new THREE.Object3D();
+      sackPositions.forEach((pos, i) => {
+        dummy.position.set(pos.x, pos.y, pos.z);
+        dummy.rotation.set(0, Math.random() * Math.PI, 0);
+        dummy.scale.set(pos.scale * 0.2, pos.scale * 0.5, pos.scale * 0.2);
+        dummy.updateMatrix();
+        sacksRef.current.setMatrixAt(i, dummy.matrix);
+        sacksRef.current.setColorAt(i, sackColors[pos.color]);
+      });
+      sacksRef.current.instanceMatrix.needsUpdate = true;
+      sacksRef.current.instanceColor.needsUpdate = true;
+    }
+  }, [cratePositions, sackPositions, crateColors, sackColors]);
   
   return (
     <group>
-      {/* Cá nhỏ */}
-      {Array.from({ length: fishCount }).map((_, i) => (
-        <group key={i} ref={(el) => (fishRef.current[i] = el)} position={[position[0], position[1] + 0.15, position[2]]}>
-          {/* Thân cá */}
-          <mesh>
-            <sphereGeometry args={[0.06, 8, 6]} />
-            <meshStandardMaterial color={fishColors[i % fishColors.length]} />
-          </mesh>
-          {/* Đầu cá */}
-          <mesh position={[0, 0, 0.08]}>
-            <sphereGeometry args={[0.04, 6, 6]} />
-            <meshStandardMaterial color={fishColors[i % fishColors.length]} />
-          </mesh>
-          {/* Mắt */}
-          <mesh position={[0.025, 0.015, 0.1]}>
-            <sphereGeometry args={[0.01, 6, 6]} />
-            <meshStandardMaterial color="#212121" />
-          </mesh>
-          <mesh position={[-0.025, 0.015, 0.1]}>
-            <sphereGeometry args={[0.01, 6, 6]} />
-            <meshStandardMaterial color="#212121" />
-          </mesh>
-          {/* Đuôi */}
-          <mesh position={[0, 0, -0.1]} rotation={[0, 0, Math.PI / 4]}>
-            <coneGeometry args={[0.05, 0.08, 4]} />
-            <meshStandardMaterial color={fishColors[i % fishColors.length]} />
-          </mesh>
-          {/* Vây lưng */}
-          <mesh position={[0, 0.05, 0]}>
-            <coneGeometry args={[0.02, 0.04, 3]} />
-            <meshStandardMaterial color={fishColors[i % fishColors.length]} />
-          </mesh>
-        </group>
-      ))}
+      {/* Thùng gỗ - InstancedMesh */}
+      <instancedMesh ref={cratesRef} args={[null, null, cratePositions.length]} castShadow>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshStandardMaterial vertexColors roughness={0.85} />
+      </instancedMesh>
       
-      {/* === CÁ MẬP === */}
-      <group ref={sharkRef} position={[position[0], position[1] + 0.1, position[2]]}>
-        {/* Thân cá mập - dài và thon */}
-        <mesh>
-          <capsuleGeometry args={[0.1, 0.35, 8, 16]} />
-          <meshStandardMaterial color="#607D8B" roughness={0.7} />
-        </mesh>
-        {/* Đầu cá mập - nhọn */}
-        <mesh position={[0, 0, 0.28]}>
-          <coneGeometry args={[0.1, 0.2, 8]} />
-          <meshStandardMaterial color="#607D8B" roughness={0.7} />
-        </mesh>
-        {/* Bụng trắng */}
-        <mesh position={[0, -0.06, 0]} scale={[0.8, 0.5, 1]}>
-          <capsuleGeometry args={[0.08, 0.3, 6, 12]} />
-          <meshStandardMaterial color="#ECEFF1" roughness={0.8} />
-        </mesh>
-        {/* Mắt cá mập */}
-        <mesh position={[0.08, 0.03, 0.2]}>
-          <sphereGeometry args={[0.025, 8, 8]} />
-          <meshStandardMaterial color="#212121" />
-        </mesh>
-        <mesh position={[-0.08, 0.03, 0.2]}>
-          <sphereGeometry args={[0.025, 8, 8]} />
-          <meshStandardMaterial color="#212121" />
-        </mesh>
-        {/* Vây lưng - đặc trưng cá mập */}
-        <mesh position={[0, 0.15, -0.05]} rotation={[0.3, 0, 0]}>
-          <coneGeometry args={[0.06, 0.18, 4]} />
-          <meshStandardMaterial color="#546E7A" roughness={0.7} />
-        </mesh>
-        {/* Vây đuôi trên */}
-        <mesh position={[0, 0.08, -0.32]} rotation={[0.8, 0, 0]}>
-          <coneGeometry args={[0.05, 0.2, 4]} />
-          <meshStandardMaterial color="#546E7A" roughness={0.7} />
-        </mesh>
-        {/* Vây đuôi dưới */}
-        <mesh position={[0, -0.04, -0.28]} rotation={[-0.5, 0, 0]}>
-          <coneGeometry args={[0.04, 0.12, 4]} />
-          <meshStandardMaterial color="#546E7A" roughness={0.7} />
-        </mesh>
-        {/* Vây ngực trái */}
-        <mesh position={[0.12, -0.03, 0.05]} rotation={[0, 0.5, -0.8]}>
-          <coneGeometry args={[0.04, 0.15, 4]} />
-          <meshStandardMaterial color="#546E7A" roughness={0.7} />
-        </mesh>
-        {/* Vây ngực phải */}
-        <mesh position={[-0.12, -0.03, 0.05]} rotation={[0, -0.5, 0.8]}>
-          <coneGeometry args={[0.04, 0.15, 4]} />
-          <meshStandardMaterial color="#546E7A" roughness={0.7} />
-        </mesh>
-        {/* Mang cá */}
-        {[0.12, 0.08, 0.04].map((z, i) => (
-          <mesh key={`gill-r-${i}`} position={[0.09, 0, z]}>
-            <boxGeometry args={[0.01, 0.04, 0.02]} />
-            <meshStandardMaterial color="#455A64" />
-          </mesh>
-        ))}
-        {[0.12, 0.08, 0.04].map((z, i) => (
-          <mesh key={`gill-l-${i}`} position={[-0.09, 0, z]}>
-            <boxGeometry args={[0.01, 0.04, 0.02]} />
-            <meshStandardMaterial color="#455A64" />
-          </mesh>
-        ))}
-      </group>
+      {/* Bao tải - InstancedMesh */}
+      <instancedMesh ref={sacksRef} args={[null, null, sackPositions.length]} castShadow>
+        <cylinderGeometry args={[1, 1.2, 1, 8]} />
+        <meshStandardMaterial vertexColors roughness={0.9} />
+      </instancedMesh>
+    </group>
+  );
+}
+
+// Optimized Fish Pond using InstancedMesh - renders 1000 fish with 1 draw call
+function FishPond({ position, size }) {
+  const fishBodyRef = React.useRef();
+  const fishTailRef = React.useRef();
+  const sharksRef = React.useRef([]);
+  const fishCount = 1000; // 1000 cá mà không lag
+  
+  // Lưu thông tin ban đầu của mỗi cá
+  const fishData = React.useMemo(() => {
+    return Array.from({ length: fishCount }).map((_, i) => ({
+      speed: 0.15 + Math.random() * 0.35,
+      radius: (size[0] / 3) * (0.15 + Math.random() * 0.7),
+      radiusZ: (size[2] / 3) * (0.15 + Math.random() * 0.7),
+      offset: Math.random() * Math.PI * 2,
+      offsetZ: Math.random() * Math.PI * 2,
+      depth: 0.03 + Math.random() * 0.1,
+      scale: 0.5 + Math.random() * 0.8,
+      colorIndex: i % 20
+    }));
+  }, [size, fishCount]);
+  
+  // Thông tin cá mập
+  const sharkData = React.useMemo(() => [
+    { speed: 0.25, radiusMult: 0.9, offsetX: 0, offsetZ: 0, scale: 1 },
+    { speed: 0.2, radiusMult: 0.7, offsetX: Math.PI / 3, offsetZ: Math.PI / 4, scale: 0.7 },
+    { speed: 0.3, radiusMult: 0.5, offsetX: Math.PI, offsetZ: Math.PI / 2, scale: 0.5 }
+  ], []);
+  
+  const fishColors = React.useMemo(() => [
+    new THREE.Color('#FF9800'), new THREE.Color('#F44336'), new THREE.Color('#FFEB3B'), 
+    new THREE.Color('#FF5722'), new THREE.Color('#FFC107'), new THREE.Color('#E91E63'), 
+    new THREE.Color('#FF7043'), new THREE.Color('#FFB300'), new THREE.Color('#4CAF50'), 
+    new THREE.Color('#03A9F4'), new THREE.Color('#9C27B0'), new THREE.Color('#00BCD4'), 
+    new THREE.Color('#8BC34A'), new THREE.Color('#CDDC39'), new THREE.Color('#FF4081'),
+    new THREE.Color('#E65100'), new THREE.Color('#D32F2F'), new THREE.Color('#FBC02D'),
+    new THREE.Color('#FF6D00'), new THREE.Color('#FFD600')
+  ], []);
+  
+  // Khởi tạo màu cho mỗi cá
+  React.useEffect(() => {
+    if (fishBodyRef.current && fishTailRef.current) {
+      for (let i = 0; i < fishCount; i++) {
+        fishBodyRef.current.setColorAt(i, fishColors[fishData[i].colorIndex]);
+        fishTailRef.current.setColorAt(i, fishColors[fishData[i].colorIndex]);
+      }
+      fishBodyRef.current.instanceColor.needsUpdate = true;
+      fishTailRef.current.instanceColor.needsUpdate = true;
+    }
+  }, [fishCount, fishData, fishColors]);
+  
+  useFrame((state) => {
+    const t = state.clock.elapsedTime;
+    const dummy = new THREE.Object3D();
+    
+    // Cập nhật vị trí cá bằng InstancedMesh
+    if (fishBodyRef.current && fishTailRef.current) {
+      for (let i = 0; i < fishCount; i++) {
+        const fish = fishData[i];
+        
+        const x = position[0] + Math.sin(t * fish.speed + fish.offset) * fish.radius;
+        const z = position[2] + Math.cos(t * fish.speed * 0.7 + fish.offsetZ) * fish.radiusZ;
+        const y = position[1] + fish.depth + Math.sin(t * 2 + fish.offset) * 0.03;
+        
+        const nextX = Math.cos(t * fish.speed + fish.offset) * fish.speed;
+        const nextZ = -Math.sin(t * fish.speed * 0.7 + fish.offsetZ) * fish.speed * 0.7;
+        const rotY = Math.atan2(nextX, nextZ);
+        
+        // Thân cá
+        dummy.position.set(x, y, z);
+        dummy.rotation.set(0, rotY, Math.sin(t * 8 + fish.offset) * 0.1);
+        dummy.scale.setScalar(fish.scale * 0.05);
+        dummy.updateMatrix();
+        fishBodyRef.current.setMatrixAt(i, dummy.matrix);
+        
+        // Đuôi cá
+        dummy.position.set(
+          x - Math.sin(rotY) * 0.07 * fish.scale,
+          y,
+          z - Math.cos(rotY) * 0.07 * fish.scale
+        );
+        dummy.rotation.set(0, rotY, Math.PI / 4 + Math.sin(t * 12 + fish.offset) * 0.3);
+        dummy.scale.setScalar(fish.scale * 0.035);
+        dummy.updateMatrix();
+        fishTailRef.current.setMatrixAt(i, dummy.matrix);
+      }
+      fishBodyRef.current.instanceMatrix.needsUpdate = true;
+      fishTailRef.current.instanceMatrix.needsUpdate = true;
+    }
+    
+    // Cá mập bơi
+    sharksRef.current.forEach((shark, i) => {
+      if (shark) {
+        const data = sharkData[i];
+        shark.position.x = position[0] + Math.sin(t * data.speed + data.offsetX) * (size[0] / 2.5) * data.radiusMult;
+        shark.position.z = position[2] + Math.cos(t * data.speed * 0.8 + data.offsetZ) * (size[2] / 2.5) * data.radiusMult;
+        shark.position.y = position[1] + 0.05 + Math.sin(t * 0.8 + i) * 0.03;
+        shark.rotation.y = Math.atan2(
+          Math.cos(t * data.speed + data.offsetX), 
+          -Math.sin(t * data.speed * 0.8 + data.offsetZ)
+        );
+        shark.rotation.z = Math.sin(t * 3 + i) * 0.05;
+      }
+    });
+  });
+  
+  // Component cá mập
+  const Shark = React.forwardRef(({ scale = 1 }, ref) => (
+    <group ref={ref} scale={scale}>
+      {/* Thân cá mập */}
+      <mesh>
+        <capsuleGeometry args={[0.1, 0.35, 8, 16]} />
+        <meshStandardMaterial color="#607D8B" roughness={0.7} />
+      </mesh>
+      {/* Đầu cá mập */}
+      <mesh position={[0, 0, 0.28]}>
+        <coneGeometry args={[0.1, 0.2, 8]} />
+        <meshStandardMaterial color="#607D8B" roughness={0.7} />
+      </mesh>
+      {/* Bụng trắng */}
+      <mesh position={[0, -0.06, 0]} scale={[0.8, 0.5, 1]}>
+        <capsuleGeometry args={[0.08, 0.3, 6, 12]} />
+        <meshStandardMaterial color="#ECEFF1" roughness={0.8} />
+      </mesh>
+      {/* Mắt */}
+      <mesh position={[0.08, 0.03, 0.2]}>
+        <sphereGeometry args={[0.025, 8, 8]} />
+        <meshStandardMaterial color="#212121" />
+      </mesh>
+      <mesh position={[-0.08, 0.03, 0.2]}>
+        <sphereGeometry args={[0.025, 8, 8]} />
+        <meshStandardMaterial color="#212121" />
+      </mesh>
+      {/* Vây lưng */}
+      <mesh position={[0, 0.15, -0.05]} rotation={[0.3, 0, 0]}>
+        <coneGeometry args={[0.06, 0.18, 4]} />
+        <meshStandardMaterial color="#546E7A" roughness={0.7} />
+      </mesh>
+      {/* Vây đuôi */}
+      <mesh position={[0, 0.08, -0.32]} rotation={[0.8, 0, 0]}>
+        <coneGeometry args={[0.05, 0.2, 4]} />
+        <meshStandardMaterial color="#546E7A" roughness={0.7} />
+      </mesh>
+      <mesh position={[0, -0.04, -0.28]} rotation={[-0.5, 0, 0]}>
+        <coneGeometry args={[0.04, 0.12, 4]} />
+        <meshStandardMaterial color="#546E7A" roughness={0.7} />
+      </mesh>
+      {/* Vây ngực */}
+      <mesh position={[0.12, -0.03, 0.05]} rotation={[0, 0.5, -0.8]}>
+        <coneGeometry args={[0.04, 0.15, 4]} />
+        <meshStandardMaterial color="#546E7A" roughness={0.7} />
+      </mesh>
+      <mesh position={[-0.12, -0.03, 0.05]} rotation={[0, -0.5, 0.8]}>
+        <coneGeometry args={[0.04, 0.15, 4]} />
+        <meshStandardMaterial color="#546E7A" roughness={0.7} />
+      </mesh>
+    </group>
+  ));
+  
+  return (
+    <group>
+      {/* Cá nhỏ - InstancedMesh cho thân */}
+      <instancedMesh ref={fishBodyRef} args={[null, null, fishCount]}>
+        <sphereGeometry args={[1, 6, 5]} />
+        <meshStandardMaterial vertexColors />
+      </instancedMesh>
+      
+      {/* Cá nhỏ - InstancedMesh cho đuôi */}
+      <instancedMesh ref={fishTailRef} args={[null, null, fishCount]}>
+        <coneGeometry args={[1, 1.5, 4]} />
+        <meshStandardMaterial vertexColors />
+      </instancedMesh>
+      
+      {/* 3 Cá mập */}
+      {sharkData.map((data, i) => (
+        <Shark 
+          key={i} 
+          ref={(el) => (sharksRef.current[i] = el)} 
+          scale={data.scale}
+        />
+      ))}
     </group>
   );
 }
@@ -6560,7 +6939,7 @@ function ZoneContent({ zone, groundSize, canvasWidth, canvasHeight, isNight }) {
               </group>
             ))}
             
-            {/* Chậu lớn dưới đất */}
+            {/* Chậu lớn dưới đất - giữa */}
             <group position={[0, 0, -ghDepth / 4]}>
               <mesh position={[0, 0.2, 0]}>
                 <cylinderGeometry args={[0.3, 0.25, 0.4, 10]} />
@@ -6575,6 +6954,155 @@ function ZoneContent({ zone, groundSize, canvasWidth, canvasHeight, isNight }) {
                 <mesh key={`flower-${j}`} position={[Math.cos(j * 1.2) * 0.25, 0.75, Math.sin(j * 1.2) * 0.25]}>
                   <sphereGeometry args={[0.08, 6, 6]} />
                   <meshStandardMaterial color={['#E91E63', '#FF5722', '#FFEB3B', '#9C27B0', '#03A9F4'][j]} />
+                </mesh>
+              ))}
+            </group>
+            
+            {/* === CÂY CÀ CHUA === */}
+            {[-ghWidth / 4, ghWidth / 4].map((x, idx) => (
+              <group key={`tomato-${idx}`} position={[x, 0, ghDepth / 4]}>
+                {/* Chậu */}
+                <mesh position={[0, 0.15, 0]}>
+                  <cylinderGeometry args={[0.2, 0.15, 0.3, 8]} />
+                  <meshStandardMaterial color="#6D4C41" />
+                </mesh>
+                {/* Thân cây */}
+                <mesh position={[0, 0.6, 0]}>
+                  <cylinderGeometry args={[0.03, 0.04, 0.8, 6]} />
+                  <meshStandardMaterial color="#558B2F" />
+                </mesh>
+                {/* Cọc đỡ */}
+                <mesh position={[0.08, 0.5, 0]}>
+                  <cylinderGeometry args={[0.015, 0.015, 0.9, 4]} />
+                  <meshStandardMaterial color="#8D6E63" />
+                </mesh>
+                {/* Lá */}
+                {[0.4, 0.6, 0.8].map((y, i) => (
+                  <mesh key={`leaf-${i}`} position={[0.1 * (i % 2 === 0 ? 1 : -1), y, 0.05]}>
+                    <sphereGeometry args={[0.12, 6, 6]} />
+                    <meshStandardMaterial color="#7CB342" />
+                  </mesh>
+                ))}
+                {/* Quả cà chua */}
+                {[0, 1, 2].map((i) => (
+                  <mesh key={`tomato-fruit-${i}`} position={[0.08 + i * 0.05, 0.5 + i * 0.12, 0.1]}>
+                    <sphereGeometry args={[0.06, 8, 8]} />
+                    <meshStandardMaterial color={i === 0 ? '#F44336' : i === 1 ? '#FF5722' : '#8BC34A'} />
+                  </mesh>
+                ))}
+              </group>
+            ))}
+            
+            {/* === CÂY ỚT === */}
+            <group position={[-ghWidth / 5, 0, 0]}>
+              {/* Chậu */}
+              <mesh position={[0, 0.12, 0]}>
+                <cylinderGeometry args={[0.15, 0.12, 0.22, 8]} />
+                <meshStandardMaterial color="#8D6E63" />
+              </mesh>
+              {/* Thân */}
+              <mesh position={[0, 0.45, 0]}>
+                <cylinderGeometry args={[0.025, 0.03, 0.5, 6]} />
+                <meshStandardMaterial color="#33691E" />
+              </mesh>
+              {/* Lá */}
+              {[0.35, 0.5, 0.65].map((y, i) => (
+                <React.Fragment key={`pepper-leaf-${i}`}>
+                  <mesh position={[0.08, y, 0]}>
+                    <sphereGeometry args={[0.08, 6, 6]} />
+                    <meshStandardMaterial color="#558B2F" />
+                  </mesh>
+                  <mesh position={[-0.08, y + 0.05, 0]}>
+                    <sphereGeometry args={[0.07, 6, 6]} />
+                    <meshStandardMaterial color="#689F38" />
+                  </mesh>
+                </React.Fragment>
+              ))}
+              {/* Quả ớt */}
+              <mesh position={[0.06, 0.4, 0.05]} rotation={[0.3, 0, 0.2]}>
+                <capsuleGeometry args={[0.02, 0.08, 4, 8]} />
+                <meshStandardMaterial color="#D32F2F" />
+              </mesh>
+              <mesh position={[-0.05, 0.5, 0.04]} rotation={[0.2, 0, -0.3]}>
+                <capsuleGeometry args={[0.02, 0.07, 4, 8]} />
+                <meshStandardMaterial color="#FF5722" />
+              </mesh>
+              <mesh position={[0.04, 0.55, 0.03]} rotation={[0.4, 0, 0.1]}>
+                <capsuleGeometry args={[0.018, 0.06, 4, 8]} />
+                <meshStandardMaterial color="#4CAF50" />
+              </mesh>
+            </group>
+            
+            {/* === CÂY DƯA LEO === */}
+            <group position={[ghWidth / 5, 0, 0]}>
+              {/* Chậu */}
+              <mesh position={[0, 0.12, 0]}>
+                <cylinderGeometry args={[0.18, 0.14, 0.22, 8]} />
+                <meshStandardMaterial color="#5D4037" />
+              </mesh>
+              {/* Giàn leo */}
+              <mesh position={[0, 0.6, 0]}>
+                <boxGeometry args={[0.02, 0.8, 0.02]} />
+                <meshStandardMaterial color="#6D4C41" />
+              </mesh>
+              <mesh position={[0, 1, 0]}>
+                <boxGeometry args={[0.3, 0.02, 0.02]} />
+                <meshStandardMaterial color="#6D4C41" />
+              </mesh>
+              {/* Dây leo */}
+              {[-0.1, 0, 0.1].map((x, i) => (
+                <mesh key={`vine-${i}`} position={[x, 0.6 + i * 0.15, 0.02]}>
+                  <cylinderGeometry args={[0.01, 0.01, 0.5 + i * 0.1, 4]} />
+                  <meshStandardMaterial color="#7CB342" />
+                </mesh>
+              ))}
+              {/* Lá */}
+              {[0.5, 0.7, 0.9].map((y, i) => (
+                <mesh key={`cucumber-leaf-${i}`} position={[0.1 * (i % 2 === 0 ? 1 : -1), y, 0.05]}>
+                  <circleGeometry args={[0.1, 6]} />
+                  <meshStandardMaterial color="#8BC34A" side={THREE.DoubleSide} />
+                </mesh>
+              ))}
+              {/* Quả dưa leo */}
+              <mesh position={[0.08, 0.45, 0.08]} rotation={[0.5, 0, 0.3]}>
+                <capsuleGeometry args={[0.03, 0.12, 4, 8]} />
+                <meshStandardMaterial color="#689F38" />
+              </mesh>
+              <mesh position={[-0.06, 0.6, 0.06]} rotation={[0.3, 0, -0.2]}>
+                <capsuleGeometry args={[0.025, 0.1, 4, 8]} />
+                <meshStandardMaterial color="#8BC34A" />
+              </mesh>
+            </group>
+            
+            {/* === CÂY RAU DIẾP === */}
+            {[-ghWidth / 3 + 0.15, ghWidth / 3 - 0.15].map((x, idx) => (
+              <group key={`lettuce-${idx}`} position={[x, 0.55, -ghDepth / 6]}>
+                {/* Chậu nhỏ */}
+                <mesh position={[0, 0.08, 0]}>
+                  <cylinderGeometry args={[0.1, 0.08, 0.12, 8]} />
+                  <meshStandardMaterial color="#A1887F" />
+                </mesh>
+                {/* Lá xà lách */}
+                {[0, 1, 2, 3, 4, 5].map((i) => (
+                  <mesh key={`lettuce-leaf-${i}`} position={[Math.cos(i * 1.05) * 0.06, 0.18 + i * 0.02, Math.sin(i * 1.05) * 0.06]} rotation={[0.3, i * 1.05, 0]}>
+                    <sphereGeometry args={[0.06, 6, 6]} />
+                    <meshStandardMaterial color={i % 2 === 0 ? '#C5E1A5' : '#AED581'} />
+                  </mesh>
+                ))}
+              </group>
+            ))}
+            
+            {/* === CÂY HÚNG QUẾ === */}
+            <group position={[0, 0.55, ghDepth / 6]}>
+              <mesh position={[0, 0.08, 0]}>
+                <cylinderGeometry args={[0.1, 0.08, 0.12, 8]} />
+                <meshStandardMaterial color="#6D4C41" />
+              </mesh>
+              {/* Lá húng quế */}
+              {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
+                <mesh key={`basil-${i}`} position={[Math.cos(i * 0.8) * 0.08, 0.2 + (i % 3) * 0.05, Math.sin(i * 0.8) * 0.08]}>
+                  <sphereGeometry args={[0.04, 6, 6]} />
+                  <meshStandardMaterial color="#2E7D32" />
                 </mesh>
               ))}
             </group>
@@ -6851,37 +7379,38 @@ function ZoneContent({ zone, groundSize, canvasWidth, canvasHeight, isNight }) {
               <meshStandardMaterial color={woodDark} roughness={0.9} />
             </mesh>
             
-            {/* === ĐỒ BÊN TRONG === */}
-            {/* Thùng gỗ */}
-            <mesh position={[-storageWidth / 3, 0.3, -storageDepth / 4]} castShadow>
-              <boxGeometry args={[0.6, 0.5, 0.5]} />
-              <meshStandardMaterial color="#A1887F" />
-            </mesh>
-            <mesh position={[-storageWidth / 3 + 0.4, 0.25, -storageDepth / 4 + 0.3]} castShadow>
-              <boxGeometry args={[0.5, 0.4, 0.4]} />
-              <meshStandardMaterial color="#8D6E63" />
-            </mesh>
+            {/* === ĐỒ BÊN TRONG - INSTANCED MESH === */}
+            <StorageItems storageWidth={storageWidth} storageDepth={storageDepth} storageHeight={storageHeight} />
             
-            {/* Bao tải */}
-            <mesh position={[storageWidth / 4, 0.35, -storageDepth / 4]} castShadow>
-              <cylinderGeometry args={[0.25, 0.3, 0.7, 8]} />
-              <meshStandardMaterial color="#795548" />
-            </mesh>
-            <mesh position={[storageWidth / 4 + 0.35, 0.3, -storageDepth / 4]} castShadow>
-              <cylinderGeometry args={[0.2, 0.25, 0.6, 8]} />
-              <meshStandardMaterial color="#6D4C41" />
-            </mesh>
+            {/* === KỆ GỖ 2 BÊN TƯỜNG === */}
+            {/* Kệ trái */}
+            <group position={[-storageWidth / 2 + 0.25, 0, 0]}>
+              <mesh position={[0, 1.8, 0]}><boxGeometry args={[0.4, 0.05, storageDepth - 0.5]} /><meshStandardMaterial color="#6D4C41" /></mesh>
+              <mesh position={[0, 2.4, 0]}><boxGeometry args={[0.4, 0.05, storageDepth - 0.5]} /><meshStandardMaterial color="#6D4C41" /></mesh>
+            </group>
+            {/* Kệ phải */}
+            <group position={[storageWidth / 2 - 0.25, 0, 0]}>
+              <mesh position={[0, 1.8, 0]}><boxGeometry args={[0.4, 0.05, storageDepth - 0.5]} /><meshStandardMaterial color="#6D4C41" /></mesh>
+              <mesh position={[0, 2.4, 0]}><boxGeometry args={[0.4, 0.05, storageDepth - 0.5]} /><meshStandardMaterial color="#6D4C41" /></mesh>
+            </group>
             
-            {/* Dụng cụ - Xẻng */}
-            <group position={[-storageWidth / 2 + 0.35, 0, storageDepth / 4]} rotation={[0.1, 0.3, 0]}>
-              <mesh position={[0, 0.7, 0]}>
-                <cylinderGeometry args={[0.025, 0.025, 1.4, 6]} />
-                <meshStandardMaterial color="#8D6E63" />
-              </mesh>
-              <mesh position={[0, 0.05, 0]} rotation={[0.3, 0, 0]}>
-                <boxGeometry args={[0.2, 0.25, 0.02]} />
-                <meshStandardMaterial color="#78909C" metalness={0.6} />
-              </mesh>
+            {/* === DỤNG CỤ TREO TƯỜNG === */}
+            {/* Xẻng, cuốc, cào treo tường sau */}
+            <group position={[0, 1.5, -storageDepth / 2 + 0.15]}>
+              {[-0.4, 0, 0.4].map((x, i) => (
+                <group key={`tool-${i}`} position={[x, 0, 0]} rotation={[0.1, 0, 0]}>
+                  <mesh position={[0, 0.5, 0]}><cylinderGeometry args={[0.02, 0.02, 1, 6]} /><meshStandardMaterial color="#8D6E63" /></mesh>
+                  <mesh position={[0, 0, 0]}><boxGeometry args={[0.15, 0.2, 0.02]} /><meshStandardMaterial color="#607D8B" metalness={0.6} /></mesh>
+                </group>
+              ))}
+            </group>
+            
+            {/* === XÔ VÀ BÌNH TƯỚI GẦN CỬA === */}
+            <group position={[0.3, 0, storageDepth / 2 - 0.4]}>
+              <mesh position={[0, 0.15, 0]}><cylinderGeometry args={[0.12, 0.1, 0.25, 10]} /><meshStandardMaterial color="#1976D2" /></mesh>
+            </group>
+            <group position={[-0.3, 0, storageDepth / 2 - 0.4]}>
+              <mesh position={[0, 0.1, 0]}><cylinderGeometry args={[0.08, 0.1, 0.18, 8]} /><meshStandardMaterial color="#4CAF50" /></mesh>
             </group>
             
             {/* Đèn dầu - bật sáng khi đêm */}
@@ -7051,6 +7580,33 @@ function Scene({ zones, viewMode }) {
           color={['#E91E63', '#9C27B0', '#FF5722', '#FFEB3B', '#03A9F4'][i % 5]}
         />
       ))}
+      
+      {/* ===== NGƯỜI NÔNG DÂN ===== */}
+      {/* Người đang làm việc gần ruộng */}
+      <Farmer position={[-8, 0, -12]} rotation={0.3} action="working" shirtColor="#1976D2" pantsColor="#5D4037" walkSpeed={0.4} />
+      <Farmer position={[-5, 0, -15]} rotation={-0.5} action="working" shirtColor="#388E3C" pantsColor="#3E2723" walkSpeed={0.35} />
+      
+      {/* Người đang đi bộ trên đường - di chuyển vòng tròn */}
+      <Farmer position={[5, 0, 0]} action="walking" shirtColor="#F57C00" pantsColor="#455A64" walkRadius={8} walkSpeed={0.25} />
+      <Farmer position={[-3, 0, 8]} action="walking" shirtColor="#7B1FA2" pantsColor="#37474F" walkRadius={6} walkSpeed={0.3} />
+      <Farmer position={[0, 0, -5]} action="walking" shirtColor="#E91E63" pantsColor="#424242" walkRadius={12} walkSpeed={0.2} />
+      
+      {/* Người đứng gần ao cá - nhìn xung quanh */}
+      <Farmer position={[-22, 0, 18]} rotation={Math.PI / 2} action="standing" shirtColor="#0288D1" pantsColor="#4E342E" />
+      
+      {/* Người đang làm việc trong vườn rau */}
+      <Farmer position={[12, 0, -8]} rotation={Math.PI} action="working" shirtColor="#C62828" pantsColor="#5D4037" walkSpeed={0.5} />
+      <Farmer position={[15, 0, -10]} rotation={0.8} action="working" shirtColor="#FF5722" pantsColor="#3E2723" walkSpeed={0.45} />
+      
+      {/* Người đứng gần cổng */}
+      <Farmer position={[0, 0, -35]} rotation={0} action="standing" shirtColor="#00796B" pantsColor="#3E2723" />
+      
+      {/* Người đi bộ gần nhà kho */}
+      <Farmer position={[20, 0, 15]} action="walking" shirtColor="#5D4037" pantsColor="#263238" walkRadius={5} walkSpeed={0.35} />
+      
+      {/* Thêm người đi bộ quanh vườn */}
+      <Farmer position={[-15, 0, 20]} action="walking" shirtColor="#9C27B0" pantsColor="#37474F" walkRadius={10} walkSpeed={0.18} />
+      <Farmer position={[25, 0, -20]} action="walking" shirtColor="#009688" pantsColor="#455A64" walkRadius={7} walkSpeed={0.28} />
     </>
   );
 }
