@@ -1,6 +1,12 @@
 const mqtt = require('mqtt');
 const EventEmitter = require('events');
 const Device = require('../models/Device');
+const Control = require('../models/Control');
+const emailService = require('./emailService');
+
+// Alert cooldown tracking
+const alertCooldowns = new Map();
+const ALERT_COOLDOWN = 5 * 60 * 1000; // 5 minutes
 
 class MQTTService extends EventEmitter {
   constructor() {
@@ -43,6 +49,7 @@ class MQTTService extends EventEmitter {
 
     const brokerUrl = `mqtt://${brokerHost}:${this.port}`;
     console.log(`🔌 Connecting to MQTT broker...`);
+    console.log(`📋 MQTT Config: broker=${brokerHost}, port=${this.port}, topicPrefix=${this.topicPrefix}`);
 
     this.client = mqtt.connect(brokerUrl, {
       clientId: `smartgarden_server_${Date.now()}`,
@@ -152,12 +159,102 @@ class MQTTService extends EventEmitter {
     }
     // === END UPDATE ===
 
+    // === CHECK ALERTS ===
+    await this.checkAlerts(deviceId, updated);
+    // === END CHECK ALERTS ===
+
     // Emit event for other services
     this.emit('telemetry', { deviceId, data: updated });
 
     // Broadcast via WebSocket
     if (this.wsService) {
       this.wsService.broadcastSensorData({ deviceId, ...updated });
+    }
+  }
+
+  async checkAlerts(deviceId, sensorData) {
+    try {
+      const device = await Device.findOne({ deviceId: deviceId }).populate('ownerId', 'email fullName');
+      if (!device) return;
+
+      const alertControls = await Control.find({
+        deviceId: device._id,
+        controlType: 'alert',
+        isActive: true,
+        'alertSettings.enabled': true
+      });
+
+      if (alertControls.length === 0) return;
+      
+      console.log(`🔔 MQTT: Checking ${alertControls.length} alerts for device ${device.name}`);
+
+      for (const control of alertControls) {
+        const alertSetting = control.alertSettings;
+        if (!alertSetting) continue;
+
+        const sensorValue = sensorData[alertSetting.sensor];
+        if (sensorValue === null || sensorValue === undefined) continue;
+
+        let shouldAlert = false;
+        let alertCondition = '';
+
+        // FE: above dùng minValue (> minValue), below dùng maxValue (< maxValue)
+        if (alertSetting.conditionType === 'above' && sensorValue > alertSetting.minValue) {
+          shouldAlert = true;
+          alertCondition = 'above';
+        } else if (alertSetting.conditionType === 'below' && sensorValue < alertSetting.maxValue) {
+          shouldAlert = true;
+          alertCondition = 'below';
+        } else if (alertSetting.conditionType === 'range') {
+          if (sensorValue < alertSetting.minValue) {
+            shouldAlert = true;
+            alertCondition = 'below';
+          } else if (sensorValue > alertSetting.maxValue) {
+            shouldAlert = true;
+            alertCondition = 'above';
+          }
+        }
+
+        if (shouldAlert) {
+          const cooldownKey = `${deviceId}_alert_${alertSetting.sensor}`;
+          const lastAlert = alertCooldowns.get(cooldownKey);
+          const now = Date.now();
+
+          if (!lastAlert || (now - lastAlert) > ALERT_COOLDOWN) {
+            alertCooldowns.set(cooldownKey, now);
+
+            const thresholdValue = alertCondition === 'above' ? alertSetting.minValue : alertSetting.maxValue;
+
+            console.log(`🔔 Alert triggered: ${alertSetting.sensor} ${alertCondition} ${thresholdValue} (current: ${sensorValue})`);
+
+            // Send WebSocket notification
+            if (this.wsService && device.ownerId?._id) {
+              this.wsService.sendNotificationToUser(device.ownerId._id.toString(), {
+                type: 'sensor_alert',
+                message: alertSetting.message || `⚠️ ${device.name}: ${alertSetting.sensor} ${alertCondition === 'above' ? 'vượt' : 'dưới'} ngưỡng - Hiện tại: ${sensorValue}`,
+                severity: 'warning',
+                deviceId: device._id,
+                sensorType: alertSetting.sensor,
+                value: sensorValue
+              });
+            }
+
+            // Send email alert
+            if (device.ownerId?.email) {
+              await emailService.sendThresholdAlert(device.ownerId.email, {
+                deviceName: device.name,
+                sensorType: alertSetting.sensor,
+                value: sensorValue,
+                threshold: thresholdValue,
+                condition: alertCondition
+              });
+              console.log(`📧 Alert email sent to ${device.ownerId.email}`);
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.error('❌ Check alerts error:', err.message);
     }
   }
 

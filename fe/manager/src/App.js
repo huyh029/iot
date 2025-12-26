@@ -3047,7 +3047,7 @@ function ControlsPage() {
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <p style={{ margin: 0, fontWeight: '700', color: '#0f172a', fontSize: '0.9375rem' }}>{schedule.name}</p>
                           <p style={{ margin: '0.25rem 0 0', fontSize: '1.25rem', fontWeight: '800', color: schedule.enabled ? '#4cbe00' : '#64748b' }}>{schedule.time}</p>
-                          <p style={{ margin: '0.25rem 0 0', fontSize: '0.75rem', color: '#94a3b8' }}>{schedule.days.map(d => dayLabels[d]).join(', ')}</p>
+                          <p style={{ margin: '0.25rem 0 0', fontSize: '0.75rem', color: '#94a3b8' }}>{(schedule.days || []).map(d => dayLabels[d]).join(', ')}</p>
                           <div style={{ marginTop: '0.5rem', display: 'flex', flexWrap: 'wrap', gap: '0.375rem' }}>
                             <span style={{ padding: '0.25rem 0.5rem', borderRadius: '0.375rem', fontSize: '0.75rem', fontWeight: '600', background: '#dbeafe', color: '#1e40af' }}>
                               {actionIcons[schedule.action]} {actionNames[schedule.action]} {schedule.actionValue}%

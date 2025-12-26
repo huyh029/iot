@@ -13,7 +13,7 @@ const controlSchema = new mongoose.Schema({
   },
   controlType: {
     type: String,
-    enum: ['light', 'irrigation', 'fan', 'heater', 'cooler', 'fertilizer'],
+    enum: ['light', 'irrigation', 'fan', 'heater', 'cooler', 'fertilizer', 'reminder', 'alert', 'water', 'mist', 'pump'],
     required: true
   },
   mode: {
@@ -36,11 +36,14 @@ const controlSchema = new mongoose.Schema({
   },
   // Scheduled control
   scheduleSettings: {
+    enabled: { type: Boolean, default: true },
     schedules: [{
+      name: String,
+      time: String, // HH:MM format
       days: [{ type: String, enum: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] }],
-      startTime: String, // HH:MM format
-      endTime: String,   // HH:MM format
-      intensity: { type: Number, min: 0, max: 100, default: 50 },
+      action: String, // on, off, notify
+      intensity: { type: Number, min: 0, max: 100, default: 100 },
+      duration: { type: Number, default: 0 }, // minutes
       isActive: { type: Boolean, default: true }
     }]
   },
@@ -68,6 +71,15 @@ const controlSchema = new mongoose.Schema({
       enabled: { type: Boolean, default: true },
       methods: [{ type: String, enum: ['websocket', 'email', 'sms'] }]
     }
+  },
+  // Alert settings (sensor-based notifications)
+  alertSettings: {
+    enabled: { type: Boolean, default: true },
+    sensor: String, // temperature, humidity, light, soil_moisture
+    conditionType: { type: String, enum: ['above', 'below', 'range'] },
+    minValue: Number,
+    maxValue: Number,
+    message: String
   },
   // Current state
   currentState: {

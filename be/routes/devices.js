@@ -92,11 +92,13 @@ router.get('/mqtt-config/:deviceId', async (req, res) => {
   }
 });
 
-// Get control states by device ID (for ESP32)
-// Also acts as heartbeat + reads telemetry from MQTT + checks thresholds from DB
+// Get control states by device ID (for ESP32 and FE)
+// If called with ?heartbeat=true, updates lastSeen (ESP32 heartbeat)
+// Otherwise just reads data (FE polling)
 router.get('/controls/:deviceId', async (req, res) => {
   try {
     const { deviceId } = req.params;
+    const { heartbeat } = req.query; // ESP32 gửi ?heartbeat=true
     const wsService = req.app.get('wsService');
     const mqttService = req.app.get('mqttService');
     
@@ -110,26 +112,28 @@ router.get('/controls/:deviceId', async (req, res) => {
       });
     }
     
-    // === HEARTBEAT: Update status to online ===
-    const wasOffline = device.status !== 'online';
-    const previousStatus = device.status;
-    device.status = 'online';
-    device.lastSeen = new Date();
-    await device.save();
-    
-    console.log(`📡 Device ${deviceId}: ${previousStatus} → online (lastSeen: ${device.lastSeen.toISOString()})`);
-    
-    // Broadcast status change if device was offline
-    if (wasOffline && wsService) {
-      wsService.broadcastDeviceStatus(device._id.toString(), 'online');
+    // === HEARTBEAT: Only update status if ESP32 sends heartbeat=true ===
+    if (heartbeat === 'true') {
+      const wasOffline = device.status !== 'online';
+      const previousStatus = device.status;
+      device.status = 'online';
+      device.lastSeen = new Date();
+      await device.save();
       
-      // Notify owner
-      wsService.sendNotificationToUser(device.ownerId._id.toString(), {
-        type: 'device_online',
-        message: `Thiết bị "${device.name}" đã online`,
-        severity: 'success',
-        deviceId: device._id
-      });
+      console.log(`📡 Device ${deviceId}: ${previousStatus} → online (lastSeen: ${device.lastSeen.toISOString()})`);
+      
+      // Broadcast status change if device was offline
+      if (wasOffline && wsService) {
+        wsService.broadcastDeviceStatus(device._id.toString(), 'online');
+        
+        // Notify owner
+        wsService.sendNotificationToUser(device.ownerId._id.toString(), {
+          type: 'device_online',
+          message: `Thiết bị "${device.name}" đã online`,
+          severity: 'success',
+          deviceId: device._id
+        });
+      }
     }
     // === END HEARTBEAT ===
     
@@ -281,14 +285,119 @@ router.get('/controls/:deviceId', async (req, res) => {
     }
     // === END THRESHOLD CHECK ===
     
+    // === CHECK ALERT SETTINGS (sensor-based notifications) ===
+    if (hasSensorData) {
+      const alertControls = await Control.find({
+        deviceId: device._id,
+        controlType: 'alert',
+        isActive: true,
+        'alertSettings.enabled': true
+      });
+      
+      console.log(`🔔 Found ${alertControls.length} alert controls for device ${device.name}`);
+      
+      for (const control of alertControls) {
+        const alertSetting = control.alertSettings;
+        console.log(`🔔 Alert setting:`, JSON.stringify(alertSetting));
+        
+        if (!alertSetting) {
+          console.log(`🔔 No alertSetting found, skipping`);
+          continue;
+        }
+        
+        const sensorValue = sensorData[alertSetting.sensor];
+        console.log(`🔔 Checking ${alertSetting.sensor}: value=${sensorValue}, condition=${alertSetting.conditionType}, min=${alertSetting.minValue}, max=${alertSetting.maxValue}`);
+        
+        if (sensorValue === null || sensorValue === undefined) {
+          console.log(`🔔 Sensor value is null/undefined, skipping`);
+          continue;
+        }
+        
+        let shouldAlert = false;
+        let alertCondition = '';
+        
+        // FE: above dùng minValue (> minValue), below dùng maxValue (< maxValue)
+        if (alertSetting.conditionType === 'above' && sensorValue > alertSetting.minValue) {
+          shouldAlert = true;
+          alertCondition = 'above';
+        } else if (alertSetting.conditionType === 'below' && sensorValue < alertSetting.maxValue) {
+          shouldAlert = true;
+          alertCondition = 'below';
+        } else if (alertSetting.conditionType === 'range') {
+          if (sensorValue < alertSetting.minValue) {
+            shouldAlert = true;
+            alertCondition = 'below';
+          } else if (sensorValue > alertSetting.maxValue) {
+            shouldAlert = true;
+            alertCondition = 'above';
+          }
+        }
+        
+        if (shouldAlert) {
+          const cooldownKey = `${deviceId}_alert_${alertSetting.sensor}`;
+          const lastAlert = alertCooldowns.get(cooldownKey);
+          const now = Date.now();
+          
+          if (!lastAlert || (now - lastAlert) > ALERT_COOLDOWN) {
+            alertCooldowns.set(cooldownKey, now);
+            
+            // FE: above dùng minValue, below dùng maxValue
+            const thresholdValue = alertCondition === 'above' ? alertSetting.minValue : alertSetting.maxValue;
+            
+            alerts.push({
+              type: 'alert',
+              sensorType: alertSetting.sensor,
+              value: sensorValue,
+              threshold: thresholdValue,
+              condition: alertCondition,
+              message: alertSetting.message
+            });
+            
+            console.log(`🔔 Alert triggered: ${alertSetting.sensor} ${alertCondition} ${thresholdValue} (current: ${sensorValue})`);
+            
+            // Send WebSocket notification
+            if (wsService) {
+              wsService.sendNotificationToUser(device.ownerId._id.toString(), {
+                type: 'sensor_alert',
+                message: alertSetting.message || `⚠️ ${device.name}: ${getSensorName(alertSetting.sensor)} ${alertCondition === 'above' ? 'vượt' : 'dưới'} ngưỡng - Hiện tại: ${sensorValue}`,
+                severity: 'warning',
+                deviceId: device._id,
+                sensorType: alertSetting.sensor,
+                value: sensorValue
+              });
+            }
+            
+            // Send email alert
+            if (device.ownerId?.email) {
+              emailService.sendThresholdAlert(device.ownerId.email, {
+                deviceName: device.name,
+                sensorType: alertSetting.sensor,
+                value: sensorValue,
+                threshold: thresholdValue,
+                condition: alertCondition
+              }).catch(err => console.error('Alert email error:', err));
+              
+              console.log(`📧 Alert email sent to ${device.ownerId.email}`);
+            }
+          }
+        }
+      }
+    }
+    // === END ALERT CHECK ===
+    
     // Get control states from MQTT cache
     const controls = mqttService.getDeviceControlStates(deviceId);
+    
+    // Get telemetry timestamp
+    const telemetryTimestamp = telemetry?.timestamp || null;
     
     res.json({
       success: true,
       deviceId: device.deviceId,
       status: device.status,
+      lastSeen: device.lastSeen,
       telemetry: sensorData,
+      telemetryTimestamp: telemetryTimestamp,
       alerts: alerts,
       controls: controls
     });

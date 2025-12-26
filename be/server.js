@@ -76,13 +76,19 @@ const OFFLINE_TIMEOUT = 15 * 1000; // 15 giây không gọi API thì offline
 // Use setInterval for more frequent checks (every 15 seconds)
 setInterval(async () => {
   try {
-    const cutoffTime = new Date(Date.now() - OFFLINE_TIMEOUT);
+    const now = new Date();
+    const cutoffTime = new Date(now.getTime() - OFFLINE_TIMEOUT);
+    
+    // Log để debug
+    console.log(`🔍 Checking offline devices... (cutoff: ${cutoffTime.toISOString()})`);
     
     // Find devices that will be marked offline
     const devicesToMarkOffline = await Device.find({
       status: 'online',
       lastSeen: { $lt: cutoffTime }
     }).populate('assignedUsers', '_id email').populate('ownerId', '_id email');
+    
+    console.log(`🔍 Found ${devicesToMarkOffline.length} device(s) to mark offline`);
     
     if (devicesToMarkOffline.length > 0) {
       // Update status

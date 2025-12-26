@@ -736,30 +736,43 @@ router.post('/automation', auth, async (req, res) => {
     
     // Map sensor type to control type for alerts
     if (type === 'alert' && !controlType) {
-      const sensorToControl = {
-        'light': 'light',
-        'temperature': 'fan',
-        'humidity': 'fan', 
-        'soil': 'irrigation',
-        'soil_moisture': 'irrigation'
-      };
-      controlType = sensorToControl[settings.sensor] || 'light';
+      // Use 'alert' as controlType for sensor alerts
+      controlType = 'alert';
+    }
+    
+    // Default controlType for reminders
+    if (type === 'reminder' && !controlType) {
+      controlType = 'reminder';
     }
 
-    // Create or update control with automation settings
-    let control = await Control.findOne({ 
-      deviceId, 
-      controlType,
-      isActive: true 
-    });
-
-    if (!control) {
+    // For alert and reminder, always create new (allow multiple)
+    // For other types, find existing or create new
+    let control;
+    
+    if (type === 'alert' || type === 'reminder') {
+      // Always create new alert/reminder
       control = new Control({
         deviceId,
         userId: user._id,
         controlType,
-        mode: type === 'schedule' ? 'scheduled' : type === 'alert' ? 'threshold' : 'auto'
+        mode: type === 'alert' ? 'threshold' : 'scheduled'
       });
+    } else {
+      // Find existing or create new for schedule/sensor
+      control = await Control.findOne({ 
+        deviceId, 
+        controlType,
+        isActive: true 
+      });
+
+      if (!control) {
+        control = new Control({
+          deviceId,
+          userId: user._id,
+          controlType,
+          mode: type === 'schedule' ? 'scheduled' : 'auto'
+        });
+      }
     }
 
     if (type === 'schedule') {
@@ -793,15 +806,33 @@ router.post('/automation', auth, async (req, res) => {
         maxValue: settings.maxValue,
         message: settings.message
       };
+    } else if (type === 'reminder') {
+      // Lưu nhắc nhở theo thời gian
+      control.mode = 'scheduled';
+      control.scheduleSettings = {
+        enabled: settings.enabled !== false,
+        schedules: [{
+          time: settings.time,
+          days: settings.days,
+          action: 'notify',
+          title: settings.title,
+          message: settings.message
+        }]
+      };
     }
 
+    console.log('Saving control:', JSON.stringify(control.toObject(), null, 2));
+    
     await control.save();
+    console.log('Control saved successfully:', control._id);
+    
     await control.populate('userId', 'username fullName');
 
     res.status(201).json(control);
   } catch (error) {
-    console.error('Save automation error:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Save automation error:', error.message);
+    console.error('Error stack:', error.stack);
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 
