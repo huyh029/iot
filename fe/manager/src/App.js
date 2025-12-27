@@ -4912,98 +4912,76 @@ function GrassField({ zoneX, zoneZ, zoneWidth, zoneDepth }) {
   );
 }
 
-// Optimized Tea Bush Field using InstancedMesh - vườn trà
+// Optimized Tea Bush Field using InstancedMesh - cây trà đơn giản: 1 que + 2 lá
 function TeaBushField({ zoneX, zoneZ, zoneWidth, zoneDepth }) {
-  const trunkRef = React.useRef();
-  const bush1Ref = React.useRef();
-  const bush2Ref = React.useRef();
-  const bush3Ref = React.useRef();
-  const leafTipRef = React.useRef();
-  const spacing = 0.8;
+  const stemRef = React.useRef();
+  const leaf1Ref = React.useRef();
+  const leaf2Ref = React.useRef();
+  
+  const spacing = 0.15; // Dày hơn
   const cols = Math.floor(zoneWidth / spacing);
   const rows = Math.floor(zoneDepth / spacing);
   const count = cols * rows;
   
   React.useEffect(() => {
-    if (!trunkRef.current || !bush1Ref.current || !bush2Ref.current || !bush3Ref.current || !leafTipRef.current) return;
+    if (!stemRef.current || !leaf1Ref.current || !leaf2Ref.current) return;
     
     const dummy = new THREE.Object3D();
     let idx = 0;
     
     for (let row = 0; row < rows; row++) {
       for (let col = 0; col < cols; col++) {
-        const x = zoneX + col * spacing + spacing / 2 + (Math.random() - 0.5) * 0.15;
-        const z = zoneZ + row * spacing + spacing / 2 + (Math.random() - 0.5) * 0.15;
-        const scale = 0.8 + Math.random() * 0.3;
-        const height = 0.4 + Math.random() * 0.2;
+        const x = zoneX + col * spacing + spacing / 2 + (Math.random() - 0.5) * 0.05;
+        const z = zoneZ + row * spacing + spacing / 2 + (Math.random() - 0.5) * 0.05;
+        const height = 0.35 + Math.random() * 0.15; // Cao hơn
+        const rot = Math.random() * Math.PI * 2;
         
-        // Thân cây trà nhỏ
-        dummy.position.set(x, height / 2, z);
-        dummy.scale.set(scale, scale, scale);
-        dummy.rotation.set(0, Math.random() * Math.PI, 0);
+        // Que/thân cây - xanh
+        dummy.position.set(x, height / 2 + 0.14, z);
+        dummy.scale.set(1, height, 1);
+        dummy.rotation.set(0, rot, 0);
         dummy.updateMatrix();
-        trunkRef.current.setMatrixAt(idx, dummy.matrix);
+        stemRef.current.setMatrixAt(idx, dummy.matrix);
         
-        // Bụi trà lớp 1 - dưới cùng
-        dummy.position.set(x, height + 0.15, z);
-        dummy.scale.set(scale * 1.3, scale * 0.8, scale * 1.3);
+        // Lá 1 - bên trái, to hơn
+        dummy.position.set(x - 0.05, height + 0.12, z);
+        dummy.scale.set(1, 1, 1);
+        dummy.rotation.set(0.3, rot, -0.5);
         dummy.updateMatrix();
-        bush1Ref.current.setMatrixAt(idx, dummy.matrix);
+        leaf1Ref.current.setMatrixAt(idx, dummy.matrix);
         
-        // Bụi trà lớp 2 - giữa
-        dummy.position.set(x, height + 0.28, z);
-        dummy.scale.set(scale * 1.1, scale * 0.7, scale * 1.1);
+        // Lá 2 - bên phải, to hơn
+        dummy.position.set(x + 0.05, height + 0.08, z);
+        dummy.scale.set(1, 1, 1);
+        dummy.rotation.set(0.3, rot + 0.5, 0.5);
         dummy.updateMatrix();
-        bush2Ref.current.setMatrixAt(idx, dummy.matrix);
-        
-        // Bụi trà lớp 3 - trên
-        dummy.position.set(x, height + 0.38, z);
-        dummy.scale.set(scale * 0.8, scale * 0.6, scale * 0.8);
-        dummy.updateMatrix();
-        bush3Ref.current.setMatrixAt(idx, dummy.matrix);
-        
-        // Búp trà non - đỉnh
-        dummy.position.set(x, height + 0.5, z);
-        dummy.scale.set(scale * 0.5, scale * 0.5, scale * 0.5);
-        dummy.updateMatrix();
-        leafTipRef.current.setMatrixAt(idx, dummy.matrix);
+        leaf2Ref.current.setMatrixAt(idx, dummy.matrix);
         
         idx++;
       }
     }
-    trunkRef.current.instanceMatrix.needsUpdate = true;
-    bush1Ref.current.instanceMatrix.needsUpdate = true;
-    bush2Ref.current.instanceMatrix.needsUpdate = true;
-    bush3Ref.current.instanceMatrix.needsUpdate = true;
-    leafTipRef.current.instanceMatrix.needsUpdate = true;
+    
+    stemRef.current.instanceMatrix.needsUpdate = true;
+    leaf1Ref.current.instanceMatrix.needsUpdate = true;
+    leaf2Ref.current.instanceMatrix.needsUpdate = true;
   }, [zoneX, zoneZ, zoneWidth, zoneDepth, cols, rows]);
   
   return (
     <group>
-      {/* Thân cây */}
-      <instancedMesh ref={trunkRef} args={[null, null, count]}>
-        <cylinderGeometry args={[0.03, 0.05, 0.5, 6]} />
-        <meshStandardMaterial color="#5D4037" roughness={0.9} />
+      {/* Que/thân - xanh đậm */}
+      <instancedMesh ref={stemRef} args={[null, null, count]}>
+        <cylinderGeometry args={[0.015, 0.02, 1, 4]} />
+        <meshStandardMaterial color="#1B5E20" />
       </instancedMesh>
-      {/* Bụi trà lớp 1 - xanh đậm */}
-      <instancedMesh ref={bush1Ref} args={[null, null, count]}>
-        <sphereGeometry args={[0.25, 10, 10]} />
-        <meshStandardMaterial color="#2E7D32" roughness={0.8} />
+      {/* Lá 1 - xanh */}
+      <instancedMesh ref={leaf1Ref} args={[null, null, count]}>
+        <planeGeometry args={[0.12, 0.06]} />
+        <meshStandardMaterial color="#2E7D32" side={THREE.DoubleSide} />
       </instancedMesh>
-      {/* Bụi trà lớp 2 - xanh vừa */}
-      <instancedMesh ref={bush2Ref} args={[null, null, count]}>
-        <sphereGeometry args={[0.2, 10, 10]} />
-        <meshStandardMaterial color="#388E3C" roughness={0.8} />
-      </instancedMesh>
-      {/* Bụi trà lớp 3 - xanh nhạt */}
-      <instancedMesh ref={bush3Ref} args={[null, null, count]}>
-        <sphereGeometry args={[0.15, 8, 8]} />
-        <meshStandardMaterial color="#43A047" roughness={0.8} />
-      </instancedMesh>
-      {/* Búp trà non - xanh sáng */}
-      <instancedMesh ref={leafTipRef} args={[null, null, count]}>
-        <coneGeometry args={[0.08, 0.12, 6]} />
-        <meshStandardMaterial color="#81C784" />
+      {/* Lá 2 - xanh nhạt hơn */}
+      <instancedMesh ref={leaf2Ref} args={[null, null, count]}>
+        <planeGeometry args={[0.1, 0.05]} />
+        <meshStandardMaterial color="#43A047" side={THREE.DoubleSide} />
       </instancedMesh>
     </group>
   );
@@ -6422,65 +6400,87 @@ function ZoneContent({ zone, groundSize, canvasWidth, canvasHeight, isNight }) {
     case 'herb':
       return (
         <group>
-          {/* Nền đất đồi */}
-          <mesh position={[centerX, 0.08, centerZ]} receiveShadow>
-            <boxGeometry args={[zoneWidth, 0.16, zoneDepth]} />
-            <meshStandardMaterial color="#5D4037" roughness={1} />
+          {/* Nền đất đồi - màu đất đỏ bazan */}
+          <mesh position={[centerX, 0.06, centerZ]} receiveShadow>
+            <boxGeometry args={[zoneWidth, 0.12, zoneDepth]} />
+            <meshStandardMaterial color="#8D6E63" roughness={1} />
           </mesh>
           
-          {/* Lớp đất mặt */}
-          <mesh position={[centerX, 0.18, centerZ]} receiveShadow>
-            <boxGeometry args={[zoneWidth - 0.2, 0.04, zoneDepth - 0.2]} />
-            <meshStandardMaterial color="#6D4C41" roughness={0.9} />
+          {/* Lớp đất mặt - đất nâu đỏ */}
+          <mesh position={[centerX, 0.13, centerZ]} receiveShadow>
+            <boxGeometry args={[zoneWidth - 0.1, 0.02, zoneDepth - 0.1]} />
+            <meshStandardMaterial color="#6D4C41" roughness={0.95} />
           </mesh>
           
-          {/* Cỏ nền */}
-          <GrassField zoneX={zoneX + 0.1} zoneZ={zoneZ + 0.1} zoneWidth={zoneWidth - 0.2} zoneDepth={zoneDepth - 0.2} />
+          {/* Luống trà bên trái */}
+          <TeaBushField 
+            zoneX={zoneX + 0.15} 
+            zoneZ={zoneZ + 0.15} 
+            zoneWidth={(zoneWidth - 0.8) / 2} 
+            zoneDepth={zoneDepth - 0.3} 
+          />
           
-          {/* Bụi trà */}
-          <TeaBushField zoneX={zoneX + 0.2} zoneZ={zoneZ + 0.2} zoneWidth={zoneWidth - 0.4} zoneDepth={zoneDepth - 0.4} />
+          {/* Luống trà bên phải */}
+          <TeaBushField 
+            zoneX={centerX + 0.25} 
+            zoneZ={zoneZ + 0.15} 
+            zoneWidth={(zoneWidth - 0.8) / 2} 
+            zoneDepth={zoneDepth - 0.3} 
+          />
           
-          {/* Đường đi giữa vườn trà */}
-          <mesh position={[centerX, 0.19, centerZ]} receiveShadow>
-            <boxGeometry args={[0.5, 0.02, zoneDepth - 0.5]} />
+          {/* Đường đi giữa vườn trà - đất nện */}
+          <mesh position={[centerX, 0.14, centerZ]} receiveShadow>
+            <boxGeometry args={[0.4, 0.01, zoneDepth - 0.2]} />
             <meshStandardMaterial color="#A1887F" roughness={1} />
           </mesh>
           
-          {/* Đá trang trí ven đường */}
-          {[-zoneDepth / 3, 0, zoneDepth / 3].map((z, i) => (
-            <React.Fragment key={`stones-${i}`}>
-              <mesh position={[centerX - 0.35, 0.22, centerZ + z]}>
-                <dodecahedronGeometry args={[0.08, 0]} />
+          {/* Viền đường đi bằng đá nhỏ */}
+          {Array.from({ length: Math.floor(zoneDepth / 0.4) }).map((_, i) => (
+            <React.Fragment key={`path-stones-${i}`}>
+              <mesh position={[centerX - 0.22, 0.15, zoneZ + 0.3 + i * 0.4]}>
+                <sphereGeometry args={[0.03, 6, 6]} />
                 <meshStandardMaterial color="#9E9E9E" roughness={0.9} />
               </mesh>
-              <mesh position={[centerX + 0.35, 0.22, centerZ + z]}>
-                <dodecahedronGeometry args={[0.06, 0]} />
+              <mesh position={[centerX + 0.22, 0.15, zoneZ + 0.3 + i * 0.4]}>
+                <sphereGeometry args={[0.025, 6, 6]} />
                 <meshStandardMaterial color="#BDBDBD" roughness={0.9} />
               </mesh>
             </React.Fragment>
           ))}
           
           {/* Biển "Vườn Trà" */}
-          <group position={[zoneX + 0.5, 0.2, zoneZ + 0.5]}>
-            <mesh position={[0, 0.4, 0]}>
-              <cylinderGeometry args={[0.04, 0.05, 0.8, 8]} />
+          <group position={[zoneX + 0.4, 0.14, zoneZ + 0.4]}>
+            <mesh position={[0, 0.25, 0]}>
+              <cylinderGeometry args={[0.03, 0.04, 0.5, 6]} />
               <meshStandardMaterial color="#5D4037" />
             </mesh>
-            <mesh position={[0, 0.85, 0]} rotation={[0, 0.3, 0]}>
-              <boxGeometry args={[0.5, 0.3, 0.03]} />
-              <meshStandardMaterial color="#8D6E63" />
+            <mesh position={[0, 0.55, 0]} rotation={[0, 0.2, 0]}>
+              <boxGeometry args={[0.4, 0.2, 0.02]} />
+              <meshStandardMaterial color="#4E342E" />
             </mesh>
           </group>
           
-          {/* Giỏ hái trà */}
-          <group position={[zoneX + zoneWidth - 0.5, 0.2, zoneZ + zoneDepth - 0.5]}>
-            <mesh position={[0, 0.12, 0]}>
-              <cylinderGeometry args={[0.15, 0.12, 0.2, 12]} />
-              <meshStandardMaterial color="#8D6E63" />
+          {/* Giỏ tre hái trà */}
+          <group position={[zoneX + zoneWidth - 0.4, 0.14, zoneZ + zoneDepth - 0.4]}>
+            <mesh position={[0, 0.1, 0]}>
+              <cylinderGeometry args={[0.12, 0.08, 0.18, 12]} />
+              <meshStandardMaterial color="#D7CCC8" roughness={0.9} />
             </mesh>
-            <mesh position={[0, 0.22, 0]}>
-              <sphereGeometry args={[0.12, 8, 8]} />
-              <meshStandardMaterial color="#4CAF50" />
+            <mesh position={[0, 0.19, 0]}>
+              <torusGeometry args={[0.12, 0.015, 8, 16]} />
+              <meshStandardMaterial color="#A1887F" />
+            </mesh>
+            <mesh position={[0, 0.18, 0]}>
+              <sphereGeometry args={[0.09, 8, 6]} />
+              <meshStandardMaterial color="#2E7D32" />
+            </mesh>
+          </group>
+          
+          {/* Nón lá để bên cạnh */}
+          <group position={[zoneX + zoneWidth - 0.6, 0.14, zoneZ + zoneDepth - 0.3]} rotation={[0.3, 0.5, 0.1]}>
+            <mesh>
+              <coneGeometry args={[0.2, 0.08, 16]} />
+              <meshStandardMaterial color="#D7CCC8" side={THREE.DoubleSide} />
             </mesh>
           </group>
         </group>
