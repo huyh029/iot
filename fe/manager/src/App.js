@@ -4320,23 +4320,47 @@ function Water({ position, size }) {
 }
 
 function Tree({ position, scale = 1 }) {
+  const treeRef = React.useRef();
+  const leavesRef1 = React.useRef();
+  const leavesRef2 = React.useRef();
+  const leavesRef3 = React.useRef();
+  
+  useFrame((state) => {
+    const t = state.clock.elapsedTime;
+    const windStrength = 0.02;
+    const windSpeed = 1.5;
+    // Hiệu ứng gió nhẹ cho lá cây
+    if (leavesRef1.current) {
+      leavesRef1.current.rotation.x = Math.sin(t * windSpeed + position[0]) * windStrength;
+      leavesRef1.current.rotation.z = Math.sin(t * windSpeed * 0.7 + position[2]) * windStrength;
+    }
+    if (leavesRef2.current) {
+      leavesRef2.current.rotation.x = Math.sin(t * windSpeed + position[0] + 0.5) * windStrength * 1.2;
+      leavesRef2.current.rotation.z = Math.sin(t * windSpeed * 0.7 + position[2] + 0.5) * windStrength * 1.2;
+    }
+    if (leavesRef3.current) {
+      leavesRef3.current.rotation.x = Math.sin(t * windSpeed + position[0] + 1) * windStrength * 1.5;
+      leavesRef3.current.rotation.z = Math.sin(t * windSpeed * 0.7 + position[2] + 1) * windStrength * 1.5;
+    }
+  });
+  
   return (
-    <group position={position} scale={scale}>
+    <group position={position} scale={scale} ref={treeRef}>
       {/* Trunk */}
       <mesh position={[0, 2, 0]} castShadow>
         <cylinderGeometry args={[0.3, 0.5, 4, 8]} />
         <meshStandardMaterial color="#5D4037" roughness={0.9} />
       </mesh>
-      {/* Leaves - multiple layers */}
-      <mesh position={[0, 5, 0]} castShadow>
+      {/* Leaves - multiple layers with wind effect */}
+      <mesh ref={leavesRef1} position={[0, 5, 0]} castShadow>
         <coneGeometry args={[2.5, 3, 8]} />
         <meshStandardMaterial color="#2E7D32" roughness={0.8} />
       </mesh>
-      <mesh position={[0, 6.5, 0]} castShadow>
+      <mesh ref={leavesRef2} position={[0, 6.5, 0]} castShadow>
         <coneGeometry args={[2, 2.5, 8]} />
         <meshStandardMaterial color="#388E3C" roughness={0.8} />
       </mesh>
-      <mesh position={[0, 7.8, 0]} castShadow>
+      <mesh ref={leavesRef3} position={[0, 7.8, 0]} castShadow>
         <coneGeometry args={[1.2, 2, 8]} />
         <meshStandardMaterial color="#43A047" roughness={0.8} />
       </mesh>
@@ -4729,6 +4753,56 @@ function FivePointStar({ position, size = 0.4, color = '#FFFF00', rotation = 0 }
   );
 }
 
+// Cờ Việt Nam với hiệu ứng gió
+function VietnamFlag({ position }) {
+  const flagRef = React.useRef();
+  const starRef = React.useRef();
+  
+  useFrame((state) => {
+    const t = state.clock.elapsedTime;
+    if (flagRef.current) {
+      // Hiệu ứng gió - cờ bay phần phần
+      flagRef.current.rotation.y = Math.sin(t * 2) * 0.15;
+      flagRef.current.rotation.x = Math.sin(t * 1.5 + 0.5) * 0.05;
+      flagRef.current.position.x = 1 + Math.sin(t * 2.5) * 0.05;
+    }
+    if (starRef.current) {
+      starRef.current.rotation.y = Math.sin(t * 2) * 0.15;
+      starRef.current.rotation.x = Math.sin(t * 1.5 + 0.5) * 0.05;
+      starRef.current.position.x = 1 + Math.sin(t * 2.5) * 0.05;
+    }
+  });
+  
+  return (
+    <group position={position}>
+      {/* Cột cờ */}
+      <mesh position={[0, 2.5, 0]}>
+        <cylinderGeometry args={[0.06, 0.1, 5, 8]} />
+        <meshStandardMaterial color="#BDBDBD" metalness={0.7} />
+      </mesh>
+      {/* Đỉnh cột vàng */}
+      <mesh position={[0, 5.1, 0]}>
+        <sphereGeometry args={[0.12, 8, 8]} />
+        <meshStandardMaterial color="#FFD700" metalness={0.8} />
+      </mesh>
+      {/* Lá cờ đỏ */}
+      <mesh ref={flagRef} position={[1, 4.2, 0]}>
+        <planeGeometry args={[2, 1.33]} />
+        <meshStandardMaterial color="#DA251D" side={THREE.DoubleSide} />
+      </mesh>
+      {/* Ngôi sao vàng 5 cánh */}
+      <group ref={starRef} position={[1, 4.2, 0.02]}>
+        <FivePointStar position={[0, 0, 0]} size={0.4} color="#FFFF00" rotation={Math.PI} />
+      </group>
+      {/* Chân đế */}
+      <mesh position={[0, 0.1, 0]}>
+        <cylinderGeometry args={[0.18, 0.22, 0.2, 8]} />
+        <meshStandardMaterial color="#616161" metalness={0.6} />
+      </mesh>
+    </group>
+  );
+}
+
 function Flower({ position, color }) {
   const flowerRef = React.useRef();
   
@@ -4792,18 +4866,20 @@ function RicePlant({ position }) {
   );
 }
 
-// Optimized Rice Field using InstancedMesh - renders thousands of rice with 1 draw call
+// Optimized Rice Field using InstancedMesh - renders thousands of rice with wind effect
 function RiceField({ zoneX, zoneZ, zoneWidth, zoneDepth }) {
   const meshRef = React.useRef();
   const spacing = 0.2;
   const cols = Math.floor(zoneWidth / spacing);
   const rows = Math.floor(zoneDepth / spacing);
   const count = cols * rows;
+  const basePositions = React.useRef([]);
   
   React.useEffect(() => {
     if (!meshRef.current) return;
     
     const dummy = new THREE.Object3D();
+    const positions = [];
     let idx = 0;
     
     for (let row = 0; row < rows; row++) {
@@ -4813,16 +4889,39 @@ function RiceField({ zoneX, zoneZ, zoneWidth, zoneDepth }) {
         const y = 0.55 + Math.random() * 0.15;
         const scale = 0.8 + Math.random() * 0.4;
         
+        positions.push({ x, y, z, scale, baseRot: (Math.random() - 0.5) * 0.1 });
+        
         dummy.position.set(x, y, z);
         dummy.scale.set(1, scale, 1);
-        dummy.rotation.set(0, Math.random() * Math.PI, (Math.random() - 0.5) * 0.1);
+        dummy.rotation.set(0, Math.random() * Math.PI, positions[idx].baseRot);
         dummy.updateMatrix();
         meshRef.current.setMatrixAt(idx, dummy.matrix);
         idx++;
       }
     }
+    basePositions.current = positions;
     meshRef.current.instanceMatrix.needsUpdate = true;
   }, [zoneX, zoneZ, zoneWidth, zoneDepth, cols, rows]);
+  
+  // Animation gió
+  useFrame((state) => {
+    if (!meshRef.current || basePositions.current.length === 0) return;
+    const t = state.clock.elapsedTime;
+    const dummy = new THREE.Object3D();
+    
+    for (let i = 0; i < Math.min(basePositions.current.length, count); i++) {
+      const p = basePositions.current[i];
+      const windX = Math.sin(t * 2 + p.x * 0.5) * 0.1;
+      const windZ = Math.sin(t * 1.5 + p.z * 0.5) * 0.05;
+      
+      dummy.position.set(p.x, p.y, p.z);
+      dummy.scale.set(1, p.scale, 1);
+      dummy.rotation.set(windX, 0, p.baseRot + windZ);
+      dummy.updateMatrix();
+      meshRef.current.setMatrixAt(i, dummy.matrix);
+    }
+    meshRef.current.instanceMatrix.needsUpdate = true;
+  });
   
   return (
     <instancedMesh ref={meshRef} args={[null, null, count]}>
@@ -4832,18 +4931,20 @@ function RiceField({ zoneX, zoneZ, zoneWidth, zoneDepth }) {
   );
 }
 
-// Optimized Grass Field using InstancedMesh
+// Optimized Grass Field using InstancedMesh with wind effect
 function GrassField({ zoneX, zoneZ, zoneWidth, zoneDepth }) {
   const meshRef = React.useRef();
   const spacing = 0.15;
   const cols = Math.floor(zoneWidth / spacing);
   const rows = Math.floor(zoneDepth / spacing);
   const count = cols * rows;
+  const basePositions = React.useRef([]);
   
   React.useEffect(() => {
     if (!meshRef.current) return;
     
     const dummy = new THREE.Object3D();
+    const positions = [];
     let idx = 0;
     
     for (let row = 0; row < rows; row++) {
@@ -4852,17 +4953,40 @@ function GrassField({ zoneX, zoneZ, zoneWidth, zoneDepth }) {
         const z = zoneZ + row * spacing + spacing / 2 + (Math.random() - 0.5) * 0.1;
         const y = 0.08 + Math.random() * 0.05;
         const scale = 0.6 + Math.random() * 0.5;
+        const rotY = Math.random() * Math.PI;
+        
+        positions.push({ x, y, z, scale, rotY });
         
         dummy.position.set(x, y, z);
         dummy.scale.set(1, scale, 1);
-        dummy.rotation.set((Math.random() - 0.5) * 0.3, Math.random() * Math.PI, 0);
+        dummy.rotation.set(0, rotY, 0);
         dummy.updateMatrix();
         meshRef.current.setMatrixAt(idx, dummy.matrix);
         idx++;
       }
     }
+    basePositions.current = positions;
     meshRef.current.instanceMatrix.needsUpdate = true;
   }, [zoneX, zoneZ, zoneWidth, zoneDepth, cols, rows]);
+  
+  // Animation gió nhẹ
+  useFrame((state) => {
+    if (!meshRef.current || basePositions.current.length === 0) return;
+    const t = state.clock.elapsedTime;
+    const dummy = new THREE.Object3D();
+    
+    for (let i = 0; i < Math.min(basePositions.current.length, count); i++) {
+      const p = basePositions.current[i];
+      const windX = Math.sin(t * 3 + p.x * 0.8) * 0.08;
+      
+      dummy.position.set(p.x, p.y, p.z);
+      dummy.scale.set(1, p.scale, 1);
+      dummy.rotation.set(windX, p.rotY, 0);
+      dummy.updateMatrix();
+      meshRef.current.setMatrixAt(i, dummy.matrix);
+    }
+    meshRef.current.instanceMatrix.needsUpdate = true;
+  });
   
   return (
     <instancedMesh ref={meshRef} args={[null, null, count]}>
@@ -4872,13 +4996,14 @@ function GrassField({ zoneX, zoneZ, zoneWidth, zoneDepth }) {
   );
 }
 
-// Optimized Tea Bush Field using InstancedMesh - cây trà đơn giản: 1 que + 2 lá
+// Optimized Tea Bush Field using InstancedMesh - cây trà đơn giản: 1 que + 2 lá với hiệu ứng gió
 function TeaBushField({ zoneX, zoneZ, zoneWidth, zoneDepth }) {
   const stemRef = React.useRef();
   const leaf1Ref = React.useRef();
   const leaf2Ref = React.useRef();
+  const basePositions = React.useRef([]);
   
-  const spacing = 0.15; // Dày hơn
+  const spacing = 0.15;
   const cols = Math.floor(zoneWidth / spacing);
   const rows = Math.floor(zoneDepth / spacing);
   const count = cols * rows;
@@ -4887,30 +5012,33 @@ function TeaBushField({ zoneX, zoneZ, zoneWidth, zoneDepth }) {
     if (!stemRef.current || !leaf1Ref.current || !leaf2Ref.current) return;
     
     const dummy = new THREE.Object3D();
+    const positions = [];
     let idx = 0;
     
     for (let row = 0; row < rows; row++) {
       for (let col = 0; col < cols; col++) {
         const x = zoneX + col * spacing + spacing / 2 + (Math.random() - 0.5) * 0.05;
         const z = zoneZ + row * spacing + spacing / 2 + (Math.random() - 0.5) * 0.05;
-        const height = 0.35 + Math.random() * 0.15; // Cao hơn
+        const height = 0.35 + Math.random() * 0.15;
         const rot = Math.random() * Math.PI * 2;
         
-        // Que/thân cây - xanh
+        positions.push({ x, z, height, rot });
+        
+        // Que/thân cây
         dummy.position.set(x, height / 2 + 0.14, z);
         dummy.scale.set(1, height, 1);
         dummy.rotation.set(0, rot, 0);
         dummy.updateMatrix();
         stemRef.current.setMatrixAt(idx, dummy.matrix);
         
-        // Lá 1 - bên trái, to hơn
+        // Lá 1
         dummy.position.set(x - 0.05, height + 0.12, z);
         dummy.scale.set(1, 1, 1);
         dummy.rotation.set(0.3, rot, -0.5);
         dummy.updateMatrix();
         leaf1Ref.current.setMatrixAt(idx, dummy.matrix);
         
-        // Lá 2 - bên phải, to hơn
+        // Lá 2
         dummy.position.set(x + 0.05, height + 0.08, z);
         dummy.scale.set(1, 1, 1);
         dummy.rotation.set(0.3, rot + 0.5, 0.5);
@@ -4920,11 +5048,40 @@ function TeaBushField({ zoneX, zoneZ, zoneWidth, zoneDepth }) {
         idx++;
       }
     }
-    
+    basePositions.current = positions;
     stemRef.current.instanceMatrix.needsUpdate = true;
     leaf1Ref.current.instanceMatrix.needsUpdate = true;
     leaf2Ref.current.instanceMatrix.needsUpdate = true;
   }, [zoneX, zoneZ, zoneWidth, zoneDepth, cols, rows]);
+  
+  // Animation gió cho lá
+  useFrame((state) => {
+    if (!leaf1Ref.current || !leaf2Ref.current || basePositions.current.length === 0) return;
+    const t = state.clock.elapsedTime;
+    const dummy = new THREE.Object3D();
+    
+    for (let i = 0; i < Math.min(basePositions.current.length, count); i++) {
+      const p = basePositions.current[i];
+      const windX = Math.sin(t * 2.5 + p.x * 0.6) * 0.15;
+      const windZ = Math.sin(t * 2 + p.z * 0.6) * 0.1;
+      
+      // Lá 1 đung đưa
+      dummy.position.set(p.x - 0.05, p.height + 0.12, p.z);
+      dummy.scale.set(1, 1, 1);
+      dummy.rotation.set(0.3 + windX, p.rot, -0.5 + windZ);
+      dummy.updateMatrix();
+      leaf1Ref.current.setMatrixAt(i, dummy.matrix);
+      
+      // Lá 2 đung đưa
+      dummy.position.set(p.x + 0.05, p.height + 0.08, p.z);
+      dummy.scale.set(1, 1, 1);
+      dummy.rotation.set(0.3 + windX * 0.8, p.rot + 0.5, 0.5 + windZ * 0.8);
+      dummy.updateMatrix();
+      leaf2Ref.current.setMatrixAt(i, dummy.matrix);
+    }
+    leaf1Ref.current.instanceMatrix.needsUpdate = true;
+    leaf2Ref.current.instanceMatrix.needsUpdate = true;
+  });
   
   return (
     <group>
@@ -4947,12 +5104,13 @@ function TeaBushField({ zoneX, zoneZ, zoneWidth, zoneDepth }) {
   );
 }
 
-// Optimized Flower Field using InstancedMesh - hoa với nhiều màu
+// Optimized Flower Field using InstancedMesh - hoa với nhiều màu và hiệu ứng gió
 function FlowerField({ zoneX, zoneZ, zoneWidth, zoneDepth, color }) {
   const stemRef = React.useRef();
   const petalRef = React.useRef();
   const centerRef = React.useRef();
-  const spacing = 0.25; // Siêu dày
+  const basePositions = React.useRef([]);
+  const spacing = 0.25;
   const cols = Math.floor(zoneWidth / spacing);
   const rows = Math.floor(zoneDepth / spacing);
   const count = cols * rows;
@@ -4961,6 +5119,7 @@ function FlowerField({ zoneX, zoneZ, zoneWidth, zoneDepth, color }) {
     if (!stemRef.current || !petalRef.current || !centerRef.current) return;
     
     const dummy = new THREE.Object3D();
+    const positions = [];
     let idx = 0;
     
     for (let row = 0; row < rows; row++) {
@@ -4968,6 +5127,10 @@ function FlowerField({ zoneX, zoneZ, zoneWidth, zoneDepth, color }) {
         const x = zoneX + col * spacing + spacing / 2 + (Math.random() - 0.5) * 0.3;
         const z = zoneZ + row * spacing + spacing / 2 + (Math.random() - 0.5) * 0.3;
         const height = 0.25 + Math.random() * 0.15;
+        const petalScale = 0.8 + Math.random() * 0.4;
+        const petalRot = Math.random() * Math.PI;
+        
+        positions.push({ x, z, height, petalScale, petalRot });
         
         // Thân hoa
         dummy.position.set(x, height / 2 + 0.04, z);
@@ -4978,8 +5141,8 @@ function FlowerField({ zoneX, zoneZ, zoneWidth, zoneDepth, color }) {
         
         // Cánh hoa
         dummy.position.set(x, height + 0.08, z);
-        dummy.scale.set(0.8 + Math.random() * 0.4, 0.8 + Math.random() * 0.4, 1);
-        dummy.rotation.set(Math.PI / 2, Math.random() * Math.PI, 0);
+        dummy.scale.set(petalScale, petalScale, 1);
+        dummy.rotation.set(Math.PI / 2, petalRot, 0);
         dummy.updateMatrix();
         petalRef.current.setMatrixAt(idx, dummy.matrix);
         
@@ -4992,10 +5155,50 @@ function FlowerField({ zoneX, zoneZ, zoneWidth, zoneDepth, color }) {
         idx++;
       }
     }
+    basePositions.current = positions;
     stemRef.current.instanceMatrix.needsUpdate = true;
     petalRef.current.instanceMatrix.needsUpdate = true;
     centerRef.current.instanceMatrix.needsUpdate = true;
   }, [zoneX, zoneZ, zoneWidth, zoneDepth, cols, rows]);
+  
+  // Animation gió cho hoa
+  useFrame((state) => {
+    if (!stemRef.current || !petalRef.current || !centerRef.current || basePositions.current.length === 0) return;
+    const t = state.clock.elapsedTime;
+    const dummy = new THREE.Object3D();
+    
+    for (let i = 0; i < Math.min(basePositions.current.length, count); i++) {
+      const p = basePositions.current[i];
+      const windX = Math.sin(t * 2 + p.x * 0.5) * 0.12;
+      const windZ = Math.sin(t * 1.8 + p.z * 0.5) * 0.08;
+      
+      // Thân hoa nghiêng theo gió
+      dummy.position.set(p.x, p.height / 2 + 0.04, p.z);
+      dummy.scale.set(1, 1, 1);
+      dummy.rotation.set(windX, 0, windZ);
+      dummy.updateMatrix();
+      stemRef.current.setMatrixAt(i, dummy.matrix);
+      
+      // Cánh hoa di chuyển theo thân
+      const offsetX = Math.sin(windX) * 0.02;
+      const offsetZ = Math.sin(windZ) * 0.02;
+      dummy.position.set(p.x + offsetX, p.height + 0.08, p.z + offsetZ);
+      dummy.scale.set(p.petalScale, p.petalScale, 1);
+      dummy.rotation.set(Math.PI / 2 + windX * 0.3, p.petalRot, windZ * 0.3);
+      dummy.updateMatrix();
+      petalRef.current.setMatrixAt(i, dummy.matrix);
+      
+      // Nhụy hoa
+      dummy.position.set(p.x + offsetX, p.height + 0.1, p.z + offsetZ);
+      dummy.scale.set(1, 1, 1);
+      dummy.rotation.set(0, 0, 0);
+      dummy.updateMatrix();
+      centerRef.current.setMatrixAt(i, dummy.matrix);
+    }
+    stemRef.current.instanceMatrix.needsUpdate = true;
+    petalRef.current.instanceMatrix.needsUpdate = true;
+    centerRef.current.instanceMatrix.needsUpdate = true;
+  });
   
   return (
     <group>
@@ -5267,11 +5470,12 @@ function LettuceField({ zoneX, zoneZ, zoneWidth, zoneDepth }) {
   );
 }
 
-// Optimized Herb Field using InstancedMesh - vườn thảo mộc
+// Optimized Herb Field using InstancedMesh - vườn thảo mộc với hiệu ứng gió
 function HerbField({ zoneX, zoneZ, zoneWidth, zoneDepth, herbType }) {
   const stemRef = React.useRef();
   const leaf1Ref = React.useRef();
   const leaf2Ref = React.useRef();
+  const basePositions = React.useRef([]);
   const spacing = 0.35;
   const cols = Math.floor(zoneWidth / spacing);
   const rows = Math.floor(zoneDepth / spacing);
@@ -5291,6 +5495,7 @@ function HerbField({ zoneX, zoneZ, zoneWidth, zoneDepth, herbType }) {
     if (!stemRef.current || !leaf1Ref.current || !leaf2Ref.current) return;
     
     const dummy = new THREE.Object3D();
+    const positions = [];
     let idx = 0;
     
     for (let row = 0; row < rows; row++) {
@@ -5299,35 +5504,68 @@ function HerbField({ zoneX, zoneZ, zoneWidth, zoneDepth, herbType }) {
         const z = zoneZ + row * spacing + spacing / 2 + (Math.random() - 0.5) * 0.1;
         const height = 0.2 + Math.random() * 0.15;
         const scale = 0.7 + Math.random() * 0.4;
+        const rotY = Math.random() * Math.PI;
+        
+        positions.push({ x, z, height, scale, rotY });
         
         // Thân cây
         dummy.position.set(x, height / 2 + 0.02, z);
         dummy.scale.set(scale, scale, scale);
-        dummy.rotation.set(0, Math.random() * Math.PI, 0);
+        dummy.rotation.set(0, rotY, 0);
         dummy.updateMatrix();
         stemRef.current.setMatrixAt(idx, dummy.matrix);
         
         // Lá 1
         dummy.position.set(x, height + 0.08, z);
         dummy.scale.set(scale * 1.2, scale, scale * 1.2);
-        dummy.rotation.set(0.2, Math.random() * Math.PI, 0);
+        dummy.rotation.set(0.2, rotY, 0);
         dummy.updateMatrix();
         leaf1Ref.current.setMatrixAt(idx, dummy.matrix);
         
         // Lá 2
         dummy.position.set(x + 0.05, height + 0.05, z + 0.05);
         dummy.scale.set(scale * 0.9, scale * 0.8, scale * 0.9);
-        dummy.rotation.set(-0.2, Math.random() * Math.PI, 0);
+        dummy.rotation.set(-0.2, rotY, 0);
         dummy.updateMatrix();
         leaf2Ref.current.setMatrixAt(idx, dummy.matrix);
         
         idx++;
       }
     }
+    basePositions.current = positions;
     stemRef.current.instanceMatrix.needsUpdate = true;
     leaf1Ref.current.instanceMatrix.needsUpdate = true;
     leaf2Ref.current.instanceMatrix.needsUpdate = true;
   }, [zoneX, zoneZ, zoneWidth, zoneDepth, cols, rows, herbColors]);
+  
+  // Animation gió cho thảo mộc
+  useFrame((state) => {
+    if (!leaf1Ref.current || !leaf2Ref.current || basePositions.current.length === 0) return;
+    const t = state.clock.elapsedTime;
+    const dummy = new THREE.Object3D();
+    
+    for (let i = 0; i < Math.min(basePositions.current.length, count); i++) {
+      const p = basePositions.current[i];
+      const windX = Math.sin(t * 2.2 + p.x * 0.7) * 0.12;
+      const windZ = Math.sin(t * 1.8 + p.z * 0.7) * 0.08;
+      
+      // Lá 1 đung đưa
+      dummy.position.set(p.x, p.height + 0.08, p.z);
+      dummy.scale.set(p.scale * 1.2, p.scale, p.scale * 1.2);
+      dummy.rotation.set(0.2 + windX, p.rotY, windZ);
+      dummy.updateMatrix();
+      leaf1Ref.current.setMatrixAt(i, dummy.matrix);
+      
+      // Lá 2 đung đưa
+      dummy.position.set(p.x + 0.05, p.height + 0.05, p.z + 0.05);
+      dummy.scale.set(p.scale * 0.9, p.scale * 0.8, p.scale * 0.9);
+      dummy.rotation.set(-0.2 + windX * 0.8, p.rotY, windZ * 0.8);
+      dummy.updateMatrix();
+      leaf2Ref.current.setMatrixAt(i, dummy.matrix);
+    }
+    leaf1Ref.current.instanceMatrix.needsUpdate = true;
+    leaf2Ref.current.instanceMatrix.needsUpdate = true;
+  });
   
   return (
     <group>
@@ -5749,25 +5987,45 @@ function PeachTree({ position }) {
   );
 }
 
-// Component chính - Random chọn loại cây
+// Component chính - Random chọn loại cây với hiệu ứng gió
 function FruitTree({ position, treeType }) {
+  const groupRef = React.useRef();
   const type = treeType || Math.floor(Math.random() * 12);
   
-  switch (type % 12) {
-    case 0: return <MangoTree position={position} />;
-    case 1: return <OrangeTree position={position} />;
-    case 2: return <BananaTree position={position} />;
-    case 3: return <CoconutTree position={position} />;
-    case 4: return <DragonFruitTree position={position} />;
-    case 5: return <PomeloTree position={position} />;
-    case 6: return <GrapeVine position={position} />;
-    case 7: return <StrawberryPatch position={position} />;
-    case 8: return <WatermelonPatch position={position} />;
-    case 9: return <AvocadoTree position={position} />;
-    case 10: return <PapayaTree position={position} />;
-    case 11: return <PeachTree position={position} />;
-    default: return <MangoTree position={position} />;
-  }
+  // Animation gió cho cây ăn quả
+  useFrame((state) => {
+    if (!groupRef.current) return;
+    const t = state.clock.elapsedTime;
+    const windStrength = 0.015;
+    const windSpeed = 1.2;
+    // Hiệu ứng gió nhẹ - cây nghiêng nhẹ
+    groupRef.current.rotation.x = Math.sin(t * windSpeed + position[0] * 0.5) * windStrength;
+    groupRef.current.rotation.z = Math.sin(t * windSpeed * 0.8 + position[2] * 0.5) * windStrength;
+  });
+  
+  const TreeComponent = () => {
+    switch (type % 12) {
+      case 0: return <MangoTree position={[0, 0, 0]} />;
+      case 1: return <OrangeTree position={[0, 0, 0]} />;
+      case 2: return <BananaTree position={[0, 0, 0]} />;
+      case 3: return <CoconutTree position={[0, 0, 0]} />;
+      case 4: return <DragonFruitTree position={[0, 0, 0]} />;
+      case 5: return <PomeloTree position={[0, 0, 0]} />;
+      case 6: return <GrapeVine position={[0, 0, 0]} />;
+      case 7: return <StrawberryPatch position={[0, 0, 0]} />;
+      case 8: return <WatermelonPatch position={[0, 0, 0]} />;
+      case 9: return <AvocadoTree position={[0, 0, 0]} />;
+      case 10: return <PapayaTree position={[0, 0, 0]} />;
+      case 11: return <PeachTree position={[0, 0, 0]} />;
+      default: return <MangoTree position={[0, 0, 0]} />;
+    }
+  };
+  
+  return (
+    <group position={position} ref={groupRef}>
+      <TreeComponent />
+    </group>
+  );
 }
 
 function Greenhouse({ position, size }) {
@@ -7109,30 +7367,7 @@ function ZoneContent({ zone, groundSize, canvasWidth, canvasHeight, isNight }) {
             <GardenLamp position={[ghWidth / 2 - 0.3, ghHeight / 2, ghDepth / 2 - 0.2]} isNight={isNight} lampType="wall" />
             
             {/* === CỜ VIỆT NAM - GIỮA NÓC NHÀ KÍNH === */}
-            <group position={[0, ghHeight + 0.5, 0]}>
-              {/* Cột cờ cao */}
-              <mesh position={[0, 2.5, 0]}>
-                <cylinderGeometry args={[0.06, 0.1, 5, 12]} />
-                <meshStandardMaterial color="#BDBDBD" metalness={0.7} />
-              </mesh>
-              {/* Đỉnh cột vàng */}
-              <mesh position={[0, 5.1, 0]}>
-                <sphereGeometry args={[0.12, 12, 12]} />
-                <meshStandardMaterial color="#FFD700" metalness={0.8} />
-              </mesh>
-              {/* Lá cờ đỏ to */}
-              <mesh position={[1, 4.2, 0]} rotation={[0, 0, 0]}>
-                <planeGeometry args={[2, 1.33]} />
-                <meshStandardMaterial color="#DA251D" side={THREE.DoubleSide} />
-              </mesh>
-              {/* Ngôi sao vàng 5 cánh */}
-              <FivePointStar position={[1, 4.2, 0.02]} size={0.4} color="#FFFF00" rotation={Math.PI} />
-              {/* Chân đế */}
-              <mesh position={[0, 0.1, 0]}>
-                <cylinderGeometry args={[0.18, 0.22, 0.2, 12]} />
-                <meshStandardMaterial color="#616161" metalness={0.6} />
-              </mesh>
-            </group>
+            <VietnamFlag position={[0, ghHeight + 0.5, 0]} />
           </group>
         </group>
       );
