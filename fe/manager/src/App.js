@@ -4572,160 +4572,104 @@ function Farmer({ position, rotation = 0, action = 'standing', shirtColor = '#19
 }
 
 
-// Đèn vườn - bật sáng khi trời tối
-function GardenLamp({ position, isNight = false, lampType = 'street' }) {
-  const lightIntensity = isNight ? 15 : 0;
-  const emissiveIntensity = isNight ? 2 : 0;
+// Đèn vườn - bật sáng khi trời tối (tối ưu performance)
+function GardenLamp({ position, isNight = false, lampType = 'street', hasLight = true }) {
+  const emissiveIntensity = isNight ? 2.5 : 0;
   const glowColor = '#FFE4B5';
   
   if (lampType === 'street') {
-    // Đèn đường cao - kiểu cổ điển
     return (
       <group position={position}>
-        {/* Chân đèn */}
-        <mesh position={[0, 0.1, 0]} castShadow>
-          <cylinderGeometry args={[0.25, 0.35, 0.2, 8]} />
+        <mesh position={[0, 0.1, 0]}>
+          <cylinderGeometry args={[0.25, 0.35, 0.2, 6]} />
           <meshStandardMaterial color="#2C2C2C" metalness={0.8} roughness={0.3} />
         </mesh>
-        {/* Thân đèn */}
-        <mesh position={[0, 2, 0]} castShadow>
-          <cylinderGeometry args={[0.08, 0.12, 4, 8]} />
+        <mesh position={[0, 2, 0]}>
+          <cylinderGeometry args={[0.08, 0.12, 4, 6]} />
           <meshStandardMaterial color="#1C1C1C" metalness={0.9} roughness={0.2} />
         </mesh>
-        {/* Cần đèn cong */}
-        <mesh position={[0.3, 3.8, 0]} rotation={[0, 0, -0.5]} castShadow>
-          <cylinderGeometry args={[0.04, 0.04, 0.8, 6]} />
+        <mesh position={[0.3, 3.8, 0]} rotation={[0, 0, -0.5]}>
+          <cylinderGeometry args={[0.04, 0.04, 0.8, 4]} />
           <meshStandardMaterial color="#1C1C1C" metalness={0.9} roughness={0.2} />
         </mesh>
-        {/* Chụp đèn */}
-        <mesh position={[0.5, 4, 0]} castShadow>
-          <coneGeometry args={[0.35, 0.25, 8]} />
+        <mesh position={[0.5, 4, 0]}>
+          <coneGeometry args={[0.35, 0.25, 6]} />
           <meshStandardMaterial color="#2C2C2C" metalness={0.7} roughness={0.3} />
         </mesh>
-        {/* Bóng đèn */}
         <mesh position={[0.5, 3.85, 0]}>
-          <sphereGeometry args={[0.18, 16, 16]} />
+          <sphereGeometry args={[0.18, 8, 8]} />
           <meshStandardMaterial 
             color={isNight ? glowColor : '#FFFDE7'} 
             emissive={glowColor}
             emissiveIntensity={emissiveIntensity}
-            transparent
-            opacity={isNight ? 1 : 0.8}
           />
         </mesh>
-        {/* Ánh sáng */}
-        {isNight && (
-          <pointLight 
-            position={[0.5, 3.85, 0]} 
-            color={glowColor} 
-            intensity={lightIntensity} 
-            distance={12}
-            decay={2}
-            castShadow
-          />
+        {isNight && hasLight && (
+          <pointLight position={[0.5, 3.85, 0]} color={glowColor} intensity={8} distance={10} decay={2} />
         )}
       </group>
     );
   }
   
   if (lampType === 'garden') {
-    // Đèn vườn thấp - kiểu hiện đại
     return (
       <group position={position}>
-        {/* Đế đèn */}
-        <mesh position={[0, 0.05, 0]} castShadow>
-          <cylinderGeometry args={[0.15, 0.18, 0.1, 8]} />
+        <mesh position={[0, 0.05, 0]}>
+          <cylinderGeometry args={[0.15, 0.18, 0.1, 6]} />
           <meshStandardMaterial color="#3E3E3E" metalness={0.8} roughness={0.3} />
         </mesh>
-        {/* Thân đèn */}
-        <mesh position={[0, 0.5, 0]} castShadow>
-          <cylinderGeometry args={[0.05, 0.06, 0.9, 8]} />
+        <mesh position={[0, 0.5, 0]}>
+          <cylinderGeometry args={[0.05, 0.06, 0.9, 6]} />
           <meshStandardMaterial color="#2E2E2E" metalness={0.9} roughness={0.2} />
         </mesh>
-        {/* Chụp đèn hình cầu */}
         <mesh position={[0, 1.1, 0]}>
-          <sphereGeometry args={[0.2, 16, 16]} />
+          <sphereGeometry args={[0.2, 8, 8]} />
           <meshStandardMaterial 
             color={isNight ? glowColor : '#FFFDE7'} 
             emissive={glowColor}
             emissiveIntensity={emissiveIntensity * 0.8}
-            transparent
-            opacity={isNight ? 0.95 : 0.7}
           />
         </mesh>
-        {/* Ánh sáng */}
-        {isNight && (
-          <pointLight 
-            position={[0, 1.1, 0]} 
-            color={glowColor} 
-            intensity={lightIntensity * 0.5} 
-            distance={8}
-            decay={2}
-          />
-        )}
       </group>
     );
   }
   
   if (lampType === 'wall') {
-    // Đèn tường - cho nhà kho, nhà kính
     return (
       <group position={position}>
-        {/* Giá đỡ */}
-        <mesh position={[0, 0, 0.1]} castShadow>
+        <mesh position={[0, 0, 0.1]}>
           <boxGeometry args={[0.15, 0.15, 0.2]} />
           <meshStandardMaterial color="#3E3E3E" metalness={0.8} roughness={0.3} />
         </mesh>
-        {/* Chụp đèn */}
         <mesh position={[0, 0, 0.3]} rotation={[Math.PI / 2, 0, 0]}>
-          <coneGeometry args={[0.15, 0.2, 8]} />
+          <coneGeometry args={[0.15, 0.2, 6]} />
           <meshStandardMaterial color="#2E2E2E" metalness={0.7} roughness={0.3} />
         </mesh>
-        {/* Bóng đèn */}
         <mesh position={[0, 0, 0.35]}>
-          <sphereGeometry args={[0.1, 12, 12]} />
+          <sphereGeometry args={[0.1, 8, 8]} />
           <meshStandardMaterial 
             color={isNight ? glowColor : '#FFFDE7'} 
             emissive={glowColor}
             emissiveIntensity={emissiveIntensity}
-            transparent
-            opacity={isNight ? 1 : 0.7}
           />
         </mesh>
-        {/* Ánh sáng */}
-        {isNight && (
-          <spotLight 
-            position={[0, 0, 0.35]} 
-            target-position={[0, -2, 2]}
-            color={glowColor} 
-            intensity={lightIntensity * 0.8} 
-            distance={10}
-            angle={Math.PI / 3}
-            penumbra={0.5}
-            decay={2}
-          />
-        )}
       </group>
     );
   }
   
   if (lampType === 'lantern') {
-    // Đèn lồng - kiểu Á Đông
     return (
       <group position={position}>
-        {/* Móc treo */}
         <mesh position={[0, 0.6, 0]} rotation={[0, 0, Math.PI / 2]}>
-          <torusGeometry args={[0.08, 0.015, 8, 16, Math.PI]} />
+          <torusGeometry args={[0.08, 0.015, 6, 12, Math.PI]} />
           <meshStandardMaterial color="#8B4513" metalness={0.6} roughness={0.4} />
         </mesh>
-        {/* Nắp trên */}
         <mesh position={[0, 0.45, 0]}>
-          <cylinderGeometry args={[0.02, 0.18, 0.1, 8]} />
+          <cylinderGeometry args={[0.02, 0.18, 0.1, 6]} />
           <meshStandardMaterial color="#8B0000" roughness={0.6} />
         </mesh>
-        {/* Thân đèn lồng */}
         <mesh position={[0, 0.2, 0]}>
-          <cylinderGeometry args={[0.2, 0.2, 0.4, 8, 1, true]} />
+          <cylinderGeometry args={[0.2, 0.2, 0.4, 6, 1, true]} />
           <meshStandardMaterial 
             color={isNight ? '#FF6B6B' : '#DC143C'} 
             emissive="#FF4500"
@@ -4735,16 +4679,14 @@ function GardenLamp({ position, isNight = false, lampType = 'street' }) {
             side={THREE.DoubleSide}
           />
         </mesh>
-        {/* Khung đèn */}
-        {[0, 1, 2, 3].map((i) => (
+        {[0, 2].map((i) => (
           <mesh key={i} position={[Math.cos(i * Math.PI / 2) * 0.2, 0.2, Math.sin(i * Math.PI / 2) * 0.2]}>
             <boxGeometry args={[0.02, 0.4, 0.02]} />
             <meshStandardMaterial color="#8B4513" />
           </mesh>
         ))}
-        {/* Nắp dưới */}
         <mesh position={[0, -0.05, 0]}>
-          <cylinderGeometry args={[0.18, 0.02, 0.1, 8]} />
+          <cylinderGeometry args={[0.18, 0.02, 0.1, 6]} />
           <meshStandardMaterial color="#8B0000" roughness={0.6} />
         </mesh>
         {/* Tua rua */}
@@ -4752,16 +4694,6 @@ function GardenLamp({ position, isNight = false, lampType = 'street' }) {
           <cylinderGeometry args={[0.01, 0.01, 0.15, 6]} />
           <meshStandardMaterial color="#FFD700" />
         </mesh>
-        {/* Ánh sáng */}
-        {isNight && (
-          <pointLight 
-            position={[0, 0.2, 0]} 
-            color="#FF6347" 
-            intensity={lightIntensity * 0.4} 
-            distance={6}
-            decay={2}
-          />
-        )}
       </group>
     );
   }
@@ -7562,9 +7494,9 @@ function Scene({ zones, viewMode }) {
         </>
       ) : (
         <>
-          <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
+          <Stars radius={100} depth={50} count={2000} factor={4} saturation={0} fade speed={1} />
           <mesh position={[50, 40, 50]}>
-            <sphereGeometry args={[5, 32, 32]} />
+            <sphereGeometry args={[5, 16, 16]} />
             <meshBasicMaterial color="#F5F5DC" />
           </mesh>
         </>
@@ -7608,36 +7540,27 @@ function Scene({ zones, viewMode }) {
       {/* Decorative pond */}
       <Water position={[-25, 0.15, 20]} size={[8, 0.3, 6]} />
       
-      {/* ===== ĐÈN VƯỜN ===== */}
-      {/* Đèn đường dọc lối đi chính */}
-      <GardenLamp position={[-15, 0, 0]} isNight={isNight} lampType="street" />
-      <GardenLamp position={[15, 0, 0]} isNight={isNight} lampType="street" />
-      <GardenLamp position={[0, 0, -15]} isNight={isNight} lampType="street" />
-      <GardenLamp position={[0, 0, 15]} isNight={isNight} lampType="street" />
+      {/* ===== ĐÈN VƯỜN (tối ưu: chỉ 4 đèn chính có ánh sáng thực) ===== */}
+      {/* Đèn đường dọc lối đi chính - có ánh sáng */}
+      <GardenLamp position={[-15, 0, 0]} isNight={isNight} lampType="street" hasLight={true} />
+      <GardenLamp position={[15, 0, 0]} isNight={isNight} lampType="street" hasLight={true} />
+      <GardenLamp position={[0, 0, -15]} isNight={isNight} lampType="street" hasLight={true} />
+      <GardenLamp position={[0, 0, 15]} isNight={isNight} lampType="street" hasLight={true} />
       
-      {/* Đèn đường ở 4 góc vườn */}
-      <GardenLamp position={[-30, 0, -30]} isNight={isNight} lampType="street" />
-      <GardenLamp position={[30, 0, -30]} isNight={isNight} lampType="street" />
-      <GardenLamp position={[-30, 0, 30]} isNight={isNight} lampType="street" />
-      <GardenLamp position={[30, 0, 30]} isNight={isNight} lampType="street" />
+      {/* Đèn đường ở 4 góc vườn - chỉ trang trí, không có ánh sáng */}
+      <GardenLamp position={[-30, 0, -30]} isNight={isNight} lampType="street" hasLight={false} />
+      <GardenLamp position={[30, 0, -30]} isNight={isNight} lampType="street" hasLight={false} />
+      <GardenLamp position={[-30, 0, 30]} isNight={isNight} lampType="street" hasLight={false} />
+      <GardenLamp position={[30, 0, 30]} isNight={isNight} lampType="street" hasLight={false} />
       
-      {/* Đèn vườn thấp dọc hàng rào */}
-      <GardenLamp position={[-38, 0, -20]} isNight={isNight} lampType="garden" />
+      {/* Đèn vườn thấp dọc hàng rào - chỉ trang trí */}
       <GardenLamp position={[-38, 0, 0]} isNight={isNight} lampType="garden" />
-      <GardenLamp position={[-38, 0, 20]} isNight={isNight} lampType="garden" />
-      <GardenLamp position={[38, 0, -20]} isNight={isNight} lampType="garden" />
       <GardenLamp position={[38, 0, 0]} isNight={isNight} lampType="garden" />
-      <GardenLamp position={[38, 0, 20]} isNight={isNight} lampType="garden" />
-      <GardenLamp position={[-20, 0, -38]} isNight={isNight} lampType="garden" />
       <GardenLamp position={[0, 0, -38]} isNight={isNight} lampType="garden" />
-      <GardenLamp position={[20, 0, -38]} isNight={isNight} lampType="garden" />
-      <GardenLamp position={[-20, 0, 38]} isNight={isNight} lampType="garden" />
       <GardenLamp position={[0, 0, 38]} isNight={isNight} lampType="garden" />
-      <GardenLamp position={[20, 0, 38]} isNight={isNight} lampType="garden" />
       
       {/* Đèn lồng trang trí gần ao */}
-      <GardenLamp position={[-28, 0, 18]} isNight={isNight} lampType="lantern" />
-      <GardenLamp position={[-22, 0, 22]} isNight={isNight} lampType="lantern" />
+      <GardenLamp position={[-25, 0, 18]} isNight={isNight} lampType="lantern" />
       
       {/* Zone contents */}
       {zones.map((zone) => (
