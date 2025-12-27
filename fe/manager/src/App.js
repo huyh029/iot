@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
-import { Canvas, useFrame } from '@react-three/fiber';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Sky, Cloud, OrbitControls, useTexture, Stars } from '@react-three/drei';
 import * as THREE from 'three';
 
@@ -7452,6 +7452,98 @@ function ZoneContent({ zone, groundSize, canvasWidth, canvasHeight, isNight }) {
   }
 }
 
+// First Person Controls - điều khiển góc nhìn thứ nhất
+function FirstPersonControls() {
+  const { camera, gl } = useThree();
+  const moveSpeed = 0.3;
+  const lookSpeed = 0.002;
+  const keys = React.useRef({ w: false, a: false, s: false, d: false, space: false, shift: false });
+  const euler = React.useRef(new THREE.Euler(0, 0, 0, 'YXZ'));
+  const isLocked = React.useRef(false);
+  
+  React.useEffect(() => {
+    // Đặt camera ở vị trí ban đầu
+    camera.position.set(0, 2, 20);
+    euler.current.setFromQuaternion(camera.quaternion);
+    
+    const handleKeyDown = (e) => {
+      const key = e.key.toLowerCase();
+      if (key === 'w') keys.current.w = true;
+      if (key === 'a') keys.current.a = true;
+      if (key === 's') keys.current.s = true;
+      if (key === 'd') keys.current.d = true;
+      if (key === ' ') keys.current.space = true;
+      if (key === 'shift') keys.current.shift = true;
+    };
+    
+    const handleKeyUp = (e) => {
+      const key = e.key.toLowerCase();
+      if (key === 'w') keys.current.w = false;
+      if (key === 'a') keys.current.a = false;
+      if (key === 's') keys.current.s = false;
+      if (key === 'd') keys.current.d = false;
+      if (key === ' ') keys.current.space = false;
+      if (key === 'shift') keys.current.shift = false;
+    };
+    
+    const handleMouseMove = (e) => {
+      if (!isLocked.current) return;
+      euler.current.y -= e.movementX * lookSpeed;
+      euler.current.x -= e.movementY * lookSpeed;
+      euler.current.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, euler.current.x));
+      camera.quaternion.setFromEuler(euler.current);
+    };
+    
+    const handleClick = () => {
+      gl.domElement.requestPointerLock();
+    };
+    
+    const handlePointerLockChange = () => {
+      isLocked.current = document.pointerLockElement === gl.domElement;
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    document.addEventListener('mousemove', handleMouseMove);
+    gl.domElement.addEventListener('click', handleClick);
+    document.addEventListener('pointerlockchange', handlePointerLockChange);
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+      document.removeEventListener('mousemove', handleMouseMove);
+      gl.domElement.removeEventListener('click', handleClick);
+      document.removeEventListener('pointerlockchange', handlePointerLockChange);
+    };
+  }, [camera, gl]);
+  
+  useFrame(() => {
+    const direction = new THREE.Vector3();
+    const right = new THREE.Vector3();
+    
+    camera.getWorldDirection(direction);
+    right.crossVectors(direction, camera.up).normalize();
+    
+    // Di chuyển ngang (không bay theo hướng nhìn)
+    const moveDir = new THREE.Vector3(direction.x, 0, direction.z).normalize();
+    const moveRight = new THREE.Vector3(right.x, 0, right.z).normalize();
+    
+    if (keys.current.w) camera.position.addScaledVector(moveDir, moveSpeed);
+    if (keys.current.s) camera.position.addScaledVector(moveDir, -moveSpeed);
+    if (keys.current.a) camera.position.addScaledVector(moveRight, -moveSpeed);
+    if (keys.current.d) camera.position.addScaledVector(moveRight, moveSpeed);
+    if (keys.current.space) camera.position.y += moveSpeed;
+    if (keys.current.shift) camera.position.y -= moveSpeed;
+    
+    // Giới hạn trong vườn
+    camera.position.x = Math.max(-38, Math.min(38, camera.position.x));
+    camera.position.z = Math.max(-38, Math.min(38, camera.position.z));
+    camera.position.y = Math.max(1, Math.min(30, camera.position.y));
+  });
+  
+  return null;
+}
+
 function Scene({ zones, viewMode }) {
   const groundSize = 80;
   const canvasWidth = 800;
@@ -7616,6 +7708,7 @@ function Garden3DView({ zones, zoneTemplates }) {
   const wrapperRef = React.useRef(null);
   const [viewMode, setViewMode] = React.useState('day');
   const [isFullscreen, setIsFullscreen] = React.useState(false);
+  const [cameraMode, setCameraMode] = React.useState('orbit'); // 'orbit' hoặc 'firstPerson'
 
   // Toggle fullscreen
   const toggleFullscreen = () => {
@@ -7653,10 +7746,43 @@ function Garden3DView({ zones, zoneTemplates }) {
             <span className="material-symbols-outlined" style={{ color: '#4cbe00' }}>view_in_ar</span>
             Vườn 3D
           </h3>
-          <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Kéo chuột để xoay • Cuộn để zoom</span>
+          <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+            {cameraMode === 'orbit' ? 'Kéo chuột để xoay • Cuộn để zoom' : 'WASD di chuyển • Chuột xoay • Space lên • Shift xuống'}
+          </span>
         </div>
         
         <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <button
+            onClick={() => setCameraMode('orbit')}
+            style={{
+              padding: '0.5rem 1rem',
+              borderRadius: '0.5rem',
+              border: 'none',
+              cursor: 'pointer',
+              fontWeight: '600',
+              fontSize: '0.8125rem',
+              background: cameraMode === 'orbit' ? '#4cbe00' : '#f1f5f9',
+              color: cameraMode === 'orbit' ? 'white' : '#64748b'
+            }}
+          >
+            🌐 Toàn cảnh
+          </button>
+          <button
+            onClick={() => setCameraMode('firstPerson')}
+            style={{
+              padding: '0.5rem 1rem',
+              borderRadius: '0.5rem',
+              border: 'none',
+              cursor: 'pointer',
+              fontWeight: '600',
+              fontSize: '0.8125rem',
+              background: cameraMode === 'firstPerson' ? '#4cbe00' : '#f1f5f9',
+              color: cameraMode === 'firstPerson' ? 'white' : '#64748b'
+            }}
+          >
+            👁️ Góc nhìn thứ nhất
+          </button>
+          <div style={{ width: '1px', background: '#e2e8f0', margin: '0 0.25rem' }}></div>
           <button
             onClick={() => setViewMode('day')}
             style={{
@@ -7723,22 +7849,37 @@ function Garden3DView({ zones, zoneTemplates }) {
           </button>
         )}
         
+        {/* Hướng dẫn cho góc nhìn thứ nhất */}
+        {cameraMode === 'firstPerson' && (
+          <div style={{ position: 'absolute', bottom: '1rem', left: '1rem', zIndex: 100, padding: '0.75rem 1rem', borderRadius: '0.5rem', background: 'rgba(0,0,0,0.7)', color: 'white', fontSize: '0.75rem', lineHeight: '1.5' }}>
+            <div><b>W/S</b> - Tiến/Lùi</div>
+            <div><b>A/D</b> - Trái/Phải</div>
+            <div><b>Space</b> - Bay lên</div>
+            <div><b>Shift</b> - Hạ xuống</div>
+            <div><b>Chuột</b> - Xoay camera</div>
+          </div>
+        )}
+        
         <Canvas
           shadows
-          camera={{ position: [40, 30, 40], fov: 50 }}
+          camera={{ position: cameraMode === 'firstPerson' ? [0, 2, 10] : [40, 30, 40], fov: cameraMode === 'firstPerson' ? 75 : 50 }}
           style={{ width: '100%', height: '100%' }}
         >
           <React.Suspense fallback={null}>
             <Scene zones={zones} viewMode={viewMode} />
-            <OrbitControls 
-              enablePan={true}
-              enableZoom={true}
-              enableRotate={true}
-              minDistance={20}
-              maxDistance={120}
-              maxPolarAngle={Math.PI / 2.1}
-              target={[0, 0, 0]}
-            />
+            {cameraMode === 'orbit' ? (
+              <OrbitControls 
+                enablePan={true}
+                enableZoom={true}
+                enableRotate={true}
+                minDistance={20}
+                maxDistance={120}
+                maxPolarAngle={Math.PI / 2.1}
+                target={[0, 0, 0]}
+              />
+            ) : (
+              <FirstPersonControls />
+            )}
           </React.Suspense>
         </Canvas>
       </div>
