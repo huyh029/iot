@@ -4701,6 +4701,34 @@ function GardenLamp({ position, isNight = false, lampType = 'street', hasLight =
   return null;
 }
 
+// Ngôi sao 5 cánh cho cờ Việt Nam
+function FivePointStar({ position, size = 0.4, color = '#FFFF00' }) {
+  const starShape = React.useMemo(() => {
+    const shape = new THREE.Shape();
+    const outerRadius = size;
+    const innerRadius = size * 0.4;
+    const points = 5;
+    
+    for (let i = 0; i < points * 2; i++) {
+      const radius = i % 2 === 0 ? outerRadius : innerRadius;
+      const angle = (i * Math.PI) / points - Math.PI / 2;
+      const x = Math.cos(angle) * radius;
+      const y = Math.sin(angle) * radius;
+      if (i === 0) shape.moveTo(x, y);
+      else shape.lineTo(x, y);
+    }
+    shape.closePath();
+    return shape;
+  }, [size]);
+  
+  return (
+    <mesh position={position}>
+      <shapeGeometry args={[starShape]} />
+      <meshStandardMaterial color={color} side={THREE.DoubleSide} />
+    </mesh>
+  );
+}
+
 function Flower({ position, color }) {
   const flowerRef = React.useRef();
   
@@ -7097,11 +7125,8 @@ function ZoneContent({ zone, groundSize, canvasWidth, canvasHeight, isNight }) {
                 <planeGeometry args={[2, 1.33]} />
                 <meshStandardMaterial color="#DA251D" side={THREE.DoubleSide} />
               </mesh>
-              {/* Ngôi sao vàng to */}
-              <mesh position={[1, 4.2, 0.02]}>
-                <circleGeometry args={[0.35, 5]} />
-                <meshStandardMaterial color="#FFFF00" side={THREE.DoubleSide} />
-              </mesh>
+              {/* Ngôi sao vàng 5 cánh */}
+              <FivePointStar position={[1, 4.2, 0.02]} size={0.4} color="#FFFF00" />
               {/* Chân đế */}
               <mesh position={[0, 0.1, 0]}>
                 <cylinderGeometry args={[0.18, 0.22, 0.2, 12]} />
