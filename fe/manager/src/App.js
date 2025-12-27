@@ -4702,7 +4702,7 @@ function GardenLamp({ position, isNight = false, lampType = 'street', hasLight =
 }
 
 // Ngôi sao 5 cánh cho cờ Việt Nam
-function FivePointStar({ position, size = 0.4, color = '#FFFF00' }) {
+function FivePointStar({ position, size = 0.4, color = '#FFFF00', rotation = 0 }) {
   const starShape = React.useMemo(() => {
     const shape = new THREE.Shape();
     const outerRadius = size;
@@ -4722,7 +4722,7 @@ function FivePointStar({ position, size = 0.4, color = '#FFFF00' }) {
   }, [size]);
   
   return (
-    <mesh position={position}>
+    <mesh position={position} rotation={[0, 0, rotation]}>
       <shapeGeometry args={[starShape]} />
       <meshStandardMaterial color={color} side={THREE.DoubleSide} />
     </mesh>
@@ -7126,7 +7126,7 @@ function ZoneContent({ zone, groundSize, canvasWidth, canvasHeight, isNight }) {
                 <meshStandardMaterial color="#DA251D" side={THREE.DoubleSide} />
               </mesh>
               {/* Ngôi sao vàng 5 cánh */}
-              <FivePointStar position={[1, 4.2, 0.02]} size={0.4} color="#FFFF00" />
+              <FivePointStar position={[1, 4.2, 0.02]} size={0.4} color="#FFFF00" rotation={Math.PI} />
               {/* Chân đế */}
               <mesh position={[0, 0.1, 0]}>
                 <cylinderGeometry args={[0.18, 0.22, 0.2, 12]} />
